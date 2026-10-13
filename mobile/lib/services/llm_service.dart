@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:llamadart/llamadart.dart';
 import '../core/constants/app_constants.dart';
 
+import 'web_search_service.dart';
+
 class LLMPerformanceStats {
   final double loadTimeSeconds;
   final double timeToFirstTokenMs;
@@ -55,6 +57,21 @@ class LLMService extends ChangeNotifier {
   void setEnableThinking(bool value) {
     if (_enableThinking != value) {
       _enableThinking = value;
+      notifyListeners();
+    }
+  }
+
+  // Web Search mode
+  final WebSearchService _webSearchService = WebSearchService();
+  bool _enableWebSearch = false;
+  String _searchStatus = '';
+
+  bool get enableWebSearch => _enableWebSearch;
+  String get searchStatus => _searchStatus;
+
+  void setEnableWebSearch(bool value) {
+    if (_enableWebSearch != value) {
+      _enableWebSearch = value;
       notifyListeners();
     }
   }
@@ -209,8 +226,28 @@ class LLMService extends ChangeNotifier {
     bool isFirstToken = true;
 
     try {
+      String effectivePrompt = userPrompt;
+      if (_enableWebSearch) {
+        _searchStatus = 'Поиск в интернете...';
+        notifyListeners();
+        try {
+          final webContext = await _webSearchService.getWebContext(userPrompt);
+          if (webContext != null && webContext.isNotEmpty) {
+            debugPrint('[WEB SEARCH] Данные из интернета получены:\n$webContext');
+            effectivePrompt = '$webContext\n\n'
+                'Используя вышеприведенные актуальные данные из интернета, подробно ответь на вопрос пользователя:\n'
+                '$userPrompt';
+          }
+        } catch (e) {
+          debugPrint('[WEB SEARCH] Ошибка веб-поиска: $e');
+        } finally {
+          _searchStatus = '';
+          notifyListeners();
+        }
+      }
+
       final promptParts = [
-        LlamaTextContent(userPrompt),
+        LlamaTextContent(effectivePrompt),
       ];
 
       final generationParams = GenerationParams(

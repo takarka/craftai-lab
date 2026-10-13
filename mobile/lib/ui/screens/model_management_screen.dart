@@ -103,38 +103,43 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                       const SizedBox(height: 12),
 
                       // CPU Thread Selection
-                      Row(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Потоков CPU: ',
+                            'Потоков CPU:',
                             style: theme.textTheme.bodySmall?.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          SegmentedButton<int>(
-                            style: const ButtonStyle(
-                              visualDensity: VisualDensity.compact,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          const SizedBox(height: 6),
+                          SizedBox(
+                            width: double.infinity,
+                            child: SegmentedButton<int>(
+                              showSelectedIcon: false,
+                              style: const ButtonStyle(
+                                visualDensity: VisualDensity.compact,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              segments: const [
+                                ButtonSegment(
+                                  value: 2,
+                                  label: Text('2 (эконом)'),
+                                ),
+                                ButtonSegment(
+                                  value: 4,
+                                  label: Text('4 (баланс)'),
+                                ),
+                                ButtonSegment(
+                                  value: 6,
+                                  label: Text('6 (макс)'),
+                                ),
+                              ],
+                              selected: {llmService.threads},
+                              onSelectionChanged: (set) {
+                                llmService.setThreads(set.first);
+                              },
                             ),
-                            segments: const [
-                              ButtonSegment(
-                                value: 2,
-                                label: Text('2 (эконом)'),
-                              ),
-                              ButtonSegment(
-                                value: 4,
-                                label: Text('4 (оптимально)'),
-                              ),
-                              ButtonSegment(
-                                value: 6,
-                                label: Text('6 (макс)'),
-                              ),
-                            ],
-                            selected: {llmService.threads},
-                            onSelectionChanged: (set) {
-                              llmService.setThreads(set.first);
-                            },
                           ),
                         ],
                       ),
@@ -177,10 +182,12 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Загрузка модели...',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
+                            Expanded(
+                              child: Text(
+                                'Загрузка модели...',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                             IconButton(
@@ -213,10 +220,12 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Локальные модели (.gguf)',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Text(
+                      'Локальные модели (.gguf)',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   TextButton.icon(
@@ -513,11 +522,13 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                         children: [
                           Icon(Icons.usb_rounded, color: Colors.blue, size: 20),
                           SizedBox(width: 8),
-                          Text(
-                            'Быстрая передача моделей по USB (ADB)',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
+                          Expanded(
+                            child: Text(
+                              'Быстрая передача моделей по USB (ADB)',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
                             ),
                           ),
                         ],

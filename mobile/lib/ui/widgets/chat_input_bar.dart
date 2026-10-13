@@ -6,6 +6,9 @@ class ChatInputBar extends StatelessWidget {
   final bool isModelLoaded;
   final bool enableThinking;
   final ValueChanged<bool> onToggleThinking;
+  final bool enableWebSearch;
+  final ValueChanged<bool> onToggleWebSearch;
+  final String searchStatus;
   final VoidCallback onSend;
   final VoidCallback onStop;
 
@@ -16,6 +19,9 @@ class ChatInputBar extends StatelessWidget {
     required this.isModelLoaded,
     required this.enableThinking,
     required this.onToggleThinking,
+    required this.enableWebSearch,
+    required this.onToggleWebSearch,
+    this.searchStatus = '',
     required this.onSend,
     required this.onStop,
   });
@@ -45,68 +51,132 @@ class ChatInputBar extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Thinking Toggle Chip
+          // Mode Toggles (Thinking & Web Search)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                InkWell(
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: isModelLoaded
-                      ? () => onToggleThinking(!enableThinking)
-                      : null,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: enableThinking
-                          ? theme.colorScheme.primaryContainer
-                          : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  // 1. Thinking Mode Toggle
+                  InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: isModelLoaded
+                        ? () => onToggleThinking(!enableThinking)
+                        : null,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
                         color: enableThinking
-                            ? theme.colorScheme.primary
-                            : Colors.transparent,
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.psychology_rounded,
-                          size: 16,
+                            ? theme.colorScheme.primaryContainer
+                            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
                           color: enableThinking
                               ? theme.colorScheme.primary
-                              : theme.iconTheme.color?.withValues(alpha: 0.6),
+                              : Colors.transparent,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.psychology_rounded,
+                            size: 16,
+                            color: enableThinking
+                                ? theme.colorScheme.primary
+                                : theme.iconTheme.color?.withValues(alpha: 0.6),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            enableThinking ? 'Рассуждения: Вкл' : 'Рассуждения: Выкл',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontWeight: enableThinking
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: enableThinking
+                                  ? theme.colorScheme.onPrimaryContainer
+                                  : theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  // 2. Web Search Mode Toggle
+                  InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () => onToggleWebSearch(!enableWebSearch),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: enableWebSearch
+                            ? Colors.blue.withValues(alpha: 0.2)
+                            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: enableWebSearch
+                              ? Colors.blueAccent
+                              : Colors.transparent,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.language_rounded,
+                            size: 16,
+                            color: enableWebSearch
+                                ? Colors.blueAccent
+                                : theme.iconTheme.color?.withValues(alpha: 0.6),
+                          ),
+                          const SizedBox(width: 5),
+                          Text(
+                            enableWebSearch ? 'Поиск: Вкл' : 'Поиск: Выкл',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontWeight: enableWebSearch
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: enableWebSearch
+                                  ? Colors.blueAccent
+                                  : theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  if (searchStatus.isNotEmpty) ...[
+                    const SizedBox(width: 10),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(
+                          width: 10,
+                          height: 10,
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          enableThinking ? 'Рассуждения: Вкл' : 'Рассуждения: Выкл',
+                          searchStatus,
                           style: theme.textTheme.labelSmall?.copyWith(
-                            fontWeight: enableThinking
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            color: enableThinking
-                                ? theme.colorScheme.onPrimaryContainer
-                                : theme.textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                            color: Colors.blueAccent,
+                            fontStyle: FontStyle.italic,
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  enableThinking
-                      ? 'Модель выводит ход мыслей'
-                      : 'Прямые быстрые ответы',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
-                    fontSize: 11,
-                  ),
-                ),
-              ],
+                  ],
+                ],
+              ),
             ),
           ),
 
@@ -123,7 +193,9 @@ class ChatInputBar extends StatelessWidget {
                   enabled: isModelLoaded,
                   decoration: InputDecoration(
                     hintText: isModelLoaded
-                        ? 'Спросите что-нибудь у Qwen...'
+                        ? (enableWebSearch
+                            ? 'Спросите или вставьте ссылку для анализа...'
+                            : 'Спросите что-нибудь у модели...')
                         : 'Сначала загрузите модель...',
                     filled: true,
                     contentPadding: const EdgeInsets.symmetric(

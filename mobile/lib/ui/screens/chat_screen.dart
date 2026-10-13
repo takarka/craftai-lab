@@ -213,6 +213,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 isModelLoaded: llm.isModelLoaded,
                 enableThinking: llm.enableThinking,
                 onToggleThinking: (val) => llm.setEnableThinking(val),
+                enableWebSearch: llm.enableWebSearch,
+                onToggleWebSearch: (val) => llm.setEnableWebSearch(val),
+                searchStatus: llm.searchStatus,
                 onSend: _sendMessage,
                 onStop: () => llm.stopGeneration(),
               );
