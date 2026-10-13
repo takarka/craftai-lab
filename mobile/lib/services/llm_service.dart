@@ -48,6 +48,17 @@ class LLMService extends ChangeNotifier {
   double _lastLoadTimeSec = 0.0;
   LLMPerformanceStats _lastStats = const LLMPerformanceStats();
 
+  // Thinking / Reasoning mode
+  bool _enableThinking = false;
+  bool get enableThinking => _enableThinking;
+
+  void setEnableThinking(bool value) {
+    if (_enableThinking != value) {
+      _enableThinking = value;
+      notifyListeners();
+    }
+  }
+
   bool get isModelLoaded => _isModelLoaded;
   bool get isLoadingModel => _isLoadingModel;
   bool get isGenerating => _isGenerating;
@@ -199,6 +210,7 @@ class LLMService extends ChangeNotifier {
       final stream = _session!.create(
         promptParts,
         params: generationParams,
+        enableThinking: _enableThinking,
       );
 
       await for (final chunk in stream) {

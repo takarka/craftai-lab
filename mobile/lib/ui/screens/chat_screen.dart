@@ -211,6 +211,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 controller: _inputController,
                 isGenerating: llm.isGenerating,
                 isModelLoaded: llm.isModelLoaded,
+                enableThinking: llm.enableThinking,
+                onToggleThinking: (val) => llm.setEnableThinking(val),
                 onSend: _sendMessage,
                 onStop: () => llm.stopGeneration(),
               );
