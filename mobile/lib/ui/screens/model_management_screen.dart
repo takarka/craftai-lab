@@ -469,7 +469,50 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
+                        if (preset['params'] != null || preset['badge'] != null) ...[
+                          Wrap(
+                            spacing: 6,
+                            runSpacing: 4,
+                            children: [
+                              if (preset['params'] != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'Параметры: ${preset['params']}',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              if (preset['badge'] != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: isGemma
+                                        ? Colors.blue.withValues(alpha: 0.15)
+                                        : Colors.amber.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    preset['badge']!,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: isGemma
+                                          ? Colors.blueAccent
+                                          : Colors.amber.shade300,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                        ],
                         Text(
                           preset['description']!,
                           style: theme.textTheme.bodySmall,
