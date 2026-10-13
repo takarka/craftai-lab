@@ -7,8 +7,13 @@ environment:
   sdk: ^3.13.4
 
 dependencies:
+  dio: ^5.11.1
+  file_picker: ^13.1.0
   flutter:
     sdk: flutter
+  flutter_markdown: ^0.7.7+1
+  llamadart: ^0.11.1
+  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_test:

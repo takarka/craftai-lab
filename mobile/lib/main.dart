@@ -1,16 +1,65 @@
 import 'package:flutter/material.dart';
+import 'core/constants/app_constants.dart';
+import 'core/theme/app_theme.dart';
+import 'services/llm_service.dart';
+import 'services/model_manager_service.dart';
+import 'ui/screens/chat_screen.dart';
 
 void main() {
-  runApp(const MainApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(const QwenChatApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class QwenChatApp extends StatefulWidget {
+  const QwenChatApp({super.key});
+
+  @override
+  State<QwenChatApp> createState() => _QwenChatAppState();
+}
+
+class _QwenChatAppState extends State<QwenChatApp> {
+  late final ModelManagerService _modelManager;
+  late final LLMService _llmService;
+
+  @override
+  void initState() {
+    super.initState();
+    _modelManager = ModelManagerService();
+    _llmService = LLMService();
+    _initializeApp();
+  }
+
+  Future<void> _initializeApp() async {
+    await _modelManager.refreshLocalModels();
+    // If a local GGUF model already exists, auto-load the first one
+    if (_modelManager.localModels.isNotEmpty) {
+      final firstModel = _modelManager.localModels.first;
+      _llmService.loadModel(
+        modelPath: firstModel.path,
+        modelDisplayName: firstModel.name,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _llmService.dispose();
+    _modelManager.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello World!'))),
+    return MaterialApp(
+      title: AppConstants.appTitle,
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.dark,
+      home: ChatScreen(
+        llmService: _llmService,
+        modelManager: _modelManager,
+      ),
     );
   }
 }
