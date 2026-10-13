@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/constants/app_constants.dart';
 import '../../services/llm_service.dart';
 import '../../services/model_manager_service.dart';
@@ -35,13 +36,11 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
     final filteredPresets = _selectedFamily == 'Все'
         ? AppConstants.presetModels
         : AppConstants.presetModels
-            .where((p) => p['family'] == _selectedFamily)
-            .toList();
+              .where((p) => p['family'] == _selectedFamily)
+              .toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Управление моделями ИИ'),
-      ),
+      appBar: AppBar(title: const Text('Управление моделями ИИ')),
       body: ListenableBuilder(
         listenable: Listenable.merge([modelManager, llmService]),
         builder: (context, _) {
@@ -95,11 +94,64 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                         llmService.isModelLoaded
                             ? '${llmService.currentModelName} • ${llmService.threads} потока CPU'
                             : llmService.loadStatus.isNotEmpty
-                                ? llmService.loadStatus
-                                : 'Выберите модель из локальных файлов или скачайте пресет ниже.',
+                            ? llmService.loadStatus
+                            : 'Выберите модель из локальных файлов или скачайте пресет ниже.',
                         style: theme.textTheme.bodyMedium,
                       ),
 
+                      const SizedBox(height: 12),
+
+                      Text(
+                        'Размер контекста',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      const SizedBox(height: 6),
+                      DropdownButtonFormField<int>(
+                        key: ValueKey(llmService.selectedContextSize),
+                        initialValue: llmService.selectedContextSize,
+                        items: const [1024, 2048, 4096, 8192]
+                            .map(
+                              (size) => DropdownMenuItem(
+                                value: size,
+                                child: Text('$size токенов'),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: !llmService.canChangeChat
+                            ? null
+                            : (size) async {
+                                if (size == null) return;
+                                try {
+                                  final success = await llmService
+                                      .changeContextSize(size);
+                                  if (!success && context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Не удалось изменить контекст. Выберите меньший размер.',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(e.toString())),
+                                    );
+                                  }
+                                }
+                              },
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Больший контекст требует больше оперативной памяти. '
+                        'При изменении активная модель перезагружается; сообщения сохраняются.',
+                        style: theme.textTheme.bodySmall,
+                      ),
                       const SizedBox(height: 12),
 
                       // CPU Thread Selection
@@ -167,7 +219,9 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
               if (modelManager.isDownloading) ...[
                 Card(
                   elevation: 0,
-                  color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  color: theme.colorScheme.primaryContainer.withValues(
+                    alpha: 0.3,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                     side: BorderSide(
@@ -230,8 +284,8 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                   ),
                   TextButton.icon(
                     onPressed: () async {
-                      final importedPath =
-                          await modelManager.pickLocalModelFile();
+                      final importedPath = await modelManager
+                          .pickLocalModelFile();
                       if (importedPath != null && context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Файл импортирован!')),
@@ -248,7 +302,9 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
               if (modelManager.localModels.isEmpty)
                 Card(
                   elevation: 0,
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.5,
+                  ),
                   child: const Padding(
                     padding: EdgeInsets.all(16),
                     child: Text(
@@ -268,7 +324,9 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                     elevation: 0,
                     margin: const EdgeInsets.only(bottom: 10),
                     color: isThisLoaded
-                        ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
+                        ? theme.colorScheme.primaryContainer.withValues(
+                            alpha: 0.3,
+                          )
                         : theme.colorScheme.surfaceContainerHighest,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
@@ -313,11 +371,11 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                                   onPressed: llmService.isLoadingModel
                                       ? null
                                       : () async {
-                                          final success =
-                                              await llmService.loadModel(
-                                            modelPath: m.path,
-                                            modelDisplayName: m.name,
-                                          );
+                                          final success = await llmService
+                                              .loadModel(
+                                                modelPath: m.path,
+                                                modelDisplayName: m.name,
+                                              );
                                           if (success && context.mounted) {
                                             Navigator.pop(context);
                                           }
@@ -332,8 +390,10 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                                 ),
                               const Spacer(),
                               IconButton(
-                                icon: const Icon(Icons.delete_outline_rounded,
-                                    size: 20),
+                                icon: const Icon(
+                                  Icons.delete_outline_rounded,
+                                  size: 20,
+                                ),
                                 tooltip: 'Удалить',
                                 onPressed: isThisLoaded
                                     ? null
@@ -376,14 +436,14 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                           avatar: family == 'Gemma'
                               ? const Icon(Icons.scatter_plot_rounded, size: 16)
                               : (family == 'Qwen'
-                                  ? const Icon(Icons.auto_awesome, size: 16)
-                                  : null),
+                                    ? const Icon(Icons.auto_awesome, size: 16)
+                                    : null),
                           label: Text(
                             family == 'Gemma'
-                                ? 'Google Gemma (${AppConstants.presetModels.where((p) => p['family'] == 'Gemma').length})'
+                                ? 'Google Gemma / Gemini (${AppConstants.presetModels.where((p) => p['family'] == 'Gemma').length})'
                                 : (family == 'Qwen'
-                                    ? 'Alibaba Qwen (${AppConstants.presetModels.where((p) => p['family'] == 'Qwen').length})'
-                                    : 'Все (${AppConstants.presetModels.length})'),
+                                      ? 'Alibaba Qwen (${AppConstants.presetModels.where((p) => p['family'] == 'Qwen').length})'
+                                      : 'Все (${AppConstants.presetModels.length})'),
                           ),
                           onSelected: (selected) {
                             if (selected) {
@@ -403,8 +463,9 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
               ...filteredPresets.map((preset) {
                 final fileName = preset['fileName']!;
                 final family = preset['family'] ?? 'Qwen';
-                final isAlreadyDownloaded = modelManager.localModels
-                    .any((m) => m.name == fileName);
+                final isAlreadyDownloaded = modelManager.localModels.any(
+                  (m) => m.name == fileName,
+                );
 
                 final isGemma = family == 'Gemma';
 
@@ -425,7 +486,9 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: isGemma
                                     ? Colors.blue.withValues(alpha: 0.2)
@@ -455,7 +518,9 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 4),
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: theme.colorScheme.surfaceContainer,
                                 borderRadius: BorderRadius.circular(8),
@@ -470,16 +535,21 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        if (preset['params'] != null || preset['badge'] != null) ...[
+                        if (preset['params'] != null ||
+                            preset['badge'] != null) ...[
                           Wrap(
                             spacing: 6,
                             runSpacing: 4,
                             children: [
                               if (preset['params'] != null)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+                                    color: theme.colorScheme.primaryContainer
+                                        .withValues(alpha: 0.5),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
@@ -492,7 +562,10 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                                 ),
                               if (preset['badge'] != null)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: isGemma
                                         ? Colors.blue.withValues(alpha: 0.15)
@@ -521,8 +594,11 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                         if (isAlreadyDownloaded)
                           const Row(
                             children: [
-                              Icon(Icons.check_circle,
-                                  color: Colors.green, size: 16),
+                              Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                                size: 16,
+                              ),
                               SizedBox(width: 6),
                               Text('Уже скачана в память'),
                             ],
@@ -532,9 +608,9 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                             onPressed: modelManager.isDownloading
                                 ? null
                                 : () => modelManager.downloadModel(
-                                      url: preset['url']!,
-                                      targetFileName: fileName,
-                                    ),
+                                    url: preset['url']!,
+                                    targetFileName: fileName,
+                                  ),
                             icon: const Icon(Icons.download_rounded, size: 18),
                             label: const Text('Скачать модель'),
                           ),
@@ -552,9 +628,7 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                 color: Colors.blue.withValues(alpha: 0.08),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(
-                    color: Colors.blue.withValues(alpha: 0.3),
-                  ),
+                  side: BorderSide(color: Colors.blue.withValues(alpha: 0.3)),
                 ),
                 child: const Padding(
                   padding: EdgeInsets.all(14),

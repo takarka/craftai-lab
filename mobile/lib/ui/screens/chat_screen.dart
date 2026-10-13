@@ -25,10 +25,23 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final List<ChatMessage> _messages = [];
+  List<ChatMessage> get _messages => widget.llmService.messages;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.llmService.addListener(_onChatChanged);
+  }
+
+  void _onChatChanged() {
+    if (!mounted) return;
+    setState(() {});
+    _scrollToBottom();
+  }
 
   @override
   void dispose() {
+    widget.llmService.removeListener(_onChatChanged);
     _inputController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -48,75 +61,27 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _sendMessage([String? quickText]) async {
     final text = quickText ?? _inputController.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty || !widget.llmService.historyReady) return;
 
     if (!widget.llmService.isModelLoaded) {
       _openModelManagement();
       return;
     }
 
+    if (widget.llmService.isGenerating || widget.llmService.isLoadingModel) {
+      return;
+    }
     _inputController.clear();
-
-    final userMessage = ChatMessage(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      text: text,
-      isUser: true,
-      timestamp: DateTime.now(),
-    );
-
-    final aiMessageId = (DateTime.now().millisecondsSinceEpoch + 1).toString();
-    final aiMessage = ChatMessage(
-      id: aiMessageId,
-      text: '',
-      isUser: false,
-      timestamp: DateTime.now(),
-      isGenerating: true,
-    );
-
-    setState(() {
-      _messages.add(userMessage);
-      _messages.add(aiMessage);
-    });
-
-    _scrollToBottom();
-
-    final StringBuffer buffer = StringBuffer();
-
     try {
-      final stream = widget.llmService.generateResponseStream(
+      await for (final _ in widget.llmService.generateResponseStream(
         userPrompt: text,
-      );
-
-      await for (final token in stream) {
-        buffer.write(token);
-        final currentText = buffer.toString();
-
-        final index = _messages.indexWhere((m) => m.id == aiMessageId);
-        if (index != -1 && mounted) {
-          setState(() {
-            _messages[index] = _messages[index].copyWith(
-              text: currentText,
-              tokensPerSecond: widget.llmService.lastTokensPerSecond,
-              totalTokens: widget.llmService.lastTokenCount,
-            );
-          });
-          _scrollToBottom();
-        }
+      )) {
+        // The service publishes message updates through its listener.
       }
     } catch (e) {
-      buffer.write('\n\n⚠️ *Ошибка при генерации:* $e');
-    } finally {
-      final index = _messages.indexWhere((m) => m.id == aiMessageId);
-      if (index != -1 && mounted) {
-        setState(() {
-          _messages[index] = _messages[index].copyWith(
-            text: buffer.toString(),
-            isGenerating: false,
-            tokensPerSecond: widget.llmService.lastTokensPerSecond,
-            totalTokens: widget.llmService.lastTokenCount,
-          );
-        });
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -125,7 +90,7 @@ class _ChatScreenState extends State<ChatScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Очистить диалог?'),
-        content: const Text('Вся история сообщений текущей сессии будет удалена.'),
+        content: const Text('Сообщения этого чата будут удалены с устройства.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -133,9 +98,6 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           FilledButton(
             onPressed: () {
-              setState(() {
-                _messages.clear();
-              });
               widget.llmService.resetChatSession();
               Navigator.pop(ctx);
             },
@@ -164,6 +126,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final llm = widget.llmService;
 
     return Scaffold(
+      drawer: _buildChatDrawer(),
       appBar: AppBar(
         title: ListenableBuilder(
           listenable: llm,
@@ -179,6 +142,16 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.add_comment_outlined),
+            tooltip: 'Новый чат',
+            onPressed: llm.canChangeChat
+                ? () {
+                    _inputController.clear();
+                    llm.createNewChat();
+                  }
+                : null,
+          ),
+          IconButton(
             icon: const Icon(Icons.settings_suggest_rounded),
             tooltip: 'Модели',
             onPressed: _openModelManagement,
@@ -186,12 +159,26 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.delete_sweep_rounded),
             tooltip: 'Очистить чат',
-            onPressed: _messages.isEmpty ? null : _clearChat,
+            onPressed: _messages.isEmpty || !llm.historyReady
+                ? null
+                : _clearChat,
           ),
         ],
       ),
       body: Column(
         children: [
+          if (!llm.historyReady) const LinearProgressIndicator(),
+          if (llm.storageError != null)
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                llm.storageError!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ),
+          _buildContextIndicator(theme),
           Expanded(
             child: _messages.isEmpty
                 ? _buildEmptyState(theme)
@@ -200,7 +187,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
-                      return ChatBubble(message: _messages[index]);
+                      return ChatBubble(
+                        key: ValueKey(_messages[index].id),
+                        message: _messages[index],
+                      );
                     },
                   ),
           ),
@@ -210,17 +200,111 @@ class _ChatScreenState extends State<ChatScreen> {
               return ChatInputBar(
                 controller: _inputController,
                 isGenerating: llm.isGenerating,
-                isModelLoaded: llm.isModelLoaded,
+                isModelLoaded:
+                    llm.isModelLoaded &&
+                    llm.historyReady &&
+                    !llm.isLoadingModel,
                 enableThinking: llm.enableThinking,
                 onToggleThinking: (val) => llm.setEnableThinking(val),
                 enableWebSearch: llm.enableWebSearch,
                 onToggleWebSearch: (val) => llm.setEnableWebSearch(val),
-                searchStatus: llm.searchStatus,
+                searchStatus: llm.searchStatus.isNotEmpty
+                    ? llm.searchStatus
+                    : llm.contextStatus,
                 onSend: _sendMessage,
                 onStop: () => llm.stopGeneration(),
               );
             },
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChatDrawer() {
+    final llm = widget.llmService;
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(20),
+              child: Text(
+                'Чаты на устройстве',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.add_comment_outlined),
+              title: const Text('Новый чат'),
+              enabled: llm.canChangeChat,
+              onTap: () {
+                _inputController.clear();
+                llm.createNewChat();
+                Navigator.pop(context);
+              },
+            ),
+            const Divider(),
+            Expanded(
+              child: ListView.builder(
+                itemCount: llm.conversations.length,
+                itemBuilder: (context, index) {
+                  final chat = llm.conversations[index];
+                  return ListTile(
+                    leading: const Icon(Icons.chat_bubble_outline),
+                    title: Text(
+                      chat.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text('${chat.messages.length} сообщений'),
+                    selected: chat.id == llm.activeConversation.id,
+                    enabled: llm.canChangeChat,
+                    onTap: () {
+                      _inputController.clear();
+                      llm.selectChat(chat.id);
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContextIndicator(ThemeData theme) {
+    final llm = widget.llmService;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            llm.activeConversation.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleSmall,
+          ),
+          if (llm.isModelLoaded) ...[
+            const SizedBox(height: 4),
+            Tooltip(
+              message:
+                  'Токены последнего запроса без генерируемого ответа. '
+                  'При заполнении контекста старые сообщения заменяются кратким резюме.',
+              child: Text(
+                'Контекст запроса: ${llm.contextTokens} / ${llm.contextSize} токенов${llm.activeConversation.summary.isEmpty ? '' : ' • с резюме'}',
+                style: theme.textTheme.bodySmall,
+              ),
+            ),
+            const SizedBox(height: 4),
+            LinearProgressIndicator(
+              value: (llm.contextTokens / llm.contextSize).clamp(0.0, 1.0),
+              minHeight: 3,
+            ),
+          ],
         ],
       ),
     );
@@ -236,7 +320,9 @@ class _ChatScreenState extends State<ChatScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+                color: theme.colorScheme.primaryContainer.withValues(
+                  alpha: 0.3,
+                ),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -258,7 +344,9 @@ class _ChatScreenState extends State<ChatScreen> {
               'Без интернета, без задержек API, 100% конфиденциально.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                color: theme.textTheme.bodyMedium?.color?.withValues(
+                  alpha: 0.7,
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -284,17 +372,23 @@ class _ChatScreenState extends State<ChatScreen> {
                   ActionChip(
                     avatar: const Icon(Icons.lightbulb_outline, size: 16),
                     label: const Text('Объясни квантовые вычисления'),
-                    onPressed: () => _sendMessage('Объясни квантовые вычисления простыми словами'),
+                    onPressed: () => _sendMessage(
+                      'Объясни квантовые вычисления простыми словами',
+                    ),
                   ),
                   ActionChip(
                     avatar: const Icon(Icons.code_rounded, size: 16),
                     label: const Text('Напиши функцию на Dart'),
-                    onPressed: () => _sendMessage('Напиши функцию на Dart для вычисления чисел Фибоначчи'),
+                    onPressed: () => _sendMessage(
+                      'Напиши функцию на Dart для вычисления чисел Фибоначчи',
+                    ),
                   ),
                   ActionChip(
                     avatar: const Icon(Icons.phone_android_rounded, size: 16),
                     label: const Text('Как работает локальная LLM?'),
-                    onPressed: () => _sendMessage('Как работает локальная языковая модель прямо на смартфоне?'),
+                    onPressed: () => _sendMessage(
+                      'Как работает локальная языковая модель прямо на смартфоне?',
+                    ),
                   ),
                 ],
               ),

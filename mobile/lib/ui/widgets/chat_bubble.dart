@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+
 import '../../models/chat_message.dart';
 
 class ChatBubble extends StatefulWidget {
   final ChatMessage message;
 
-  const ChatBubble({
-    super.key,
-    required this.message,
-  });
+  const ChatBubble({super.key, required this.message});
 
   @override
   State<ChatBubble> createState() => _ChatBubbleState();
@@ -28,21 +26,27 @@ class _ChatBubbleState extends State<ChatBubble> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment:
-            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           if (!isUser) ...[
             CircleAvatar(
               radius: 16,
               backgroundColor: theme.colorScheme.primary,
-              child: const Icon(Icons.auto_awesome, size: 18, color: Colors.white),
+              child: const Icon(
+                Icons.auto_awesome,
+                size: 18,
+                color: Colors.white,
+              ),
             ),
             const SizedBox(width: 10),
           ],
           Flexible(
             child: Column(
-              crossAxisAlignment:
-                  isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isUser
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 Container(
                   constraints: BoxConstraints(
@@ -85,19 +89,23 @@ class _ChatBubbleState extends State<ChatBubble> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (!isUser && message.tokensPerSecond != null && message.tokensPerSecond! > 0) ...[
+                    if (!isUser &&
+                        message.tokensPerSecond != null &&
+                        message.tokensPerSecond! > 0) ...[
                       Text(
                         '${message.tokensPerSecond!.toStringAsFixed(1)} tok/s',
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontSize: 11,
-                          color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.6),
+                          color: theme.textTheme.bodySmall?.color?.withValues(
+                            alpha: 0.6,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
                     ],
                     GestureDetector(
                       onTap: () {
-                        Clipboard.setData(ClipboardData(text: _getCleanText(message.text)));
+                        Clipboard.setData(ClipboardData(text: message.text));
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Скопировано в буфер обмена'),
@@ -108,7 +116,9 @@ class _ChatBubbleState extends State<ChatBubble> {
                       child: Icon(
                         Icons.copy_rounded,
                         size: 14,
-                        color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+                        color: theme.textTheme.bodySmall?.color?.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                     ),
                   ],
@@ -133,10 +143,14 @@ class _ChatBubbleState extends State<ChatBubble> {
     );
   }
 
-  Widget _buildAiResponse(BuildContext context, ThemeData theme, ChatMessage message) {
+  Widget _buildAiResponse(
+    BuildContext context,
+    ThemeData theme,
+    ChatMessage message,
+  ) {
     final rawText = message.text;
 
-    if (rawText.isEmpty && message.isGenerating) {
+    if (rawText.isEmpty && message.reasoning.isEmpty && message.isGenerating) {
       return const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -146,24 +160,18 @@ class _ChatBubbleState extends State<ChatBubble> {
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
           SizedBox(width: 10),
-          Text('Генерирую ответ...', style: TextStyle(fontStyle: FontStyle.italic)),
+          Text(
+            'Генерирую ответ...',
+            style: TextStyle(fontStyle: FontStyle.italic),
+          ),
         ],
       );
     }
 
-    // Check for thinking blocks: <think> ... </think>
-    if (rawText.contains('<think>')) {
-      final startIndex = rawText.indexOf('<think>') + 7;
-      final endIndex = rawText.indexOf('</think>');
-      final isStillThinking = endIndex == -1;
-
-      final thoughtContent = isStillThinking
-          ? rawText.substring(startIndex).trim()
-          : rawText.substring(startIndex, endIndex).trim();
-
-      final answerContent = isStillThinking
-          ? ''
-          : rawText.substring(endIndex + 8).trim();
+    if (message.reasoning.isNotEmpty) {
+      final isStillThinking = message.isGenerating && rawText.isEmpty;
+      final thoughtContent = message.reasoning;
+      final answerContent = rawText;
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,7 +197,10 @@ class _ChatBubbleState extends State<ChatBubble> {
                     });
                   },
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
                         Icon(
@@ -230,15 +241,22 @@ class _ChatBubbleState extends State<ChatBubble> {
                     ),
                   ),
                 ),
-                if ((_isThoughtExpanded || isStillThinking) && thoughtContent.isNotEmpty)
+                if ((_isThoughtExpanded || isStillThinking) &&
+                    thoughtContent.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(left: 12, right: 12, bottom: 10),
+                    padding: const EdgeInsets.only(
+                      left: 12,
+                      right: 12,
+                      bottom: 10,
+                    ),
                     child: Text(
                       thoughtContent,
                       style: theme.textTheme.bodySmall?.copyWith(
                         fontStyle: FontStyle.italic,
                         height: 1.4,
-                        color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.8),
+                        color: theme.textTheme.bodySmall?.color?.withValues(
+                          alpha: 0.8,
+                        ),
                       ),
                     ),
                   ),
@@ -246,9 +264,10 @@ class _ChatBubbleState extends State<ChatBubble> {
             ),
           ),
 
+          if (message.error != null) _buildError(theme, message.error!),
+
           // Main Final Answer
-          if (answerContent.isNotEmpty)
-            _buildMarkdown(theme, answerContent),
+          if (answerContent.isNotEmpty) _buildMarkdown(theme, answerContent),
 
           if (message.isGenerating && !isStillThinking)
             Padding(
@@ -270,7 +289,8 @@ class _ChatBubbleState extends State<ChatBubble> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildMarkdown(theme, rawText),
+        if (rawText.isNotEmpty) _buildMarkdown(theme, rawText),
+        if (message.error != null) _buildError(theme, message.error!),
         if (message.isGenerating)
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -292,10 +312,7 @@ class _ChatBubbleState extends State<ChatBubble> {
       data: text,
       selectable: true,
       styleSheet: MarkdownStyleSheet.fromTheme(theme).copyWith(
-        p: theme.textTheme.bodyMedium?.copyWith(
-          fontSize: 15,
-          height: 1.45,
-        ),
+        p: theme.textTheme.bodyMedium?.copyWith(fontSize: 15, height: 1.45),
         code: TextStyle(
           fontFamily: 'monospace',
           fontSize: 13,
@@ -309,11 +326,15 @@ class _ChatBubbleState extends State<ChatBubble> {
     );
   }
 
-  String _getCleanText(String text) {
-    if (text.contains('<think>') && text.contains('</think>')) {
-      final endIndex = text.indexOf('</think>') + 8;
-      return text.substring(endIndex).trim();
-    }
-    return text;
+  Widget _buildError(ThemeData theme, String error) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Text(
+        'Ошибка при генерации: $error',
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.error,
+        ),
+      ),
+    );
   }
 }
