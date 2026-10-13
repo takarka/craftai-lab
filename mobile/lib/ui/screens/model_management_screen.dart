@@ -18,6 +18,8 @@ class ModelManagementScreen extends StatefulWidget {
 }
 
 class _ModelManagementScreenState extends State<ModelManagementScreen> {
+  String _selectedFamily = 'Все';
+
   @override
   void initState() {
     super.initState();
@@ -30,9 +32,15 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
     final modelManager = widget.modelManager;
     final llmService = widget.llmService;
 
+    final filteredPresets = _selectedFamily == 'Все'
+        ? AppConstants.presetModels
+        : AppConstants.presetModels
+            .where((p) => p['family'] == _selectedFamily)
+            .toList();
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Управление моделью ИИ'),
+        title: const Text('Управление моделями ИИ'),
       ),
       body: ListenableBuilder(
         listenable: Listenable.merge([modelManager, llmService]),
@@ -73,7 +81,7 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                           Expanded(
                             child: Text(
                               llmService.isModelLoaded
-                                  ? 'Модель загружена в RAM'
+                                  ? 'Модель активна в памяти'
                                   : 'Модель не загружена',
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -85,12 +93,52 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                       const SizedBox(height: 8),
                       Text(
                         llmService.isModelLoaded
-                            ? '${llmService.currentModelName} (4 потока CPU)'
+                            ? '${llmService.currentModelName} • ${llmService.threads} потока CPU'
                             : llmService.loadStatus.isNotEmpty
                                 ? llmService.loadStatus
                                 : 'Выберите модель из локальных файлов или скачайте пресет ниже.',
                         style: theme.textTheme.bodyMedium,
                       ),
+
+                      const SizedBox(height: 12),
+
+                      // CPU Thread Selection
+                      Row(
+                        children: [
+                          Text(
+                            'Потоков CPU: ',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          SegmentedButton<int>(
+                            style: const ButtonStyle(
+                              visualDensity: VisualDensity.compact,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            segments: const [
+                              ButtonSegment(
+                                value: 2,
+                                label: Text('2 (эконом)'),
+                              ),
+                              ButtonSegment(
+                                value: 4,
+                                label: Text('4 (оптимально)'),
+                              ),
+                              ButtonSegment(
+                                value: 6,
+                                label: Text('6 (макс)'),
+                              ),
+                            ],
+                            selected: {llmService.threads},
+                            onSelectionChanged: (set) {
+                              llmService.setThreads(set.first);
+                            },
+                          ),
+                        ],
+                      ),
+
                       if (llmService.isLoadingModel) ...[
                         const SizedBox(height: 12),
                         const LinearProgressIndicator(),
@@ -100,7 +148,7 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                         OutlinedButton.icon(
                           onPressed: () => llmService.unloadModel(),
                           icon: const Icon(Icons.eject_rounded, size: 18),
-                          label: const Text('Выгрузить из оперативной памяти'),
+                          label: const Text('Выгрузить из RAM'),
                         ),
                       ],
                     ],
@@ -129,12 +177,10 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Expanded(
-                              child: Text(
-                                'Загрузка модели...',
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            Text(
+                              'Загрузка модели...',
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                             IconButton(
@@ -167,12 +213,10 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Text(
-                      'Локальные модели (.gguf)',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  Text(
+                    'Локальные модели (.gguf)',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   TextButton.icon(
@@ -201,7 +245,7 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                     child: Text(
                       'В папке приложения пока нет файлов .gguf. '
                       'Вы можете скачать пресет ниже или нажать "Выбрать с телефона" '
-                      'для выбора уже загруженного файла (например, Qwen3.5-2B-Q4_K_M.gguf).',
+                      'для выбора уже загруженного файла.',
                     ),
                   ),
                 )
@@ -296,28 +340,68 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
 
               const SizedBox(height: 24),
 
-              // 4. Preset Models Section
-              Text(
-                'Готовые пресеты моделей',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+              // 4. Preset Models Section with Filter Chips
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Каталог моделей',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // Family Filter Tabs
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    for (final family in ['Все', 'Qwen', 'Gemma'])
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          selected: _selectedFamily == family,
+                          avatar: family == 'Gemma'
+                              ? const Icon(Icons.scatter_plot_rounded, size: 16)
+                              : (family == 'Qwen'
+                                  ? const Icon(Icons.auto_awesome, size: 16)
+                                  : null),
+                          label: Text(
+                            family == 'Gemma'
+                                ? 'Google Gemma (${AppConstants.presetModels.where((p) => p['family'] == 'Gemma').length})'
+                                : (family == 'Qwen'
+                                    ? 'Alibaba Qwen (${AppConstants.presetModels.where((p) => p['family'] == 'Qwen').length})'
+                                    : 'Все (${AppConstants.presetModels.length})'),
+                          ),
+                          onSelected: (selected) {
+                            if (selected) {
+                              setState(() {
+                                _selectedFamily = family;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Нажмите «Скачать», чтобы загрузить проверенную квантованную GGUF модель из Hugging Face:',
-                style: theme.textTheme.bodySmall,
-              ),
+
               const SizedBox(height: 12),
 
-              ...AppConstants.presetModels.map((preset) {
+              ...filteredPresets.map((preset) {
                 final fileName = preset['fileName']!;
+                final family = preset['family'] ?? 'Qwen';
                 final isAlreadyDownloaded = modelManager.localModels
                     .any((m) => m.name == fileName);
 
+                final isGemma = family == 'Gemma';
+
                 return Card(
                   elevation: 0,
-                  margin: const EdgeInsets.only(bottom: 10),
+                  margin: const EdgeInsets.only(bottom: 12),
                   color: theme.colorScheme.surfaceContainerHighest,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -328,8 +412,29 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: isGemma
+                                    ? Colors.blue.withValues(alpha: 0.2)
+                                    : Colors.deepPurple.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                isGemma ? 'GOOGLE' : 'QWEN',
+                                style: TextStyle(
+                                  color: isGemma
+                                      ? Colors.blueAccent
+                                      : Colors.deepPurpleAccent,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 preset['name']!,
@@ -408,21 +513,19 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                         children: [
                           Icon(Icons.usb_rounded, color: Colors.blue, size: 20),
                           SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              'Быстрая передача по USB (ADB)',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue,
-                              ),
+                          Text(
+                            'Быстрая передача моделей по USB (ADB)',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
                             ),
                           ),
                         ],
                       ),
                       SizedBox(height: 8),
                       Text(
-                        'Чтобы не скачивать файл 1.4 ГБ по интернету, скопируйте его с компьютера за 20 секунд:\n'
-                        'adb push Qwen3.5-2B-Q4_K_M.gguf /sdcard/Download/\n'
+                        'Любой GGUF файл (Qwen, Gemma, Llama) можно за секунды передать через компьютер:\n'
+                        'adb push имя_файла.gguf /sdcard/Download/\n'
                         'Затем нажмите кнопку «Выбрать с телефона» выше.',
                         style: TextStyle(fontSize: 13, height: 1.4),
                       ),

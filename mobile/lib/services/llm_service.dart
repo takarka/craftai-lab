@@ -59,6 +59,16 @@ class LLMService extends ChangeNotifier {
     }
   }
 
+  int _threads = AppConstants.defaultThreads;
+  int get threads => _threads;
+
+  void setThreads(int value) {
+    if (_threads != value) {
+      _threads = value;
+      notifyListeners();
+    }
+  }
+
   bool get isModelLoaded => _isModelLoaded;
   bool get isLoadingModel => _isLoadingModel;
   bool get isGenerating => _isGenerating;
@@ -104,10 +114,11 @@ class LLMService extends ChangeNotifier {
     required String modelPath,
     required String modelDisplayName,
     int contextSize = AppConstants.defaultContextSize,
-    int threads = AppConstants.defaultThreads,
+    int? threads,
   }) async {
     if (_isLoadingModel) return false;
 
+    final actualThreads = threads ?? _threads;
     _isLoadingModel = true;
     _loadStatus = 'Инициализация движка llama.cpp...';
     notifyListeners();
@@ -116,7 +127,7 @@ class LLMService extends ChangeNotifier {
     debugPrint('═══════════════════════════════════════════════════════════');
     debugPrint('[LLM BENCHMARK] Начинается загрузка модели: $modelDisplayName');
     debugPrint('[LLM BENCHMARK] Путь: $modelPath');
-    debugPrint('[LLM BENCHMARK] Контекст: $contextSize, Потоков: $threads');
+    debugPrint('[LLM BENCHMARK] Контекст: $contextSize, Потоков: $actualThreads');
     debugPrint('[LLM BENCHMARK] RAM до загрузки: ${currentRamUsageMB.toStringAsFixed(1)} МБ');
 
     try {
@@ -134,8 +145,8 @@ class LLMService extends ChangeNotifier {
 
       final modelParams = ModelParams(
         contextSize: contextSize,
-        numberOfThreads: threads,
-        numberOfThreadsBatch: threads,
+        numberOfThreads: actualThreads,
+        numberOfThreadsBatch: actualThreads,
         useMmap: true,
       );
 
