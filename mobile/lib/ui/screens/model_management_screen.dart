@@ -70,12 +70,14 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                                 : theme.colorScheme.primary,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            llmService.isModelLoaded
-                                ? 'Модель загружена в RAM'
-                                : 'Модель не загружена',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
+                          Expanded(
+                            child: Text(
+                              llmService.isModelLoaded
+                                  ? 'Модель загружена в RAM'
+                                  : 'Модель не загружена',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],
@@ -127,10 +129,12 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Загрузка модели...',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
+                            Expanded(
+                              child: Text(
+                                'Загрузка модели...',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                             IconButton(
@@ -163,10 +167,12 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Локальные модели (.gguf)',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Text(
+                      'Локальные модели (.gguf)',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   TextButton.icon(
@@ -207,53 +213,80 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
 
                   return Card(
                     elevation: 0,
-                    margin: const EdgeInsets.only(bottom: 8),
+                    margin: const EdgeInsets.only(bottom: 10),
                     color: isThisLoaded
                         ? theme.colorScheme.primaryContainer.withValues(alpha: 0.3)
                         : theme.colorScheme.surfaceContainerHighest,
-                    child: ListTile(
-                      leading: Icon(
-                        Icons.memory_rounded,
-                        color: isThisLoaded
-                            ? theme.colorScheme.primary
-                            : theme.iconTheme.color,
-                      ),
-                      title: Text(
-                        m.name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text('Размер: ${m.formattedSize}'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (!isThisLoaded)
-                            FilledButton.tonal(
-                              onPressed: llmService.isLoadingModel
-                                  ? null
-                                  : () async {
-                                      final success =
-                                          await llmService.loadModel(
-                                        modelPath: m.path,
-                                        modelDisplayName: m.name,
-                                      );
-                                      if (success && context.mounted) {
-                                        Navigator.pop(context);
-                                      }
-                                    },
-                              child: const Text('Загрузить'),
-                            )
-                          else
-                            const Chip(
-                              label: Text('Активна'),
-                              backgroundColor: Colors.green,
-                              labelStyle: TextStyle(color: Colors.white),
-                            ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline_rounded,
-                                size: 20),
-                            onPressed: isThisLoaded
-                                ? null
-                                : () => modelManager.deleteModel(m.path),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.memory_rounded,
+                                color: isThisLoaded
+                                    ? theme.colorScheme.primary
+                                    : theme.iconTheme.color,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  m.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Размер: ${m.formattedSize}',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              if (!isThisLoaded)
+                                FilledButton.tonal(
+                                  onPressed: llmService.isLoadingModel
+                                      ? null
+                                      : () async {
+                                          final success =
+                                              await llmService.loadModel(
+                                            modelPath: m.path,
+                                            modelDisplayName: m.name,
+                                          );
+                                          if (success && context.mounted) {
+                                            Navigator.pop(context);
+                                          }
+                                        },
+                                  child: const Text('Загрузить в память'),
+                                )
+                              else
+                                const Chip(
+                                  label: Text('Активна в RAM'),
+                                  backgroundColor: Colors.green,
+                                  labelStyle: TextStyle(color: Colors.white),
+                                ),
+                              const Spacer(),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded,
+                                    size: 20),
+                                tooltip: 'Удалить',
+                                onPressed: isThisLoaded
+                                    ? null
+                                    : () => modelManager.deleteModel(m.path),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -375,11 +408,13 @@ class _ModelManagementScreenState extends State<ModelManagementScreen> {
                         children: [
                           Icon(Icons.usb_rounded, color: Colors.blue, size: 20),
                           SizedBox(width: 8),
-                          Text(
-                            'Быстрая передача по USB (ADB)',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
+                          Expanded(
+                            child: Text(
+                              'Быстрая передача по USB (ADB)',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
                             ),
                           ),
                         ],
