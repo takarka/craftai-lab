@@ -33,10 +33,23 @@ class WebSearchService {
     caseSensitive: false,
   );
 
-  bool containsUrl(String text) => _urlRegex.hasMatch(text);
+  String _cleanUrl(String raw) {
+    var url = raw.trim();
+    const trailingChars = {'»', '"', "'", '.', ',', ';', ':', '?', '!', ')', ']', '>'};
+    while (url.isNotEmpty && trailingChars.contains(url[url.length - 1])) {
+      url = url.substring(0, url.length - 1).trim();
+    }
+    return url;
+  }
+
+  bool containsUrl(String text) => extractUrls(text).isNotEmpty;
 
   List<String> extractUrls(String text) {
-    return _urlRegex.allMatches(text).map((m) => m.group(0)!).toList();
+    return _urlRegex
+        .allMatches(text)
+        .map((m) => _cleanUrl(m.group(0)!))
+        .where((u) => u.isNotEmpty)
+        .toList();
   }
 
   /// Fetches content from a URL directly
