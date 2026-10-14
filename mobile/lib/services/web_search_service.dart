@@ -77,6 +77,65 @@ class WebSearchService {
     }
   }
 
+  /// Decides if web search should be performed for this prompt.
+  /// Prevents wasteful searches for personal chat, greetings, names, and memory.
+  bool shouldSearchWeb(String prompt) {
+    final trimmed = prompt.trim();
+    if (trimmed.isEmpty) return false;
+    final lower = trimmed.toLowerCase();
+
+    // 1. Direct URLs always warrant reading
+    if (containsUrl(trimmed)) return true;
+
+    // 2. Weather queries always search
+    if (isWeatherQuery(trimmed)) return true;
+
+    // 3. Explicit web search commands
+    final explicitSearch = RegExp(
+      r'(поищи|найди в интернете|погугли|загугли|найди инфо|поиск в сети|веб-поиск|search)',
+      caseSensitive: false,
+    );
+    if (explicitSearch.hasMatch(lower)) return true;
+
+    // 4. Exclude personal greetings, identity, naming, memory, coding
+    final excludedPatterns = [
+      r'^(привет|здравствуй|салам|сәлем|добрый день|добрый вечер|доброе утро|хай|ку|hello|hi)\b',
+      r'^(как дела|как поживаешь|что делаешь|калайсын|қалайсың|how are you)\b',
+      r'^(кто ты|что ты|что умеешь|что можешь|сен кімсің|who are you)\b',
+      r'^(назови меня|меня зовут|мое имя|менің атым|call me|my name is)\b',
+      r'^(как меня зовут|как меня называть|как мое имя|менің атым кім|what is my name)\b',
+      r'^(запомни|есіңде сақта|помни|remember)\b',
+      r'^(спасибо|рахмет|благодарю|пока|до свидания|сау бол|thanks|bye)\b',
+      r'^(расскажи|сочини|напиши|придумай)\s+(анекдот|шутку|сказку|историю|стих|эссе)',
+      r'^(напиши|создай|исправь|оптимизируй)\s+(код|скрипт|функцию|класс|запрос|программу)',
+    ];
+    for (final pattern in excludedPatterns) {
+      if (RegExp(pattern, caseSensitive: false).hasMatch(lower)) {
+        return false;
+      }
+    }
+
+    // 5. Fact/Knowledge/Current events keywords
+    final searchTriggers = [
+      'новости', 'сегодня', 'сейчас', 'вчера', 'курс', 'валют', 'доллар', 'тенге',
+      'рубл', 'евро', 'акции', 'цена', 'стоимость', 'релиз', 'версия', 'обновление',
+      'президент', 'матч', 'счет', 'когда выйдет', 'последн', 'актуальн', 'кто выиграл',
+      'что произошло', 'что случилось', 'что такое', 'кто такой', 'где находится',
+      'сколько стоит', 'почему', 'зачем',
+    ];
+    if (searchTriggers.any((k) => lower.contains(k))) {
+      return true;
+    }
+
+    // Default for short conversational phrases (< 4 words) without question mark: false
+    final words = lower.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    if (words.length <= 4 && !lower.contains('?')) {
+      return false;
+    }
+
+    return true;
+  }
+
   /// Checks if query is weather-related (in RU, KK, or EN)
   bool isWeatherQuery(String query) {
     final lower = query.toLowerCase();

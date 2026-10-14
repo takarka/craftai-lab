@@ -41,6 +41,7 @@ class ChatContextManager {
     required bool Function() cancelled,
     required void Function(String summary, String throughId) onSummary,
     required void Function(String status) onStatus,
+    List<String> globalMemory = const [],
   }) async {
     final responseTokens = math.min(1024, contextSize ~/ 2);
     final budget = contextSize - responseTokens;
@@ -54,7 +55,11 @@ class ChatContextManager {
       final messages = [
         LlamaChatMessage.fromText(
           role: LlamaChatRole.system,
-          text: contextSystemPrompt(systemPrompt, summary),
+          text: contextSystemPrompt(
+            systemPrompt,
+            summary,
+            globalMemory: globalMemory,
+          ),
         ),
         ...turns.expand((turn) => turn.modelMessages),
         LlamaChatMessage.fromText(role: LlamaChatRole.user, text: userPrompt),

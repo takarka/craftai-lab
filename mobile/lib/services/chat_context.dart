@@ -50,10 +50,33 @@ List<LlamaChatMessage> buildChatContext(
   afterId: afterId,
 ).expand((turn) => turn.modelMessages).toList();
 
-String contextSystemPrompt(String systemPrompt, String summary) =>
-    summary.isEmpty
-    ? systemPrompt
-    : '$systemPrompt\n\nКраткое содержание предыдущей части этого диалога (используй как справочную информацию):\n$summary';
+String contextSystemPrompt(
+  String systemPrompt,
+  String summary, {
+  List<String> globalMemory = const [],
+}) {
+  final buffer = StringBuffer(systemPrompt);
+
+  if (globalMemory.isNotEmpty) {
+    buffer.writeln();
+    buffer.writeln();
+    buffer.writeln('=== ОБЩАЯ ДОЛГОСРОЧНАЯ ПАМЯТЬ О ПОЛЬЗОВАТЕЛЕ (ФАКТЫ) ===');
+    for (final fact in globalMemory) {
+      buffer.writeln('• $fact');
+    }
+    buffer.writeln('Всегда помни эти факты и учитывай их во всех ответах пользователю.');
+  }
+
+  if (summary.isNotEmpty) {
+    buffer.writeln();
+    buffer.writeln();
+    buffer.writeln(
+      'Краткое содержание предыдущей части этого диалога (используй как справочную информацию):\n$summary',
+    );
+  }
+
+  return buffer.toString();
+}
 
 ChatSession createChatSession(
   LlamaEngine engine,
@@ -61,10 +84,15 @@ ChatSession createChatSession(
   required String systemPrompt,
   String summary = '',
   String? summarizedThroughId,
+  List<String> globalMemory = const [],
 }) {
   final session = ChatSession(
     engine,
-    systemPrompt: contextSystemPrompt(systemPrompt, summary),
+    systemPrompt: contextSystemPrompt(
+      systemPrompt,
+      summary,
+      globalMemory: globalMemory,
+    ),
   );
   for (final message in buildChatContext(
     messages,

@@ -101,6 +101,9 @@ class LLMService extends ChangeNotifier {
         _activeId = archive.activeId;
         _selectedContextSize = archive.contextSize;
         _contextSize = archive.contextSize;
+        _globalMemory
+          ..clear()
+          ..addAll(archive.globalMemory);
       }
     } catch (e) {
       _storageWritable = false;
@@ -148,6 +151,7 @@ class LLMService extends ChangeNotifier {
           conversations: [..._chats],
           activeId: _activeId,
           contextSize: _selectedContextSize,
+          globalMemory: [..._globalMemory],
         ),
       );
       if (_storageError != null) {
@@ -264,6 +268,110 @@ class LLMService extends ChangeNotifier {
       _enableWebSearch = value;
       notifyListeners();
     }
+  }
+
+  // Global / Shared Memory (facts remembered across all chats)
+  final List<String> _globalMemory = [];
+  List<String> get globalMemory => List.unmodifiable(_globalMemory);
+
+  void addGlobalMemory(String fact) {
+    final clean = fact.trim();
+    if (clean.isEmpty || _globalMemory.contains(clean)) return;
+    _globalMemory.add(clean);
+    notifyListeners();
+    _scheduleSave();
+    debugPrint('[GLOBAL MEMORY] Добавлен факт: $clean');
+  }
+
+  void removeGlobalMemory(int index) {
+    if (index >= 0 && index < _globalMemory.length) {
+      final removed = _globalMemory.removeAt(index);
+      notifyListeners();
+      _scheduleSave();
+      debugPrint('[GLOBAL MEMORY] Удален факт: $removed');
+    }
+  }
+
+  void updateGlobalMemory(int index, String newFact) {
+    final clean = newFact.trim();
+    if (index >= 0 && index < _globalMemory.length && clean.isNotEmpty) {
+      _globalMemory[index] = clean;
+      notifyListeners();
+      _scheduleSave();
+      debugPrint('[GLOBAL MEMORY] Обновлен факт: $clean');
+    }
+  }
+
+  void clearGlobalMemory() {
+    if (_globalMemory.isNotEmpty) {
+      _globalMemory.clear();
+      notifyListeners();
+      _scheduleSave();
+      debugPrint('[GLOBAL MEMORY] Память очищена');
+    }
+  }
+
+  void _detectAndRememberFacts(String userPrompt) {
+    final text = userPrompt.trim();
+
+    // 1. "Назови меня Арка" / "Зови меня Арка" / "Call me Arka"
+    final nameMatch1 = RegExp(
+      r'(?:назови|зови|считай)\s+меня\s+([А-ЯЁа-яёA-Za-zӘәҒғҚқҢңӨөҰұҮүҺһІі\-]+)',
+      caseSensitive: false,
+    ).firstMatch(text);
+
+    // 2. "Меня зовут Арка" / "Мое имя Арка" / "Менің атым Арка"
+    final nameMatch2 = RegExp(
+      r'(?:меня\s+зовут|мое\s+имя|моё\s+имя|менің\s+атым)\s+([А-ЯЁа-яёA-Za-zӘәҒғҚқҢңӨөҰұҮүҺһІі\-]+)',
+      caseSensitive: false,
+    ).firstMatch(text);
+
+    final extractedName = nameMatch1?.group(1) ?? nameMatch2?.group(1);
+    if (extractedName != null && extractedName.isNotEmpty) {
+      final cleanName = extractedName.replaceAll(RegExp(r'[\.,!?]'), '').trim();
+      if (cleanName.length >= 2) {
+        _setUniqueFact('Имя пользователя', 'Имя пользователя: $cleanName');
+        return;
+      }
+    }
+
+    // 3. "Запомни: ..." / "Запомни, что ..." / "Есіңде сақта: ..."
+    final rememberMatch = RegExp(
+      r'(?:запомни|есіңде\s+сақта|remember)[,:]?\s*(?:что\s+)?(.+)',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (rememberMatch != null) {
+      final fact = rememberMatch.group(1)?.replaceAll(RegExp(r'[\.!?]+$'), '').trim();
+      if (fact != null && fact.isNotEmpty && fact.length >= 3) {
+        addGlobalMemory(fact);
+        return;
+      }
+    }
+
+    // 4. "Я живу в Астане" / "Мен Астанада тұрамын"
+    final cityMatch = RegExp(
+      r'(?:я\s+живу\s+в|город\s+проживания|мой\s+город)\s+([А-ЯЁа-яёA-Za-zӘәҒғҚқҢңӨөҰұҮүҺһІі\-]+)',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (cityMatch != null) {
+      final city = cityMatch.group(1)?.replaceAll(RegExp(r'[\.,!?]'), '').trim();
+      if (city != null && city.length >= 3) {
+        _setUniqueFact('Город проживания', 'Город проживания: $city');
+        return;
+      }
+    }
+  }
+
+  void _setUniqueFact(String prefix, String newFact) {
+    final idx = _globalMemory.indexWhere((f) => f.startsWith(prefix));
+    if (idx != -1) {
+      _globalMemory[idx] = newFact;
+    } else {
+      _globalMemory.add(newFact);
+    }
+    notifyListeners();
+    _scheduleSave();
+    debugPrint('[GLOBAL MEMORY] Сохранен уникальный факт: $newFact');
   }
 
   int _threads = AppConstants.defaultThreads;
@@ -474,8 +582,11 @@ class LLMService extends ChangeNotifier {
     bool isFirstToken = true;
 
     try {
+      // Автоматически распознаем и запоминаем факты о пользователе (имя, город, заметки)
+      _detectAndRememberFacts(userPrompt);
+
       String effectivePrompt = userPrompt;
-      if (_enableWebSearch) {
+      if (_enableWebSearch && _webSearchService.shouldSearchWeb(userPrompt)) {
         _searchStatus = 'Поиск в интернете...';
         notifyListeners();
         try {
@@ -526,6 +637,7 @@ class LLMService extends ChangeNotifier {
             activeConversation.withSummary(summary, throughId),
           );
         },
+        globalMemory: _globalMemory,
       );
       if (_stopRequested || epoch != _chatEpoch) return;
       _contextTokens = prepared.promptTokens;
@@ -643,6 +755,7 @@ class LLMService extends ChangeNotifier {
     systemPrompt: _systemPrompt,
     summary: activeConversation.summary,
     summarizedThroughId: activeConversation.summarizedThroughId,
+    globalMemory: _globalMemory,
   );
 
   void _updateReply(

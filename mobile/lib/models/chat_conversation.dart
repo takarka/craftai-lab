@@ -75,18 +75,22 @@ class ChatArchive {
   final List<ChatConversation> conversations;
   final String activeId;
   final int contextSize;
+  final List<String> globalMemory;
 
   ChatArchive({
     required List<ChatConversation> conversations,
     required this.activeId,
     this.contextSize = 2048,
-  }) : conversations = List.unmodifiable(conversations);
+    List<String> globalMemory = const [],
+  })  : conversations = List.unmodifiable(conversations),
+        globalMemory = List.unmodifiable(globalMemory);
 
   Map<String, dynamic> toJson() => {
     'version': 1,
     'activeId': activeId,
     'contextSize': contextSize,
     'conversations': conversations.map((c) => c.toJson()).toList(),
+    'globalMemory': globalMemory,
   };
 
   factory ChatArchive.fromJson(Map<String, dynamic> json) {
@@ -108,10 +112,15 @@ class ChatArchive {
     if (![1024, 2048, 4096, 8192].contains(size)) {
       throw const FormatException('Invalid context size');
     }
+    final memory = (json['globalMemory'] as List?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        const <String>[];
     return ChatArchive(
       conversations: chats,
       activeId: activeId,
       contextSize: size,
+      globalMemory: memory,
     );
   }
 }

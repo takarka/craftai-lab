@@ -6,6 +6,7 @@ import '../../services/model_manager_service.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/chat_input_bar.dart';
 import '../widgets/generation_stats_badge.dart';
+import '../widgets/global_memory_sheet.dart';
 import 'model_management_screen.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -142,6 +143,21 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         actions: [
           IconButton(
+            icon: ListenableBuilder(
+              listenable: llm,
+              builder: (context, _) {
+                final count = llm.globalMemory.length;
+                return Badge(
+                  isLabelVisible: count > 0,
+                  label: Text('$count'),
+                  child: const Icon(Icons.psychology_rounded),
+                );
+              },
+            ),
+            tooltip: 'Общая память модели',
+            onPressed: () => GlobalMemorySheet.show(context, llm),
+          ),
+          IconButton(
             icon: const Icon(Icons.add_comment_outlined),
             tooltip: 'Новый чат',
             onPressed: llm.canChangeChat
@@ -242,6 +258,19 @@ class _ChatScreenState extends State<ChatScreen> {
                 _inputController.clear();
                 llm.createNewChat();
                 Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.psychology_rounded),
+              title: const Text('Общая память модели'),
+              subtitle: Text(
+                llm.globalMemory.isEmpty
+                    ? 'Факты не сохранены'
+                    : '${llm.globalMemory.length} фактов сохранено',
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                GlobalMemorySheet.show(context, llm);
               },
             ),
             const Divider(),
