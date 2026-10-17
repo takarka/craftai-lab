@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>D05 Начать заново</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+.scr{width:390px;height:844px;box-sizing:border-box;position:relative;background:#F3F5FA;color:#0B1B33;font-family:'Onest',sans-serif;font-size:15px;line-height:1.4;overflow:hidden}
+.scr *{box-sizing:border-box}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 18px;border-radius:12px;font-family:inherit;font-size:16px;font-weight:600;border:0;cursor:pointer}
+.btn.d{background:#A23B00;color:#fff}
+.btn.s{background:#fff;color:#0047BA;border:1.5px solid #0047BA}
+</style>
+</helmet>
+<div class="scr">
+  <div style="position:absolute;inset:0;background:rgba(11,27,51,.55)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;padding:12px 24px 32px;display:flex;flex-direction:column;gap:14px">
+    <div style="align-self:center;width:40px;height:6px;border-radius:3px;background:#C4CFE3"></div>
+    <div style="width:48px;height:48px;border-radius:14px;background:#FFE8D6;color:#A23B00;display:flex;align-items:center;justify-content:center">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+    </div>
+    <h1 style="margin:0;font-size:24px;line-height:1.2;font-weight:700">Начать заново?</h1>
+    <div style="color:#4A5872">Будет удалено только на этом телефоне:</div>
+    <ul style="margin:0;padding-left:20px;color:#0B1B33;display:flex;flex-direction:column;gap:4px">
+      <li>инструкции и все их версии</li>
+      <li>память и загруженные документы</li>
+      <li>прогресс по курсу и модули персонажа</li>
+    </ul>
+    <div style="background:#E3ECFB;border-radius:12px;padding:12px;font-size:14px;color:#0B1B33">Аккаунт CraftAI останется. Вернуть удалённое нельзя — копии на сервере нет.</div>
+    <a class="btn d" href="S03.dc.html" style="text-decoration:none">Удалить и начать заново</a>
+    <a class="btn s" href="S11.dc.html" style="text-decoration:none">Отмена</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

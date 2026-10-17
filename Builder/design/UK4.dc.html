@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>UI-кит · Персонаж</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+.kit{width:1200px;height:1260px;box-sizing:border-box;padding:40px 44px;background:#fff;color:#0B1B33;font-family:'Onest',sans-serif;font-size:15px;line-height:1.4;overflow:hidden;display:flex;flex-direction:column;gap:22px}
+.kit *{box-sizing:border-box}
+.kh{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #E3ECFB;padding-bottom:14px}
+.kh h1{margin:0;font-size:30px;font-weight:700;letter-spacing:-.01em}
+.kh span{font-size:14px;color:#4A5872}
+.cap{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#4A5872}
+</style>
+</helmet>
+<div class="kit">
+  <div class="kh"><h1>UI-кит · Персонаж</h1><span>Каждый пройденный уровень добавляет модуль. Непройденный модуль виден на 14%.</span></div>
+  <div style="display:grid;grid-template-columns:repeat(3,320px);gap:20px 24px"><div style="display:flex;flex-direction:column;gap:8px"><dc-import name="Char" level="0" hint-size="320px,400px"></dc-import><div><b>Пустой ассистент</b><div class="cap">После онбординга, модулей нет</div></div></div><div style="display:flex;flex-direction:column;gap:8px"><dc-import name="Char" level="1" hint-size="320px,400px"></dc-import><div><b>Имя</b><div class="cap">Уровень 1 · антенна</div></div></div><div style="display:flex;flex-direction:column;gap:8px"><dc-import name="Char" level="2" hint-size="320px,400px"></dc-import><div><b>Инструкции</b><div class="cap">Уровень 2 · датчик справа</div></div></div><div style="display:flex;flex-direction:column;gap:8px"><dc-import name="Char" level="3" hint-size="320px,400px"></dc-import><div><b>Знания</b><div class="cap">Уровень 3 · книга слева</div></div></div><div style="display:flex;flex-direction:column;gap:8px"><dc-import name="Char" level="4" hint-size="320px,400px"></dc-import><div><b>Память</b><div class="cap">Уровень 4 · плашка на груди</div></div></div><div style="display:flex;flex-direction:column;gap:8px"><dc-import name="Char" level="5" hint-size="320px,400px"></dc-import><div><b>Инструменты</b><div class="cap">Уровень 5 · ноги</div></div></div></div>
+  <div style="font-size:13px;color:#4A5872;max-width:900px">Компонент «Персонаж» с параметром level от 0 до 5. Цвета тела и модулей берутся из палитры: синий корпус, оранжевая антенна, светло-оранжевые книга и плашка памяти. В шапках и таб-баре используется уменьшенная голова без модулей.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":1260}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

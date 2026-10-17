@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>S01 Знакомство</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+.scr{width:390px;height:844px;box-sizing:border-box;display:flex;flex-direction:column;background:#F3F5FA;color:#0B1B33;font-family:'Onest',sans-serif;font-size:15px;line-height:1.4;overflow:hidden}
+.scr *{box-sizing:border-box}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 18px;border-radius:12px;font-family:inherit;font-size:16px;font-weight:600;border:0;cursor:pointer}
+.btn.p{background:#0047BA;color:#fff}
+.card{background:#fff;border-radius:18px;padding:16px;display:flex;gap:14px;align-items:flex-start;box-shadow:0 1px 2px rgba(11,27,51,.08)}
+.ic{flex:none;width:44px;height:44px;border-radius:12px;background:#E3ECFB;color:#0047BA;display:flex;align-items:center;justify-content:center}
+</style>
+</helmet>
+<div class="scr" style="padding:20px 24px 24px">
+  <div style="display:flex;gap:6px;padding-top:8px">
+    <div style="flex:1;height:6px;border-radius:3px;background:#0047BA"></div>
+    <div style="flex:1;height:6px;border-radius:3px;background:#C4CFE3"></div>
+    <div style="flex:1;height:6px;border-radius:3px;background:#C4CFE3"></div>
+  </div>
+  <div style="padding-top:32px">
+    <h1 style="margin:0;font-size:28px;line-height:1.15;font-weight:700;letter-spacing:-.01em">Вы не просто пользуетесь ИИ — вы его собираете</h1>
+    <p style="margin:12px 0 0;color:#4A5872">Пять уровней. На каждом ваш ассистент получает новый «модуль», а вы узнаёте, как он работает внутри.</p>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:12px;padding-top:24px">
+    <div class="card">
+      <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h6"/></svg></div>
+      <div><div style="font-weight:700">Учите ассистента своей работе</div><div style="color:#4A5872;font-size:14px">Инструкции, память и документы вашего предмета.</div></div>
+    </div>
+    <div class="card">
+      <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></div>
+      <div><div style="font-weight:700">Заглядывайте «Под капот»</div><div style="color:#4A5872;font-size:14px">Видите промпт, модель, токены и источники ответа.</div></div>
+    </div>
+    <div class="card">
+      <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/></svg></div>
+      <div><div style="font-weight:700">Знаете, где ваши данные</div><div style="color:#4A5872;font-size:14px">У каждого ответа есть метка: на телефоне или в облаке.</div></div>
+    </div>
+  </div>
+  <a class="btn p" href="S02.dc.html" style="text-decoration:none">Далее</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
