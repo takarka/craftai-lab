@@ -11,6 +11,8 @@ import 'domain/context_assembler.dart';
 import 'domain/conversation.dart';
 import 'infrastructure/chat_stream_client.dart';
 import 'infrastructure/persistent_chat_repository.dart';
+import '../trace/domain/request_trace.dart';
+import '../trace/trace_providers.dart';
 
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
   final db = ref.watch(storageDatabaseProvider);
@@ -316,6 +318,9 @@ class ChatSessionNotifier extends Notifier<ChatState> {
 
     _currentCancellationToken = ChatCancellationToken();
     _bufferedText = '';
+    final startTime = DateTime.now().toUtc();
+    int? serverPromptTokens;
+    int? serverCompletionTokens;
 
     // Setup coalescing timer (flushes text updates every 50ms)
     _coalescingTimer?.cancel();
@@ -341,6 +346,9 @@ class ChatSessionNotifier extends Notifier<ChatState> {
           state = state.copyWith(activeModelId: event.modelId);
         } else if (event is TextDeltaStreamEvent) {
           _bufferedText += event.text;
+        } else if (event is UsageStreamEvent) {
+          serverPromptTokens = event.inputTokens;
+          serverCompletionTokens = event.outputTokens;
         } else if (event is TerminalStreamEvent) {
           _slowTimer?.cancel();
           _coalescingTimer?.cancel();
@@ -371,6 +379,28 @@ class ChatSessionNotifier extends Notifier<ChatState> {
           if (!conversation.isEphemeral) {
             await repo.saveMessage(finalMsg);
           }
+
+          // Save Execution Trace
+          final durationMs = DateTime.now().toUtc().difference(startTime).inMilliseconds;
+          final trace = RequestTrace.fromExecution(
+            requestId: requestId,
+            ownerId: ownerId,
+            conversationId: conversation.id,
+            modelCategory: selectedCategory.id,
+            assistantVersion: 1,
+            userPrompt: trimmed,
+            responseText: _bufferedText.isEmpty ? finalMsg.content : _bufferedText,
+            durationMs: durationMs,
+            status: event.isInterrupted
+                ? TraceStatus.interrupted
+                : (event.isError ? TraceStatus.error : TraceStatus.completed),
+            errorCode: event.isError ? (event.code ?? 'Error') : null,
+            createdAtUtc: startTime,
+            serverPromptTokens: serverPromptTokens,
+            serverCompletionTokens: serverCompletionTokens,
+            costTier: selectedCategory.priceRating,
+          );
+          await ref.read(traceRepositoryProvider).saveTrace(trace);
           break;
         }
       }
@@ -401,6 +431,24 @@ class ChatSessionNotifier extends Notifier<ChatState> {
       if (!conversation.isEphemeral) {
         await repo.saveMessage(failedMsg);
       }
+
+      // Save Execution Trace on catch
+      final durationMs = DateTime.now().toUtc().difference(startTime).inMilliseconds;
+      final trace = RequestTrace.fromExecution(
+        requestId: requestId,
+        ownerId: ownerId,
+        conversationId: conversation.id,
+        modelCategory: selectedCategory.id,
+        assistantVersion: 1,
+        userPrompt: trimmed,
+        responseText: _bufferedText,
+        durationMs: durationMs,
+        status: TraceStatus.error,
+        errorCode: errorMsg,
+        createdAtUtc: startTime,
+        costTier: selectedCategory.priceRating,
+      );
+      await ref.read(traceRepositoryProvider).saveTrace(trace);
     } finally {
       _slowTimer?.cancel();
       _coalescingTimer?.cancel();

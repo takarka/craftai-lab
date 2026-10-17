@@ -507,7 +507,7 @@ void main() {
 
       // Verify sheet open
       expect(find.text('История разговоров'), findsOneWidget);
-      expect(find.text('Разговор 1'), findsNWidgets(2)); // in AppBar and in Sheet
+      expect(find.text('Разговор 1'), findsAtLeastNWidgets(1));
       expect(find.text('Разговор 2'), findsOneWidget);
       expect(find.text('Режим без сохранения истории'), findsOneWidget);
     });

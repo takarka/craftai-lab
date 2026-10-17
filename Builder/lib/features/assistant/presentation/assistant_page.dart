@@ -14,6 +14,7 @@ import '../../models/domain/model_category.dart';
 import '../../models/model_providers.dart';
 import '../../onboarding/presentation/d02_consent_sheet.dart';
 import '../../policy/policy_providers.dart';
+import '../../trace/presentation/trace_sheet.dart';
 
 class AssistantPage extends ConsumerStatefulWidget {
   const AssistantPage({super.key, required this.ownerId});
@@ -540,11 +541,24 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        BuilderButton(
-                          key: const Key('chat.retryBtn'),
-                          label: 'Повторить запрос',
-                          variant: BuilderButtonVariant.secondary,
-                          onPressed: () => ref.read(chatSessionProvider(widget.ownerId).notifier).retryLast(),
+                        Row(
+                          children: [
+                            BuilderButton(
+                              key: const Key('chat.retryBtn'),
+                              label: 'Повторить запрос',
+                              variant: BuilderButtonVariant.secondary,
+                              onPressed: () => ref.read(chatSessionProvider(widget.ownerId).notifier).retryLast(),
+                            ),
+                            if (message.requestId != null) ...[
+                              const SizedBox(width: 8),
+                              BuilderButton(
+                                key: Key('chat.errorTraceBtn_${message.id}'),
+                                label: 'Под капотом',
+                                variant: BuilderButtonVariant.text,
+                                onPressed: () => TraceSheet.show(context, requestId: message.requestId!),
+                              ),
+                            ],
+                          ],
                         ),
                       ],
                     ),
@@ -592,6 +606,14 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                   }
                                 }
                               },
+                      ),
+                      IconButton(
+                        key: Key('chat.traceBtn_${message.id}'),
+                        icon: const Icon(Icons.tune, size: 16, color: BuilderColors.primary),
+                        tooltip: 'Под капотом',
+                        onPressed: message.requestId != null
+                            ? () => TraceSheet.show(context, requestId: message.requestId!)
+                            : null,
                       ),
                       const Tooltip(
                         message: 'Сохранение в заметки станет доступно на Уровне 5 (Инструменты)',
