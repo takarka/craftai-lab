@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>S26 Итог уровня</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+.scr{width:390px;height:844px;box-sizing:border-box;display:flex;flex-direction:column;background:#F3F5FA;color:#0B1B33;font-family:'Onest',sans-serif;font-size:15px;line-height:1.4;overflow:hidden}
+.scr *{box-sizing:border-box}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 18px;border-radius:12px;font-family:inherit;font-size:16px;font-weight:600;border:0;cursor:pointer}
+.btn.p{background:#0047BA;color:#fff}
+.btn.s{background:#fff;color:#0047BA;border:1.5px solid #0047BA}
+.ba{flex:1;min-width:0;background:#fff;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px;box-shadow:0 1px 2px rgba(11,27,51,.08);font-size:13px}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px;color:#4A5872}
+</style>
+</helmet>
+<div class="scr" style="padding:20px 24px 24px">
+  <div style="padding-top:12px;text-align:center">
+    <div style="font-size:13px;font-weight:700;color:#A23B00;letter-spacing:.06em;text-transform:uppercase">Уровень 4 пройден</div>
+    <h1 style="margin:6px 0 0;font-size:28px;line-height:1.15;font-weight:700">Вы научились давать ассистенту память</h1>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px">
+    <svg viewBox="0 0 200 200" width="190" height="190" role="img" aria-label="Персонаж с четырьмя модулями из пяти">
+      <line x1="100" y1="56" x2="100" y2="36" stroke="#0B1B33" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="100" cy="28" r="10" fill="#E8772E"/>
+      <g opacity="0.14"><rect x="62" y="158" width="26" height="22" rx="8" fill="#0B1B33"/><rect x="112" y="158" width="26" height="22" rx="8" fill="#0B1B33"/></g>
+      <rect x="40" y="56" width="120" height="108" rx="34" fill="#0047BA"/>
+      <rect x="56" y="76" width="88" height="58" rx="22" fill="#E3ECFB"/>
+      <circle cx="82" cy="104" r="7" fill="#0B1B33"/>
+      <circle cx="118" cy="104" r="7" fill="#0B1B33"/>
+      <path d="M88 120 Q100 128 112 120" fill="none" stroke="#0B1B33" stroke-width="4" stroke-linecap="round"/>
+      <rect x="78" y="142" width="44" height="14" rx="7" fill="#FFB27A"/>
+      <rect x="14" y="88" width="26" height="48" rx="8" fill="#FFB27A" stroke="#A23B00" stroke-width="3"/>
+      <circle cx="172" cy="112" r="18" fill="#E3ECFB" stroke="#0B1B33" stroke-width="3"/>
+      <circle cx="172" cy="112" r="6" fill="#E8772E"/>
+    </svg>
+    <div style="text-align:center"><b>Новый модуль: «Память»</b><div style="font-size:14px;color:#4A5872">Модулей: 4 из 5</div></div>
+    <div style="display:flex;gap:10px;width:100%">
+      <div class="ba"><b>Было</b><span>Каждый диалог с чистого листа.</span></div>
+      <div class="ba" style="border:1.5px solid #0047BA"><b>Стало</b><span>Факты о вашем классе подставляются сами.</span></div>
+    </div>
+  </div>
+  <a class="btn p" href="S20.dc.html" style="text-decoration:none">К следующему уровню</a>
+  <a class="btn s" href="Main.dc.html" style="text-decoration:none;margin-top:10px">Попробовать ассистента</a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

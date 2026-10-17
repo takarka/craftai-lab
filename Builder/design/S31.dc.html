@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>S31 Под капотом</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+.scr{width:390px;height:844px;box-sizing:border-box;display:flex;flex-direction:column;background:#F3F5FA;color:#0B1B33;font-family:'Onest',sans-serif;font-size:15px;line-height:1.4;overflow:hidden}
+.scr *{box-sizing:border-box}
+.chip{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:13px;background:#E3ECFB;color:#0047BA;font-size:12px;font-weight:600}
+.chip.o{background:#FFE8D6;color:#A23B00}
+.blk{background:#fff;border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;box-shadow:0 1px 2px rgba(11,27,51,.08)}
+.blk .h{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;letter-spacing:.04em;color:#4A5872;text-transform:uppercase}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#0B1B33;line-height:1.5}
+.seg{flex:1;min-height:44px;display:flex;align-items:center;justify-content:center;border-radius:12px;font-size:14px;font-weight:600;color:#4A5872}
+.seg.on{background:#fff;color:#0047BA;box-shadow:0 1px 2px rgba(11,27,51,.12)}
+</style>
+</helmet>
+<div class="scr">
+  <div style="display:flex;align-items:center;gap:4px;padding:10px 8px 8px 4px;background:#fff;border-bottom:1px solid #E3ECFB">
+    <a href="Main.dc.html" aria-label="Назад" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#0047BA">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </a>
+    <div style="flex:1;font-size:18px;font-weight:700">Под капотом</div>
+    <span class="chip o">Данные за рубежом</span>
+  </div>
+  <div style="display:flex;gap:4px;margin:12px 16px 0;padding:4px;background:#E3ECFB;border-radius:14px">
+    <div class="seg on">Запрос</div><div class="seg">Ответ</div><div class="seg">Расход</div>
+  </div>
+  <div style="padding:10px 16px 0;font-size:14px;color:#4A5872">Именно из этих частей собран запрос, который ушёл к модели.</div>
+  <div style="flex:1;overflow:hidden;padding:10px 16px 0;display:flex;flex-direction:column;gap:8px">
+    <div class="blk" style="border-left:0;border:1.5px solid #0047BA">
+      <div class="h"><span>1 · Инструкция (v3)</span><span class="chip">на телефоне</span></div>
+      <div class="mono">Ты — помощник учителя математики 7–8 классов. Отвечай кратко, объясняй пошагово…</div>
+    </div>
+    <div class="blk">
+      <div class="h"><span>2 · Память</span><span class="chip">на телефоне</span></div>
+      <div class="mono">В классе 28 учеников. Урок 45 минут.</div>
+    </div>
+    <div class="blk">
+      <div class="h"><span>3 · Найдено в документах</span><span class="chip">2 фрагмента</span></div>
+      <div class="mono">«Учебник алгебры.pdf», с. 84: линейное уравнение — это уравнение вида ax + b = 0…</div>
+    </div>
+    <div class="blk">
+      <div class="h"><span>4 · Ваше сообщение</span></div>
+      <div class="mono">Составь проверочную по теме «Линейные уравнения», 7 класс, 4 задания.</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;background:#0047BA;color:#fff;border-radius:18px;padding:12px 14px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      <div style="flex:1"><div style="font-weight:700">Модель: рабочая</div><div class="mono" style="color:#E3ECFB">через сервер CraftAI и OpenRouter</div></div>
+      <a href="S32.dc.html" style="color:#fff;font-weight:600;text-decoration:underline;min-height:44px;display:flex;align-items:center">Сравнить</a>
+    </div>
+  </div>
+  <div style="height:20px"></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

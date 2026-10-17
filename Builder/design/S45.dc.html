@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>S45 Разрешения</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+.scr{width:390px;height:844px;box-sizing:border-box;display:flex;flex-direction:column;background:#F3F5FA;color:#0B1B33;font-family:'Onest',sans-serif;font-size:15px;line-height:1.4;overflow:hidden}
+.scr *{box-sizing:border-box}
+.chip{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:13px;background:#E3ECFB;color:#0047BA;font-size:12px;font-weight:600}
+.chip.o{background:#FFE8D6;color:#A23B00}
+.row{background:#fff;border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;min-height:64px;box-shadow:0 1px 2px rgba(11,27,51,.08)}
+.sub{font-size:13px;color:#4A5872}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 14px;border-radius:12px;font-family:inherit;font-size:15px;font-weight:600;border:1.5px solid #0047BA;cursor:pointer;background:#fff;color:#0047BA}
+</style>
+</helmet>
+<div class="scr">
+  <div style="display:flex;align-items:center;gap:4px;padding:10px 8px 8px 4px;background:#fff;border-bottom:1px solid #E3ECFB">
+    <a href="S43.dc.html" aria-label="Назад" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#0047BA">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </a>
+    <div style="flex:1;font-size:18px;font-weight:700">Разрешения</div>
+  </div>
+  <div style="padding:12px 16px 0;font-size:14px;color:#4A5872">Что ассистенту разрешено на этом телефоне. Отозвать можно в любой момент.</div>
+  <div style="flex:1;overflow:hidden;padding:12px 16px 0;display:flex;flex-direction:column;gap:10px">
+    <div class="row"><div style="flex:1"><div style="font-weight:600">Читать календарь</div><div class="sub">Видит события, чтобы подобрать время</div></div><span class="chip">разрешено</span></div>
+    <div class="row"><div style="flex:1"><div style="font-weight:600">Создавать события</div><div class="sub">Каждый раз спрашивает «Создать?»</div></div><span class="chip">с подтверждением</span></div>
+    <div class="row"><div style="flex:1"><div style="font-weight:600">Звонить и писать</div><div class="sub">Только готовит; кнопку нажимаете вы</div></div><span class="chip">с подтверждением</span></div>
+    <div class="row"><div style="flex:1"><div style="font-weight:600">Поиск в интернете</div><div class="sub">Запрос уходит через сервер CraftAI</div></div><span class="chip o">выключено</span></div>
+    <div style="background:#E3ECFB;border-radius:14px;padding:12px 14px;font-size:14px">Ассистент не читает чужие сообщения и журнал звонков и ничего не отправляет сам.</div>
+  </div>
+  <div style="padding:12px 16px 24px"><button class="btn" style="width:100%">Открыть системные настройки</button></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>S50 Профиль</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+.scr{width:390px;height:844px;box-sizing:border-box;display:flex;flex-direction:column;background:#F3F5FA;color:#0B1B33;font-family:'Onest',sans-serif;font-size:15px;line-height:1.4;overflow:hidden}
+.scr *{box-sizing:border-box}
+.tile{flex:none;width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#E3ECFB;color:#0047BA}
+.tile.o{background:#FFE8D6;color:#A23B00}
+.item{background:#fff;border-radius:18px;padding:0 14px;display:flex;align-items:center;gap:12px;min-height:56px;text-decoration:none;color:#0B1B33;box-shadow:0 1px 2px rgba(11,27,51,.08)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:56px;font-size:12px;font-weight:600;color:#4A5872;text-decoration:none}
+.tab.on{color:#0047BA}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px;color:#4A5872}
+</style>
+</helmet>
+<div class="scr">
+  <div style="padding:24px 16px 16px;background:#fff;border-bottom:1px solid #E3ECFB;display:flex;gap:14px;align-items:center">
+    <div style="width:64px;height:64px;border-radius:32px;background:#0047BA;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700">А</div>
+    <div style="flex:1;min-width:0"><div style="font-size:20px;font-weight:700">Арка</div><div class="mono">name@school.kz</div><div style="font-size:13px;color:#4A5872">Математика · 5–9 классы</div></div>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:14px 16px 0;display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;gap:10px">
+      <div style="flex:1;background:#fff;border-radius:18px;padding:12px;box-shadow:0 1px 2px rgba(11,27,51,.08)"><div style="font-size:24px;font-weight:700;color:#0047BA">4 из 5</div><div style="font-size:13px;color:#4A5872">уровней пройдено</div></div>
+      <div style="flex:1;background:#fff;border-radius:18px;padding:12px;box-shadow:0 1px 2px rgba(11,27,51,.08)"><div style="font-size:24px;font-weight:700;color:#E8772E">4</div><div style="font-size:13px;color:#4A5872">модуля собрано</div></div>
+    </div>
+    <a class="item" href="S53.dc.html"><span class="tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></svg></span><span style="flex:1;font-weight:600">Достижения</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A5872" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></a>
+    <a class="item" href="S54.dc.html"><span class="tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></span><span style="flex:1;font-weight:600">Настройки приложения</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A5872" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></a>
+    <a class="item" href="S55.dc.html"><span class="tile o"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="3"/><path d="M11 18h2"/></svg></span><span style="flex:1;font-weight:600">Данные и приватность</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A5872" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></a>
+    <a class="item" href="S56.dc.html"><span class="tile"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/></svg></span><span style="flex:1;font-weight:600">Словарь и справка</span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A5872" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></a>
+    <div class="item" style="min-height:48px"><span style="flex:1;color:#4A5872">Выйти из аккаунта CraftAI</span></div>
+  </div>
+  <div style="display:flex;background:#fff;border-top:1px solid #E3ECFB;padding-bottom:12px">
+    <a class="tab" href="Main.dc.html"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="6" width="16" height="13" rx="5"/><circle cx="9.5" cy="12" r="1"/><circle cx="14.5" cy="12" r="1"/><path d="M12 6V3"/></svg>Ассистент</a>
+    <a class="tab" href="S20.dc.html"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/></svg>Курс</a>
+    <a class="tab on" href="S50.dc.html"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Профиль</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>UI-кит · Кнопки и контролы</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+.kit{width:1200px;height:1040px;box-sizing:border-box;padding:40px 44px;background:#fff;color:#0B1B33;font-family:'Onest',sans-serif;font-size:15px;line-height:1.4;overflow:hidden;display:flex;flex-direction:column;gap:22px}
+.kit *{box-sizing:border-box}
+.kh{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid #E3ECFB;padding-bottom:14px}
+.kh h1{margin:0;font-size:30px;font-weight:700;letter-spacing:-.01em}
+.kh span{font-size:14px;color:#4A5872}
+.lb{font-size:12px;font-weight:700;color:#4A5872;letter-spacing:.06em;text-transform:uppercase;margin:0 0 10px}
+.cap{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#4A5872}
+.row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:8px}
+.ph{background:#F3F5FA;border-radius:20px;padding:18px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:12px;font-family:inherit;font-size:16px;font-weight:600;border:0;white-space:nowrap}
+.btn.p{background:#0047BA;color:#fff}
+.btn.p.pr{background:#003A99}
+.btn.s{background:#fff;color:#0047BA;border:1.5px solid #0047BA}
+.btn.d{background:#fff;color:#A23B00;border:1.5px solid #A23B00}
+.btn.df{background:#A23B00;color:#fff}
+.btn.g{background:transparent;color:#0047BA;padding:0 8px}
+.btn.off{background:#E9EDF5;color:#8A96AD;border:0}
+.btn.sm{min-height:44px;font-size:15px;padding:0 16px}
+.ib{width:44px;height:44px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;color:#0047BA}
+.chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:13px;background:#E3ECFB;color:#0047BA;font-size:12px;font-weight:600;white-space:nowrap}
+.chip.o{background:#FFE8D6;color:#A23B00}
+.chip.n{background:#F3F5FA;color:#4A5872}
+.card{background:#fff;border-radius:18px;padding:14px;box-shadow:0 1px 2px rgba(11,27,51,.08)}
+.tile{flex:none;width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#E3ECFB;color:#0047BA}
+.tile.o{background:#FFE8D6;color:#A23B00}
+</style>
+</helmet>
+<div class="kit">
+  <div class="kh"><h1>UI-кит · Кнопки и контролы</h1><span>Высота касания от 44 px · углы 12</span></div>
+  <div style="display:grid;grid-template-columns:1.15fr 1fr;gap:36px;flex:1;min-height:0">
+    <div class="col" style="gap:22px">
+      <div><div class="lb">Кнопки · варианты</div>
+        <div style="display:grid;grid-template-columns:120px repeat(4,auto);gap:12px 12px;align-items:center;justify-content:start">
+          <span class="cap"></span><span class="cap">обычная</span><span class="cap">нажата</span><span class="cap">загрузка</span><span class="cap">выключена</span>
+          <span class="cap">Основная</span><span class="btn p">Создать</span><span class="btn p pr">Создать</span><span class="btn p"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.2-8.6"/></svg>Создаём</span><span class="btn off">Создать</span>
+          <span class="cap">Вторичная</span><span class="btn s">Отмена</span><span class="btn s" style="background:#E3ECFB">Отмена</span><span class="btn s"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Ещё раз</span><span class="btn off">Отмена</span>
+          <span class="cap">Опасная</span><span class="btn d"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Начать заново</span><span class="btn df">Сбросить</span><span></span><span></span>
+          <span class="cap">Текстовая</span><span class="btn g">Версии <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></span><span class="btn g"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>Под капотом</span><span></span><span></span>
+        </div>
+      </div>
+      <div><div class="lb">Иконочные кнопки · 44×44</div>
+        <div class="row">
+          <span class="ib"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></span><span class="ib"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></span><span class="ib"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg></span><span class="ib" style="background:#E3ECFB"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>
+          <span class="ib" style="background:#0047BA;color:#fff;border-radius:24px;width:48px;height:48px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+          <span class="cap" style="max-width:220px">Иконочная кнопка всегда с aria-label. Круглая синяя только для «Отправить».</span>
+        </div>
+      </div>
+      <div><div class="lb">Чипы</div>
+        <div class="col" style="gap:10px">
+          <div class="row" style="gap:8px"><span class="chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="3"/><path d="M11 18h2"/></svg>Данные на телефоне</span><span class="chip o"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>Данные за рубежом</span><span class="chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 19.5 10 4 4 0 0 1 18 18z"/></svg>Рабочая модель</span><span class="cap">где данные, какая модель</span></div>
+          <div class="row" style="gap:8px"><span class="chip">на телефоне</span><span class="chip n">Уровень 2</span><span class="chip" style="background:#E8772E;color:#0B1B33">Текущий</span><span class="chip n"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="3"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Закрыто</span><span class="cap">статусы и бейджи</span></div>
+        </div>
+      </div>
+      <div><div class="lb">Прогресс</div>
+        <div class="col" style="gap:12px;max-width:420px">
+          <div><div class="cap" style="margin-bottom:6px">Уровни курса · 5 сегментов</div><div style="display:flex;gap:5px"><i style="flex:1;height:8px;border-radius:4px;background:#0047BA"></i><i style="flex:1;height:8px;border-radius:4px;background:#0047BA"></i><i style="flex:1;height:8px;border-radius:4px;background:#0047BA"></i><i style="flex:1;height:8px;border-radius:4px;background:#E8772E"></i><i style="flex:1;height:8px;border-radius:4px;background:#E3ECFB"></i></div></div>
+          <div><div class="cap" style="margin-bottom:6px">Шаги урока</div><div style="display:flex;gap:4px"><i style="flex:1;height:6px;border-radius:3px;background:#0047BA"></i><i style="flex:1;height:6px;border-radius:3px;background:#0047BA"></i><i style="flex:1;height:6px;border-radius:3px;background:#C4CFE3"></i><i style="flex:1;height:6px;border-radius:3px;background:#C4CFE3"></i><i style="flex:1;height:6px;border-radius:3px;background:#C4CFE3"></i></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:#4A5872;margin-top:4px"><span>Идея</span><b style="color:#0047BA">Практика</b><span>Капот</span><span>Проверка</span><span>Итог</span></div></div>
+          <div><div class="cap" style="margin-bottom:6px">Шкала модели · качество, скорость, цена</div><div style="display:flex;gap:3px;width:140px"><i style="flex:1;height:6px;border-radius:3px;background:#0047BA"></i><i style="flex:1;height:6px;border-radius:3px;background:#0047BA"></i><i style="flex:1;height:6px;border-radius:3px;background:#0047BA"></i><i style="flex:1;height:6px;border-radius:3px;background:#E3ECFB"></i><i style="flex:1;height:6px;border-radius:3px;background:#E3ECFB"></i></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="col" style="gap:22px">
+      <div><div class="lb">Поле ввода сообщения</div>
+        <div class="ph col" style="gap:10px">
+          <div style="display:flex;gap:8px;align-items:center"><div style="flex:1;min-height:48px;display:flex;align-items:center;padding:0 16px;border-radius:24px;background:#fff;border:1px solid #D3DBEA;color:#4A5872">Напишите ассистенту…</div><span class="ib" style="background:#0047BA;color:#fff;border-radius:24px;width:48px;height:48px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+          <div style="display:flex;gap:8px;align-items:center"><div style="flex:1;min-height:48px;display:flex;align-items:center;padding:0 16px;border-radius:24px;background:#fff;border:2px solid #0047BA">Составь проверочную|</div><span class="ib" style="background:#0047BA;color:#fff;border-radius:24px;width:48px;height:48px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>
+          <div class="cap">пусто · фокус с текстом</div>
+        </div>
+      </div>
+      <div><div class="lb">Текстовое поле</div>
+        <div class="col" style="gap:12px">
+          <label class="col" style="gap:6px"><span style="font-size:13px;font-weight:600">Имя ассистента</span><span style="min-height:48px;display:flex;align-items:center;padding:0 14px;border-radius:12px;border:1px solid #D3DBEA">Помощник по математике</span></label>
+          <label class="col" style="gap:6px"><span style="font-size:13px;font-weight:600">Инструкция</span><span style="min-height:84px;padding:12px 14px;border-radius:12px;border:2px solid #0047BA;font-size:14px">Ты — помощник учителя математики 7–8 классов…</span><span class="cap">v3 · 214 символов</span></label>
+          <label class="col" style="gap:6px"><span style="font-size:13px;font-weight:600">Почта</span><span style="min-height:48px;display:flex;align-items:center;padding:0 14px;border-radius:12px;border:2px solid #A23B00">name@school</span><span style="font-size:12.5px;color:#A23B00">Проверьте адрес: после @ нужен домен, например school.kz</span></label>
+        </div>
+      </div>
+      <div><div class="lb">Переключатель и выбор</div>
+        <div class="col" style="gap:12px">
+          <div class="row" style="justify-content:space-between;min-height:44px"><span>Календарь на телефоне</span><span style="width:52px;height:32px;border-radius:16px;background:#0047BA;position:relative;display:inline-block"><i style="position:absolute;right:3px;top:3px;width:26px;height:26px;border-radius:13px;background:#fff"></i></span></div>
+          <div class="row" style="justify-content:space-between;min-height:44px"><span>Заметки</span><span style="width:52px;height:32px;border-radius:16px;background:#C4CFE3;position:relative;display:inline-block"><i style="position:absolute;left:3px;top:3px;width:26px;height:26px;border-radius:13px;background:#fff"></i></span></div>
+          <div style="display:flex;background:#F3F5FA;border-radius:12px;padding:4px;gap:4px">
+            <span style="flex:1;min-height:40px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-size:14px;font-weight:600;color:#4A5872">Мощная</span>
+            <span style="flex:1;min-height:40px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-size:14px;font-weight:600;background:#fff;color:#0047BA;box-shadow:0 1px 2px rgba(11,27,51,.12)">Рабочая</span>
+            <span style="flex:1;min-height:40px;display:flex;align-items:center;justify-content:center;border-radius:9px;font-size:14px;font-weight:600;color:#4A5872">Быстрая</span>
+          </div>
+          <div class="cap">сегменты: выбор одной из трёх моделей</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1200,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

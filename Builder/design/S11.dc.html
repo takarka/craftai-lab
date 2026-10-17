@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>S11 Настройки ассистента</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+.scr{width:390px;height:844px;box-sizing:border-box;display:flex;flex-direction:column;background:#F3F5FA;color:#0B1B33;font-family:'Onest',sans-serif;font-size:15px;line-height:1.4;overflow:hidden}
+.scr *{box-sizing:border-box}
+.card{background:#fff;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 2px rgba(11,27,51,.08)}
+.hd{display:flex;align-items:center;gap:10px}
+.ic{flex:none;width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#E3ECFB;color:#0047BA}
+.ic.o{background:#FFE8D6;color:#A23B00}
+.ttl{flex:1;min-width:0;font-size:16px;font-weight:700;line-height:1.2}
+.sub{font-size:12px;color:#4A5872;font-weight:500}
+.lvl{flex:none;height:24px;padding:0 9px;border-radius:12px;background:#F3F5FA;color:#4A5872;font-size:11px;font-weight:700;display:inline-flex;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:13px;background:#E3ECFB;color:#0047BA;font-size:12px;font-weight:600;white-space:nowrap}
+.item{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-radius:12px;background:#F3F5FA;font-size:14px}
+.lnk{display:flex;align-items:center;gap:4px;min-height:44px;color:#0047BA;font-weight:600;font-size:14px;text-decoration:none}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:56px;font-size:12px;font-weight:600;color:#4A5872;text-decoration:none}
+.tab.on{color:#0047BA}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12px;color:#4A5872}
+</style>
+</helmet>
+<div class="scr">
+  <div style="display:flex;align-items:center;gap:4px;padding:10px 8px 8px 4px;background:#fff;border-bottom:1px solid #E3ECFB">
+    <a href="Main.dc.html" aria-label="Назад" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#0047BA">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </a>
+    <div style="font-size:18px;font-weight:700">Настройки ассистента</div>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:12px 16px 0;display:flex;flex-direction:column;gap:10px">
+
+    <a href="S14.dc.html" class="card" style="flex-direction:row;align-items:center;gap:12px;background:#0047BA;color:#fff;text-decoration:none">
+      <div style="flex:none;width:52px;height:52px;border-radius:16px;background:#E3ECFB;display:flex;align-items:center;justify-content:center">
+        <svg viewBox="0 0 200 200" width="40" height="40" aria-hidden="true">
+          <line x1="100" y1="56" x2="100" y2="36" stroke="#0B1B33" stroke-width="7" stroke-linecap="round"/>
+          <circle cx="100" cy="28" r="12" fill="#E8772E"/>
+          <rect x="30" y="56" width="140" height="120" rx="40" fill="#0047BA"/>
+          <rect x="50" y="78" width="100" height="66" rx="26" fill="#E3ECFB"/>
+          <circle cx="80" cy="108" r="8" fill="#0B1B33"/>
+          <circle cx="120" cy="108" r="8" fill="#0B1B33"/>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:17px;font-weight:700;line-height:1.2">Помощник по математике</div>
+        <div style="font-size:12px;opacity:.85;margin-top:2px">7–8 классы · уровень 4 из 5</div>
+        <div style="display:flex;gap:4px;margin-top:8px">
+          <i style="flex:1;height:5px;border-radius:3px;background:#fff"></i><i style="flex:1;height:5px;border-radius:3px;background:#fff"></i><i style="flex:1;height:5px;border-radius:3px;background:#fff"></i><i style="flex:1;height:5px;border-radius:3px;background:#fff"></i><i style="flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.3)"></i>
+        </div>
+      </div>
+    </a>
+
+    <div class="card">
+      <div class="hd">
+        <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></div>
+        <a href="S40.dc.html" class="ttl" style="color:#0B1B33;text-decoration:none">Инструкции</a>
+        <span class="lvl">Уровень 2</span>
+      </div>
+      <div style="background:#F3F5FA;border-radius:12px;padding:10px 12px;font-size:13px;color:#4A5872;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Ты — помощник учителя математики 7–8 классов в Казахстане. Отвечай кратко, объясняй пошагово, не решай задачу за ученика целиком.</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span class="mono">v3 · сохранено сегодня</span>
+        <a class="lnk" href="S12.dc.html">Версии
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hd">
+        <div class="ic o"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6c0 2 1 3.5 2.5 4.5V17a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-3.5C17 12.5 18 11 18 9a6 6 0 0 0-6-6z"/><path d="M10 22h4"/></svg></div>
+        <a href="S42.dc.html" class="ttl" style="color:#0B1B33;text-decoration:none">Память</a>
+        <span class="lvl">Уровень 4</span>
+      </div>
+      <div class="item"><span style="flex:1">В классе 28 учеников</span><span class="chip">на телефоне</span></div>
+      <div class="item"><span style="flex:1">Урок 45 минут, 3-й в 10:30</span><span class="chip">на телефоне</span></div>
+    </div>
+
+    <div class="card">
+      <div class="hd">
+        <div class="ic o"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/></svg></div>
+        <div class="ttl">Знания</div>
+        <span class="lvl">Уровень 3</span>
+      </div>
+      <a href="S41.dc.html" class="item" style="text-decoration:none;color:#0B1B33">
+        <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Учебник алгебры, 7 класс.pdf</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4A5872" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+    <a href="S33.dc.html" class="card" style="flex-direction:row;align-items:center;gap:10px;text-decoration:none;color:#0B1B33">
+      <div class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18a5 5 0 1 1 1-9.9A6 6 0 0 1 19.5 10 4 4 0 0 1 18 18z"/></svg></div>
+      <div style="flex:1;min-width:0"><div class="ttl">Модель</div><div class="sub">Рабочая · для повседневных задач</div></div>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A5872" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+    </a>
+
+    <a href="D05.dc.html" style="min-height:44px;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:14px;border:1.5px solid #A23B00;color:#A23B00;font-weight:600;font-size:15px;text-decoration:none">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+      Начать заново
+    </a>
+  </div>
+  <div style="display:flex;background:#fff;border-top:1px solid #E3ECFB;padding-bottom:12px">
+    <a class="tab on" href="Main.dc.html"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="6" width="16" height="13" rx="5"/><circle cx="9.5" cy="12" r="1"/><circle cx="14.5" cy="12" r="1"/><path d="M12 6V3"/></svg>Ассистент</a>
+    <a class="tab" href="S20.dc.html"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/></svg>Курс</a>
+    <a class="tab" href="S50.dc.html"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Профиль</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

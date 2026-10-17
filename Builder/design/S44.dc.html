@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>S44 Подключения</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+.scr{width:390px;height:844px;box-sizing:border-box;display:flex;flex-direction:column;background:#F3F5FA;color:#0B1B33;font-family:'Onest',sans-serif;font-size:15px;line-height:1.4;overflow:hidden}
+.scr *{box-sizing:border-box}
+.chip{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:13px;background:#E3ECFB;color:#0047BA;font-size:12px;font-weight:600}
+.chip.o{background:#FFE8D6;color:#A23B00}
+.card{background:#fff;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 2px rgba(11,27,51,.08)}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#0B1B33}
+.fn{background:#F3F5FA;border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:12px;font-family:inherit;font-size:15px;font-weight:600;border:1.5px solid #0047BA;cursor:pointer;background:#fff;color:#0047BA}
+</style>
+</helmet>
+<div class="scr">
+  <div style="display:flex;align-items:center;gap:4px;padding:10px 8px 8px 4px;background:#fff;border-bottom:1px solid #E3ECFB">
+    <a href="S43.dc.html" aria-label="Назад" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#0047BA">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </a>
+    <div style="flex:1;font-size:18px;font-weight:700">Подключения (MCP)</div>
+  </div>
+  <div style="padding:12px 16px 0;font-size:14px;color:#4A5872">MCP — общий способ подключить к ассистенту внешний сервис. Ассистент спрашивает у сервера, что тот умеет, и вызывает нужное.</div>
+  <div style="flex:1;overflow:hidden;padding:12px 16px 0;display:flex;flex-direction:column;gap:12px">
+    <div class="card" style="border:1.5px solid #0047BA">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><b style="font-size:16px">Каталог уроков CraftAI</b><span class="chip">подключён</span></div>
+      <span class="chip" style="align-self:flex-start">Сервер CraftAI · запросы идут через интернет</span>
+      <div style="font-size:12px;font-weight:700;color:#4A5872;letter-spacing:.04em;text-transform:uppercase">Что умеет сервер</div>
+      <div class="fn"><span class="mono">search_lessons</span><span style="font-size:13px;color:#4A5872">Найти урок по предмету и теме</span></div>
+      <div class="fn"><span class="mono">get_lesson</span><span style="font-size:13px;color:#4A5872">Получить план выбранного урока</span></div>
+    </div>
+    <div style="background:#E3ECFB;border-radius:14px;padding:12px 14px;font-size:14px">Так ассистент находит урок в каталоге: сначала спрашивает список возможностей (tools/list), затем вызывает одну из них (tools/call).</div>
+    <div class="card" style="border:1.5px dashed #C4CFE3;box-shadow:none;background:transparent;color:#4A5872">
+      <div>Другие сервисы появятся позже. В версии MVP доступен один демо-сервер.</div>
+    </div>
+  </div>
+  <div style="padding:12px 16px 24px"><a class="btn" href="S45.dc.html" style="text-decoration:none;width:100%">Посмотреть разрешения</a></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
