@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<title>S40 Инструкции</title>
+
+<style>
+html.solo{background:#E9EDF5}
+html.solo body{display:flex;justify-content:center;padding:24px 16px;min-height:100vh;box-sizing:border-box}
+html.framed body{margin:0}
+</style>
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+.scr{width:390px;height:844px;box-sizing:border-box;display:flex;flex-direction:column;position:relative;background:#F3F5FA;color:#0B1B33;font-family:'Onest',sans-serif;font-size:15px;line-height:1.4;overflow:hidden}
+.scr *{box-sizing:border-box}
+a{color:inherit;text-decoration:none}
+.body{flex:1;overflow:hidden;padding:12px 16px 0;display:flex;flex-direction:column;gap:10px}
+.lead{font-size:14px;color:#4A5872}
+.lb{font-size:12px;font-weight:700;color:#4A5872;letter-spacing:.06em;text-transform:uppercase}
+.cap{font-family:'JetBrains Mono',monospace;font-size:12px;color:#4A5872}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:12px;font-family:inherit;font-size:16px;font-weight:600;border:0;white-space:nowrap}
+.btn.p{background:#0047BA;color:#fff}
+.btn.s{background:#fff;color:#0047BA;border:1.5px solid #0047BA}
+.btn.df{background:#A23B00;color:#fff}
+.btn.g{background:transparent;color:#0047BA}
+.btn.sm{min-height:44px;font-size:15px;padding:0 14px}
+.ib{flex:none;width:44px;height:44px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;color:#0047BA}
+.chip{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:13px;background:#E3ECFB;color:#0047BA;font-size:12px;font-weight:600;white-space:nowrap}
+.chip.o{background:#FFE8D6;color:#A23B00}
+.chip.n{background:#F3F5FA;color:#4A5872}
+.card{background:#fff;border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 1px 2px rgba(11,27,51,.08)}
+.hd{display:flex;align-items:center;gap:10px}
+.tile{flex:none;width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#E3ECFB;color:#0047BA}
+.tile.o{background:#FFE8D6;color:#A23B00}
+.tile.lg{width:48px;height:48px;border-radius:14px}
+.ttl{flex:1;min-width:0;font-size:16px;font-weight:700;line-height:1.2}
+.item{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border-radius:12px;background:#F3F5FA;font-size:14px}
+.row{display:flex;align-items:center;gap:10px;min-height:44px}
+.sub{font-size:12.5px;color:#4A5872;line-height:1.35}
+.sw{flex:none;width:52px;height:32px;border-radius:16px;background:#C4CFE3;position:relative}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:26px;height:26px;border-radius:13px;background:#fff}
+.sw.on{background:#0047BA}
+.sw.on::after{left:auto;right:3px}
+.hint{background:#E3ECFB;border-radius:14px;padding:12px 14px;font-size:14px;display:flex;gap:8px}
+.warn{background:#fff;border:1.5px solid #E8772E;border-radius:14px;padding:12px 14px;font-size:14px;display:flex;gap:8px}
+.mono{font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.5}
+.field{min-height:48px;display:flex;align-items:center;padding:0 14px;border-radius:12px;background:#fff;border:1px solid #D3DBEA;font-size:15px}
+.dim{position:absolute;inset:0;background:rgba(11,27,51,.55)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;padding:12px 24px 32px;display:flex;flex-direction:column;gap:14px;box-shadow:0 8px 24px rgba(11,27,51,.14)}
+.grab{align-self:center;width:40px;height:4px;border-radius:2px;background:#C4CFE3}
+.sheet h1{margin:0;font-size:24px;line-height:1.2;font-weight:700}
+.bot{display:flex;gap:10px;padding:12px 16px 24px}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:56px;font-size:12px;font-weight:600;color:#4A5872}
+.tab.on{color:#0047BA}
+.step{flex:1;height:6px;border-radius:3px;background:#C4CFE3}
+.step.on{background:#0047BA}
+</style>
+
+<div class="scr">
+<div style="display:flex;align-items:center;gap:4px;padding:10px 8px 8px 4px;background:#fff;border-bottom:1px solid #E3ECFB"><a class="ib" href="S11.html" aria-label="Назад"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></a><div style="flex:1;font-size:18px;font-weight:700">Инструкции</div><span class="chip">на телефоне</span></div>
+<div class="body">
+  <div style="display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px;padding:8px 12px;box-shadow:0 1px 2px rgba(11,27,51,.08)"><svg viewBox="0 0 200 200" width="32" height="32" aria-hidden="true"><line x1="100" y1="56" x2="100" y2="36" stroke="#0B1B33" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="28" r="12" fill="#E8772E"/><rect x="30" y="56" width="140" height="120" rx="40" fill="#0047BA"/><rect x="50" y="78" width="100" height="66" rx="26" fill="#E3ECFB"/><circle cx="80" cy="108" r="8" fill="#0B1B33"/><circle cx="120" cy="108" r="8" fill="#0B1B33"/></svg><div style="flex:1;font-size:13px"><b>Модуль «Инструкции»</b><div class="sub">уровень 2</div></div><div class="tile "><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></div></div>
+  <div class="card" style="gap:4px">
+    <span class="lb">Роль</span>
+    <div class="item" style="margin:4px 0">Помощник учителя математики 7–8 классов</div>
+    <span class="lb" style="margin-top:6px">Тон и формат</span>
+    <div class="row"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">На «вы», дружелюбно</div><div class="sub">Как в разговоре с коллегой</div></div><span class="sw on" role="img" aria-label="Включено"></span></div>
+    <div class="row"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">Ответ шагами</div><div class="sub">Нумерованный список</div></div><span class="sw on" role="img" aria-label="Включено"></span></div>
+    <span class="lb" style="margin-top:6px">Ограничения</span>
+    <div class="row"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">Не решай за ученика целиком</div><div class="sub">Сначала подсказка</div></div><span class="sw on" role="img" aria-label="Включено"></span></div>
+    <div class="row"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">Не придумывай факты</div><div class="sub">Скажи «не знаю», если не уверен</div></div><span class="sw" role="img" aria-label="Выключено"></span></div>
+    <a class="btn g sm" href="#" style="align-self:flex-start;padding:0"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Добавить своё правило</a>
+  </div>
+  <div class="card" style="gap:6px;padding:12px 14px"><div style="display:flex;justify-content:space-between"><span class="lb">Собранная инструкция</span><span class="cap">214 токенов</span></div><div class="mono" style="color:#4A5872;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ты — помощник учителя математики 7–8 классов…</div></div>
+</div>
+<div class="bot"><a class="btn s" href="Main.html" style="flex:1">Тестовый вопрос</a><a class="btn p" href="S12.html" style="flex:1">Сохранить</a></div>
+</div>
+
+
+<script>
+(function(){
+  var framed = window.top !== window;
+  document.documentElement.className += framed ? ' framed' : ' solo';
+  document.addEventListener('click', function(e){
+    var a = e.target.closest && e.target.closest('a[href]');
+    if(!a || !framed) return;
+    var m = a.getAttribute('href').match(/(?:^|\/)([A-Za-z0-9]+)\.html$/);
+    if(!m) return;
+    e.preventDefault();
+    window.top.postMessage({ craftGo: m[1] }, '*');
+  });
+})();
+</script>
+</body>
+</html>

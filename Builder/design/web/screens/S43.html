@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<title>S43 Инструменты</title>
+
+<style>
+html.solo{background:#E9EDF5}
+html.solo body{display:flex;justify-content:center;padding:24px 16px;min-height:100vh;box-sizing:border-box}
+html.framed body{margin:0}
+</style>
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+.scr{width:390px;height:844px;box-sizing:border-box;display:flex;flex-direction:column;background:#F3F5FA;color:#0B1B33;font-family:'Onest',sans-serif;font-size:15px;line-height:1.4;overflow:hidden}
+.scr *{box-sizing:border-box}
+.chip{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:13px;background:#E3ECFB;color:#0047BA;font-size:12px;font-weight:600}
+.chip.o{background:#FFE8D6;color:#A23B00}
+.tool{background:#fff;border-radius:14px;padding:12px 14px;display:flex;gap:12px;align-items:center;box-shadow:0 1px 2px rgba(11,27,51,.08);min-height:72px}
+.ic{flex:none;width:44px;height:44px;border-radius:12px;background:#E3ECFB;color:#0047BA;display:flex;align-items:center;justify-content:center}
+.sw{flex:none;width:48px;height:28px;border-radius:14px;background:#C4CFE3;position:relative}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:12px;background:#fff}
+.sw.on{background:#0047BA}
+.sw.on::after{left:23px}
+.sub{font-size:13px;color:#4A5872}
+</style>
+
+<div class="scr">
+  <div style="display:flex;align-items:center;gap:4px;padding:10px 8px 8px 4px;background:#fff;border-bottom:1px solid #E3ECFB">
+    <a href="S11.html" aria-label="Назад" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#0047BA">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </a>
+    <div style="flex:1;font-size:18px;font-weight:700">Инструменты</div>
+  </div>
+  <div style="padding:12px 16px 0;font-size:14px;color:#4A5872">Ассистент сам решает, когда нужен инструмент, но любое действие вы подтверждаете.</div>
+  <div style="flex:1;overflow:hidden;padding:12px 16px 0;display:flex;flex-direction:column;gap:10px">
+    <div class="tool">
+      <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div>
+      <div style="flex:1"><div style="font-weight:600">Календарь</div><div class="sub">Чтение; создание — с вашим «Да»</div><a href="D07.html" style="color:#0047BA;font-size:12.5px;font-weight:600;text-decoration:none">Доступ к календарю</a></div>
+      <div class="sw on" role="img" aria-label="Включено"></div>
+    </div>
+    <div class="tool">
+      <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l3 3v15H6z"/><path d="M9 11h6M9 15h6"/></svg></div>
+      <div style="flex:1"><div style="font-weight:600">Заметки ассистента</div><div class="sub">Файлы лежат на телефоне</div></div>
+      <div class="sw on" role="img" aria-label="Включено"></div>
+    </div>
+    <div class="tool">
+      <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></div>
+      <div style="flex:1"><div style="font-weight:600">Поиск в интернете</div><span class="chip o">Данные за рубежом</span></div>
+      <div class="sw" role="img" aria-label="Выключено"></div>
+    </div>
+    <div class="tool">
+      <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-3 2a12 12 0 0 0 5 5l2-3 5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></div>
+      <div style="flex:1"><div style="font-weight:600">Звонок или сообщение</div><div class="sub">Откроется системное окно, нажимаете вы</div></div>
+      <div class="sw on" role="img" aria-label="Включено"></div>
+    </div>
+    <a class="tool" href="S44.html" style="text-decoration:none;color:#0B1B33">
+      <div class="ic"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7V3M15 7V3M7 7h10v5a5 5 0 0 1-10 0zM12 17v4"/></svg></div>
+      <div style="flex:1"><div style="font-weight:600">Подключения (MCP)</div><div class="sub">1 сервер: каталог уроков CraftAI</div></div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A5872" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+  <div style="height:24px"></div>
+</div>
+
+
+<script>
+(function(){
+  var framed = window.top !== window;
+  document.documentElement.className += framed ? ' framed' : ' solo';
+  document.addEventListener('click', function(e){
+    var a = e.target.closest && e.target.closest('a[href]');
+    if(!a || !framed) return;
+    var m = a.getAttribute('href').match(/(?:^|\/)([A-Za-z0-9]+)\.html$/);
+    if(!m) return;
+    e.preventDefault();
+    window.top.postMessage({ craftGo: m[1] }, '*');
+  });
+})();
+</script>
+</body>
+</html>

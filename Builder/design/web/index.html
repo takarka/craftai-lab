@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Craft Builder — дизайн</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<link rel="stylesheet" href="viewer.css">
+</head>
+<body>
+<aside id="side">
+  <h1 id="ttl">Craft Builder</h1>
+  <p class="hint">Колесо мыши — зум, перетаскивание — перемещение. Клик по ссылке внутри экрана переносит к нужной доске. Клавиши: <kbd>0</kbd> весь холст, <kbd>+</kbd>/<kbd>−</kbd> зум.</p>
+  <nav id="nav"></nav>
+</aside>
+<main id="view"><div id="world"></div></main>
+<div id="bar">
+  <button id="zo" title="Уменьшить">−</button>
+  <span id="zl">100%</span>
+  <button id="zi" title="Увеличить">+</button>
+  <button id="fit" title="Показать всё">Весь холст</button>
+</div>
+<script src="boards.js"></script>
+<script src="viewer.js"></script>
+</body>
+</html>
