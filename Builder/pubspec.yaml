@@ -1,15 +1,22 @@
 name: builder
-description: "Craft Builder — Flutter UI Kit."
+description: "Craft Builder — самостоятельный учебный ИИ-ассистент."
 publish_to: 'none'
 version: 0.1.0+1
 
 environment:
-  sdk: '>=3.9.0 <4.0.0'
+  sdk: '>=3.12.0 <4.0.0'
+  flutter: '>=3.44.0'
 
 dependencies:
+  cupertino_icons: ^2.0.0
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_riverpod: ^3.4.3
   flutter_svg: ^2.2.0
+  go_router: ^18.1.0
+  intl: ^0.20.3
 
 dev_dependencies:
   flutter_test:
@@ -17,6 +24,7 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
     - assets/icons/
