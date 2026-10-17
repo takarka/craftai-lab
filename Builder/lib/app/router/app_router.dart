@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/session/session_repository.dart';
 import '../../features/assistant/presentation/assistant_page.dart';
+import '../../features/models/presentation/model_selection_page.dart';
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/presentation/auth_page.dart';
 import '../../features/onboarding/application/onboarding_controller.dart';
@@ -145,6 +146,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/assistant',
                 builder: (context, state) => AssistantPage(ownerId: ownerId!),
+                routes: [
+                  GoRoute(
+                    path: 'models',
+                    builder: (context, state) =>
+                        ModelSelectionPage(ownerId: ownerId!),
+                  ),
+                ],
               ),
             ],
           ),

@@ -787,6 +787,108 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Не сейчас'**
   String get d02NotNow;
+
+  /// No description provided for @modelsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Модель ассистента'**
+  String get modelsTitle;
+
+  /// No description provided for @modelsSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Категория определяет возможности, скорость и баланс мышления вашего ассистента.'**
+  String get modelsSubtitle;
+
+  /// No description provided for @modelsDisclaimer.
+  ///
+  /// In ru, this message translates to:
+  /// **'Шкалы являются справочными и не гарантируют точность или время ответа.'**
+  String get modelsDisclaimer;
+
+  /// No description provided for @modelsDataNotice.
+  ///
+  /// In ru, this message translates to:
+  /// **'Данные за рубежом'**
+  String get modelsDataNotice;
+
+  /// No description provided for @modelsQuality.
+  ///
+  /// In ru, this message translates to:
+  /// **'Качество'**
+  String get modelsQuality;
+
+  /// No description provided for @modelsSpeed.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скорость'**
+  String get modelsSpeed;
+
+  /// No description provided for @modelsPrice.
+  ///
+  /// In ru, this message translates to:
+  /// **'Стоимость'**
+  String get modelsPrice;
+
+  /// No description provided for @modelsRecommended.
+  ///
+  /// In ru, this message translates to:
+  /// **'Рекомендуемая'**
+  String get modelsRecommended;
+
+  /// No description provided for @modelsFastTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Быстрая'**
+  String get modelsFastTitle;
+
+  /// No description provided for @modelsFastDesc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Минимальная задержка, подходит для простых задач и быстрых ответов.'**
+  String get modelsFastDesc;
+
+  /// No description provided for @modelsStandardTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Рабочая'**
+  String get modelsStandardTitle;
+
+  /// No description provided for @modelsStandardDesc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оптимальный баланс глубины рассуждений, скорости и экономичности.'**
+  String get modelsStandardDesc;
+
+  /// No description provided for @modelsAdvancedTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мощная'**
+  String get modelsAdvancedTitle;
+
+  /// No description provided for @modelsAdvancedDesc.
+  ///
+  /// In ru, this message translates to:
+  /// **'Глубокий анализ сложных академических тем и нестандартных вопросов.'**
+  String get modelsAdvancedDesc;
+
+  /// No description provided for @modelsUnavailableBadge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Временно недоступна'**
+  String get modelsUnavailableBadge;
+
+  /// No description provided for @modelsUnavailableWarning.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выбранная категория сейчас недоступна на сервере. Рекомендуем переключиться на Рабочую категорию.'**
+  String get modelsUnavailableWarning;
+
+  /// No description provided for @modelsSaveSuccess.
+  ///
+  /// In ru, this message translates to:
+  /// **'Модель сохранена'**
+  String get modelsSaveSuccess;
 }
 
 class _AppLocalizationsDelegate

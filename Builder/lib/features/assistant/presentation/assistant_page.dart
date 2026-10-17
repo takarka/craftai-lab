@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/presentation/foundation_pages.dart';
 import '../../../ui_kit/ui_kit.dart';
+import '../../models/domain/model_category.dart';
+import '../../models/model_providers.dart';
 import '../../onboarding/presentation/d02_consent_sheet.dart';
 import '../../policy/policy_providers.dart';
 
@@ -136,6 +139,51 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                             ],
                           ),
                         ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  BuilderCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const BuilderIcon(BuilderGlyph.robot, size: 20, color: BuilderColors.primary),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                s.modelsTitle,
+                                style: BuilderType.h3,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final cat = ref.watch(selectedCategoryProvider(widget.ownerId));
+                            final catTitle = switch (cat) {
+                              ModelCategory.fast => s.modelsFastTitle,
+                              ModelCategory.standard => s.modelsStandardTitle,
+                              ModelCategory.advanced => s.modelsAdvancedTitle,
+                            };
+                            return Text(
+                              'Текущая категория: $catTitle',
+                              style: BuilderType.body.copyWith(
+                                color: BuilderColors.inkSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        BuilderButton(
+                          key: const Key('assistant.chooseModel'),
+                          label: 'Выбрать категорию модели (S33)',
+                          variant: BuilderButtonVariant.secondary,
+                          onPressed: () => context.push('/assistant/models'),
+                        ),
                       ],
                     ),
                   ),

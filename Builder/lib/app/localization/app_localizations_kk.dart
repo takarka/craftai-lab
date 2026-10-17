@@ -391,4 +391,61 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get d02NotNow => 'Қазір емес';
+
+  @override
+  String get modelsTitle => 'Ассистент моделі';
+
+  @override
+  String get modelsSubtitle =>
+      'Санат ассистентіңіздің мүмкіндіктерін, жылдамдығын және ойлау теңгерімін анықтайды.';
+
+  @override
+  String get modelsDisclaimer =>
+      'Шкалалар анықтамалық болып табылады және дәлдікке немесе жауап беру уақытына кепілдік бермейді.';
+
+  @override
+  String get modelsDataNotice => 'Деректер шетелге жіберіледі';
+
+  @override
+  String get modelsQuality => 'Сапа';
+
+  @override
+  String get modelsSpeed => 'Жылдамдық';
+
+  @override
+  String get modelsPrice => 'Құны';
+
+  @override
+  String get modelsRecommended => 'Ұсынылатын';
+
+  @override
+  String get modelsFastTitle => 'Жылдам';
+
+  @override
+  String get modelsFastDesc =>
+      'Ең аз кідіріс, қарапайым тапсырмалар мен жылдам жауаптар үшін қолайлы.';
+
+  @override
+  String get modelsStandardTitle => 'Жұмысшы';
+
+  @override
+  String get modelsStandardDesc =>
+      'Ойлау тереңдігінің, жылдамдықтың және үнемділіктің оңтайлы теңгерімі.';
+
+  @override
+  String get modelsAdvancedTitle => 'Мықты';
+
+  @override
+  String get modelsAdvancedDesc =>
+      'Күрделі академиялық тақырыптар мен стандартты емес сұрақтарды терең талдау.';
+
+  @override
+  String get modelsUnavailableBadge => 'Уақытша қолжетімсіз';
+
+  @override
+  String get modelsUnavailableWarning =>
+      'Таңдалған санат қазір серверде қолжетімсіз. Жұмысшы санатқа ауысуды ұсынамыз.';
+
+  @override
+  String get modelsSaveSuccess => 'Модель сақталды';
 }

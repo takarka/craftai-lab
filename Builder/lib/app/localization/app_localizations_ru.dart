@@ -389,4 +389,61 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get d02NotNow => 'Не сейчас';
+
+  @override
+  String get modelsTitle => 'Модель ассистента';
+
+  @override
+  String get modelsSubtitle =>
+      'Категория определяет возможности, скорость и баланс мышления вашего ассистента.';
+
+  @override
+  String get modelsDisclaimer =>
+      'Шкалы являются справочными и не гарантируют точность или время ответа.';
+
+  @override
+  String get modelsDataNotice => 'Данные за рубежом';
+
+  @override
+  String get modelsQuality => 'Качество';
+
+  @override
+  String get modelsSpeed => 'Скорость';
+
+  @override
+  String get modelsPrice => 'Стоимость';
+
+  @override
+  String get modelsRecommended => 'Рекомендуемая';
+
+  @override
+  String get modelsFastTitle => 'Быстрая';
+
+  @override
+  String get modelsFastDesc =>
+      'Минимальная задержка, подходит для простых задач и быстрых ответов.';
+
+  @override
+  String get modelsStandardTitle => 'Рабочая';
+
+  @override
+  String get modelsStandardDesc =>
+      'Оптимальный баланс глубины рассуждений, скорости и экономичности.';
+
+  @override
+  String get modelsAdvancedTitle => 'Мощная';
+
+  @override
+  String get modelsAdvancedDesc =>
+      'Глубокий анализ сложных академических тем и нестандартных вопросов.';
+
+  @override
+  String get modelsUnavailableBadge => 'Временно недоступна';
+
+  @override
+  String get modelsUnavailableWarning =>
+      'Выбранная категория сейчас недоступна на сервере. Рекомендуем переключиться на Рабочую категорию.';
+
+  @override
+  String get modelsSaveSuccess => 'Модель сохранена';
 }
