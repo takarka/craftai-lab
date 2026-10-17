@@ -299,8 +299,7 @@ abstract final class StorageSchemaV1 {
       policy_id TEXT NOT NULL,
       policy_version TEXT NOT NULL,
       acknowledged_at_utc TEXT NOT NULL,
-      PRIMARY KEY (owner_id, policy_id),
-      FOREIGN KEY (owner_id) REFERENCES $tableWorkspaces(owner_id) ON DELETE CASCADE
+      PRIMARY KEY (owner_id, policy_id)
     );
     ''',
 

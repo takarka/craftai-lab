@@ -225,6 +225,7 @@ Future<bool?> showD02ConsentSheet(BuildContext context) {
   return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
+    useRootNavigator: true,
     backgroundColor: Colors.transparent,
     builder: (context) => const D02ConsentSheet(),
   );

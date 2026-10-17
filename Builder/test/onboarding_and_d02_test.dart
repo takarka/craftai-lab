@@ -3,23 +3,15 @@ import 'dart:io';
 import 'package:builder/app/app.dart';
 import 'package:builder/app/environment/app_config.dart';
 import 'package:builder/app/providers.dart';
-import 'package:builder/app/router/app_router.dart';
 import 'package:builder/core/storage/database/storage_database.dart';
 import 'package:builder/core/storage/schema/storage_schema_v1.dart';
-import 'package:builder/core/storage/security/secure_key_storage.dart';
-import 'package:builder/core/storage/storage_providers.dart';
-import 'package:builder/core/storage/workspace/workspace_storage_service.dart';
 import 'package:builder/features/assistant/presentation/assistant_page.dart';
 import 'package:builder/features/onboarding/application/onboarding_controller.dart';
 import 'package:builder/features/onboarding/domain/assistant_setup.dart';
+import 'package:builder/features/onboarding/domain/initial_workspace_repository.dart';
 import 'package:builder/features/onboarding/infrastructure/persistent_initial_workspace_repository.dart';
-import 'package:builder/features/policy/domain/policy_repository.dart';
 import 'package:builder/features/policy/infrastructure/persistent_policy_repository.dart';
 import 'package:builder/features/policy/policy_providers.dart';
-import 'package:builder/features/session/domain/auth_tokens.dart';
-import 'package:builder/features/session/infrastructure/persistent_session_repository.dart';
-import 'package:builder/features/session/infrastructure/secure_token_storage.dart';
-import 'package:builder/features/session/session_providers.dart';
 import 'package:builder/features/session/session_repository.dart';
 import 'package:builder/ui_kit/ui_kit.dart';
 import 'package:flutter/material.dart';
@@ -76,7 +68,7 @@ void main() {
       );
       expect(recordBefore, isNull);
 
-      // Workspace entry required for foreign key constraint
+      // Workspace entry
       await database.db.insert(StorageSchemaV1.tableWorkspaces, {
         'owner_id': ownerId,
         'installation_id': 'test-install',
@@ -119,33 +111,68 @@ void main() {
       expect(await inMem.isPolicyAcknowledged(ownerId: 'o1', policyId: 'p1'), isTrue);
       expect((await inMem.getAcknowledgment(ownerId: 'o1', policyId: 'p1'))!.policyVersion, equals('v1.0'));
     });
+
+    test('PersistentInitialWorkspaceRepository and PersistentPolicyRepository end-to-end SQLite persistence', () async {
+      const ownerId = 'teacher-sql-1';
+      final initialWorkspaceRepo = PersistentInitialWorkspaceRepository(
+        database: database,
+        installationId: 'test-inst',
+      );
+
+      // Create workspace via persistent repository
+      final setup = AssistantSetup(
+        subject: SchoolSubject.mathematics,
+        grades: {5, 6},
+        language: AssistantLanguage.russian,
+        name: 'Пифагор',
+      );
+
+      final ws = await initialWorkspaceRepo.createIfAbsent(
+        permit: WorkspaceWritePermit(ownerId: ownerId, canCommit: () => true),
+        setup: setup,
+      );
+      expect(ws.ownerId, equals(ownerId));
+      expect(ws.setup.name, equals('Пифагор'));
+
+      // Check D02 acknowledgment initial state
+      expect(
+        await policyRepo.isPolicyAcknowledged(
+          ownerId: ownerId,
+          policyId: 'd02_cross_border_transfer',
+        ),
+        isFalse,
+      );
+
+      // Acknowledge D02
+      await policyRepo.acknowledgePolicy(
+        ownerId: ownerId,
+        policyId: 'd02_cross_border_transfer',
+        policyVersion: 'v1.0',
+      );
+
+      expect(
+        await policyRepo.isPolicyAcknowledged(
+          ownerId: ownerId,
+          policyId: 'd02_cross_border_transfer',
+        ),
+        isTrue,
+      );
+    });
   });
 
   group('F05 Onboarding S01-S03 and D02 First Consent Flow', () {
     testWidgets('Full onboarding: S01 -> S02 -> S03 -> D02 "Понятно" -> S10 Assistant', (tester) async {
       const ownerId = 'teacher-owner-201';
-      final inMemoryTokens = InMemorySecureTokenStorage();
-      final keyStorage = InMemorySecureKeyStorage();
-      final wsService = WorkspaceStorageService(
-        database: database,
-        keyStorage: keyStorage,
-        installationId: 'test_inst',
-      );
-      final initialWorkspaceRepo = PersistentInitialWorkspaceRepository(
-        database: database,
-        installationId: 'test_inst',
-      );
+      final initialWorkspaceRepo = _TestInitialWorkspaceRepository();
+      final inMemPolicyRepo = InMemoryPolicyRepository();
 
       final container = ProviderContainer(
         overrides: [
           appConfigProvider.overrideWithValue(
             const AppConfig(environment: AppEnvironment.development),
           ),
-          storageDatabaseProvider.overrideWithValue(database),
-          workspaceStorageServiceProvider.overrideWithValue(wsService),
-          persistentInitialWorkspaceRepositoryProvider.overrideWithValue(initialWorkspaceRepo),
           initialWorkspaceRepositoryProvider.overrideWithValue(initialWorkspaceRepo),
-          policyRepositoryProvider.overrideWithValue(policyRepo),
+          policyRepositoryProvider.overrideWithValue(inMemPolicyRepo),
           sessionRepositoryProvider.overrideWithValue(
             _TestSessionRepository(ownerId: ownerId, onboardingComplete: false),
           ),
@@ -209,9 +236,6 @@ void main() {
       expect(btnWidget.onPressed, isNotNull);
       await tester.ensureVisible(createButton);
       await tester.tap(createButton);
-      await tester.runAsync(() async {
-        await Future<void>.delayed(const Duration(milliseconds: 150));
-      });
       await tester.pumpAndSettle();
 
       // D02 bottom sheet opens on top of S03!
@@ -225,13 +249,10 @@ void main() {
       final understandBtn = find.byKey(const Key('d02.understand'));
       expect(understandBtn, findsOneWidget);
       await tester.tap(understandBtn);
-      await tester.runAsync(() async {
-        await Future<void>.delayed(const Duration(milliseconds: 150));
-      });
       await tester.pumpAndSettle();
 
-      // Verified: Policy is acknowledged in DB!
-      final acknowledged = await policyRepo.isPolicyAcknowledged(
+      // Verified: Policy is acknowledged in DB/Repo!
+      final acknowledged = await inMemPolicyRepo.isPolicyAcknowledged(
         ownerId: ownerId,
         policyId: 'd02_cross_border_transfer',
       );
@@ -252,28 +273,16 @@ void main() {
 
     testWidgets('Deferred D02 ("Не сейчас"): proceeds in local mode, prompts D02 on cloud attempt', (tester) async {
       const ownerId = 'teacher-owner-202';
-      final inMemoryTokens = InMemorySecureTokenStorage();
-      final keyStorage = InMemorySecureKeyStorage();
-      final wsService = WorkspaceStorageService(
-        database: database,
-        keyStorage: keyStorage,
-        installationId: 'test_inst',
-      );
-      final initialWorkspaceRepo = PersistentInitialWorkspaceRepository(
-        database: database,
-        installationId: 'test_inst',
-      );
+      final initialWorkspaceRepo = _TestInitialWorkspaceRepository();
+      final inMemPolicyRepo = InMemoryPolicyRepository();
 
       final container = ProviderContainer(
         overrides: [
           appConfigProvider.overrideWithValue(
             const AppConfig(environment: AppEnvironment.development),
           ),
-          storageDatabaseProvider.overrideWithValue(database),
-          workspaceStorageServiceProvider.overrideWithValue(wsService),
-          persistentInitialWorkspaceRepositoryProvider.overrideWithValue(initialWorkspaceRepo),
           initialWorkspaceRepositoryProvider.overrideWithValue(initialWorkspaceRepo),
-          policyRepositoryProvider.overrideWithValue(policyRepo),
+          policyRepositoryProvider.overrideWithValue(inMemPolicyRepo),
           sessionRepositoryProvider.overrideWithValue(
             _TestSessionRepository(ownerId: ownerId, onboardingComplete: false),
           ),
@@ -291,24 +300,24 @@ void main() {
       await tester.pumpAndSettle();
 
       // S01 -> S02
-      await tester.tap(find.widgetWithText(BuilderButton, 'Начать'));
+      final nextButtonS01 = find.widgetWithText(BuilderButton, 'Начать');
+      await tester.tap(nextButtonS01);
       await tester.pumpAndSettle();
 
-      // S02: pick physics and 8-9
-      final physicsChip = find.byKey(const Key('onb.subject.physics'));
-      await tester.ensureVisible(physicsChip);
-      await tester.tap(physicsChip);
+      // S02: Subject & Grades
+      final mathChip = find.byKey(const Key('onb.subject.mathematics'));
+      await tester.ensureVisible(mathChip);
+      await tester.tap(mathChip);
       await tester.pumpAndSettle();
 
-      final grade8 = find.byKey(const Key('onb.group.8'));
-      await tester.ensureVisible(grade8);
-      await tester.tap(grade8);
+      final gradeGroup5 = find.byKey(const Key('onb.group.5'));
+      await tester.ensureVisible(gradeGroup5);
+      await tester.tap(gradeGroup5);
       await tester.pumpAndSettle();
 
-      // S02 -> S03
-      final nextBtn = find.widgetWithText(BuilderButton, 'Далее');
-      await tester.ensureVisible(nextBtn);
-      await tester.tap(nextBtn);
+      final nextButtonS02 = find.widgetWithText(BuilderButton, 'Далее');
+      await tester.ensureVisible(nextButtonS02);
+      await tester.tap(nextButtonS02);
       await tester.pumpAndSettle();
 
       // S03: name and tap "Создать ассистента"
@@ -320,9 +329,6 @@ void main() {
       final createBtn = find.widgetWithText(BuilderButton, 'Создать ассистента');
       await tester.ensureVisible(createBtn);
       await tester.tap(createBtn);
-      await tester.runAsync(() async {
-        await Future<void>.delayed(const Duration(milliseconds: 150));
-      });
       await tester.pumpAndSettle();
 
       // D02 sheet is visible
@@ -333,13 +339,10 @@ void main() {
       expect(notNowBtn, findsOneWidget);
       await tester.ensureVisible(notNowBtn);
       await tester.tap(notNowBtn);
-      await tester.runAsync(() async {
-        await Future<void>.delayed(const Duration(milliseconds: 150));
-      });
       await tester.pumpAndSettle();
 
-      // Verified: Policy is NOT acknowledged in DB
-      final acknowledged = await policyRepo.isPolicyAcknowledged(
+      // Verified: Policy is NOT acknowledged in repo
+      final acknowledged = await inMemPolicyRepo.isPolicyAcknowledged(
         ownerId: ownerId,
         policyId: 'd02_cross_border_transfer',
       );
@@ -353,23 +356,19 @@ void main() {
       final cloudBtn = find.byKey(const Key('assistant.cloudAction'));
       await tester.ensureVisible(cloudBtn);
       await tester.tap(cloudBtn);
-      await tester.runAsync(() async {
-        await Future<void>.delayed(const Duration(milliseconds: 150));
-      });
       await tester.pumpAndSettle();
 
       expect(find.text('Запросы уходят за рубеж'), findsOneWidget);
 
       // User confirms this time
-      await tester.tap(find.byKey(const Key('d02.understand')));
-      await tester.runAsync(() async {
-        await Future<void>.delayed(const Duration(milliseconds: 150));
-      });
+      final confirmBtn = find.byKey(const Key('d02.understand'));
+      await tester.ensureVisible(confirmBtn);
+      await tester.tap(confirmBtn);
       await tester.pumpAndSettle();
 
       // Now policy is acknowledged
       expect(
-        await policyRepo.isPolicyAcknowledged(
+        await inMemPolicyRepo.isPolicyAcknowledged(
           ownerId: ownerId,
           policyId: 'd02_cross_border_transfer',
         ),
@@ -381,6 +380,25 @@ void main() {
   });
 }
 
+class _TestInitialWorkspaceRepository implements InitialWorkspaceRepository {
+  final Map<String, InitialWorkspace> stored = {};
+
+  @override
+  bool get isAvailable => true;
+
+  @override
+  Future<InitialWorkspace> createIfAbsent({
+    required WorkspaceWritePermit permit,
+    required AssistantSetup setup,
+  }) async {
+    final ownerId = permit.ownerId;
+    return stored.putIfAbsent(
+      ownerId,
+      () => InitialWorkspace(ownerId: ownerId, setup: setup),
+    );
+  }
+}
+
 class _TestSessionRepository implements SessionRepository {
   _TestSessionRepository({
     required this.ownerId,
@@ -389,14 +407,12 @@ class _TestSessionRepository implements SessionRepository {
 
   final String ownerId;
   final bool onboardingComplete;
-  final _controller = StreamController<SessionSnapshot>.broadcast();
 
   @override
-  Stream<SessionSnapshot> watchSession() async* {
-    yield AuthenticatedSession(
-      ownerId: ownerId,
-      onboardingComplete: onboardingComplete,
-    );
-    yield* _controller.stream;
-  }
+  Stream<SessionSnapshot> watchSession() => Stream.value(
+        AuthenticatedSession(
+          ownerId: ownerId,
+          onboardingComplete: onboardingComplete,
+        ),
+      );
 }

@@ -310,19 +310,18 @@ class OnboardingAssistantPage extends ConsumerWidget {
                   policyId: 'd02_cross_border_transfer',
                 );
                 if (!context.mounted) return;
-                bool? consentResult = true;
                 if (!acknowledged) {
-                  consentResult = await showD02ConsentSheet(context);
-                  if (consentResult == null) return;
+                  final result = await showD02ConsentSheet(context);
+                  if (result == null) return;
+                  if (result) {
+                    await policyRepo.acknowledgePolicy(
+                      ownerId: ownerId,
+                      policyId: 'd02_cross_border_transfer',
+                      policyVersion: 'v1.0',
+                    );
+                  }
                 }
                 await controller.create();
-                if (consentResult == true && !acknowledged) {
-                  await policyRepo.acknowledgePolicy(
-                    ownerId: ownerId,
-                    policyId: 'd02_cross_border_transfer',
-                    policyVersion: 'v1.0',
-                  );
-                }
               }
             : null,
       ),

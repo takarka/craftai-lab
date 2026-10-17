@@ -7,6 +7,9 @@ import 'package:builder/app/router/app_router.dart';
 import 'package:builder/features/onboarding/application/onboarding_controller.dart';
 import 'package:builder/features/onboarding/domain/assistant_setup.dart';
 import 'package:builder/features/onboarding/domain/initial_workspace_repository.dart';
+import 'package:builder/features/policy/domain/policy_repository.dart';
+import 'package:builder/features/policy/infrastructure/persistent_policy_repository.dart';
+import 'package:builder/features/policy/policy_providers.dart';
 import 'package:builder/features/session/session_repository.dart';
 import 'package:builder/preview/onboarding_preview.dart';
 import 'package:builder/ui_kit/ui_kit.dart';
@@ -64,15 +67,24 @@ Future<({ProviderContainer container, ChangingSession session})>
 mountOnboarding(
   WidgetTester tester, {
   InitialWorkspaceRepository? repository,
+  PolicyRepository? policyRepository,
   String locale = 'ru',
 }) async {
   final session = ChangingSession();
+  final policy = policyRepository ??
+      (InMemoryPolicyRepository()
+        ..acknowledgePolicy(
+          ownerId: 'owner-a',
+          policyId: 'd02_cross_border_transfer',
+          policyVersion: 'v1.0',
+        ));
   final container = ProviderContainer(
     overrides: [
       appConfigProvider.overrideWithValue(
         const AppConfig(environment: AppEnvironment.development),
       ),
       sessionRepositoryProvider.overrideWithValue(session),
+      policyRepositoryProvider.overrideWithValue(policy),
       if (repository != null)
         initialWorkspaceRepositoryProvider.overrideWithValue(repository),
     ],

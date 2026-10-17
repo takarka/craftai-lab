@@ -164,6 +164,11 @@ final class WorkspaceStorageService {
         where: 'owner_id = ?',
         whereArgs: [ownerId],
       );
+      await txn.delete(
+        StorageSchemaV1.tablePolicyAcknowledgments,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
     });
 
     if (ownerFilesDir != null) {
