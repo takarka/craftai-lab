@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/platform/platform_capabilities.dart';
+import '../features/session/session_providers.dart';
 import '../features/session/session_repository.dart';
 import 'environment/app_config.dart';
 
 final appConfigProvider = Provider<AppConfig?>((ref) => null);
 
 final sessionRepositoryProvider = Provider<SessionRepository>(
-  (ref) => const NotConnectedSessionRepository(),
+  (ref) {
+    final persistent = ref.watch(persistentSessionRepositoryProvider);
+    return persistent ?? const NotConnectedSessionRepository();
+  },
 );
 
 final sessionProvider = StreamProvider<SessionSnapshot>(

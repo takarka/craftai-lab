@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/session/session_repository.dart';
+import '../../features/assistant/presentation/assistant_page.dart';
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/presentation/auth_page.dart';
 import '../../features/onboarding/application/onboarding_controller.dart';
@@ -143,10 +144,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/assistant',
-                builder: (context, state) => FoundationPage(
-                  title: AppLocalizations.of(context).assistantTab,
-                  message: AppLocalizations.of(context).assistantPending,
-                ),
+                builder: (context, state) => AssistantPage(ownerId: ownerId!),
               ),
             ],
           ),

@@ -363,4 +363,30 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get subjectOther => 'Другое';
+
+  @override
+  String get d02Title => 'Запросы уходят за рубеж';
+
+  @override
+  String get d02Subtitle =>
+      'Ваш вопрос, инструкция, память и найденные фрагменты документов отправляются к модели через сервер CraftAI. Сервер тексты не хранит.';
+
+  @override
+  String get d02StepPhone => 'Телефон';
+
+  @override
+  String get d02StepCraftAi => 'CraftAI';
+
+  @override
+  String get d02StepModel => 'Модель';
+
+  @override
+  String get d02Warning =>
+      'Не отправляйте данные учеников: ФИО, оценки, диагнозы, контакты родителей.';
+
+  @override
+  String get d02Understand => 'Понятно';
+
+  @override
+  String get d02NotNow => 'Не сейчас';
 }

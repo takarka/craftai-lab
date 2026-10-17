@@ -739,6 +739,54 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Другое'**
   String get subjectOther;
+
+  /// No description provided for @d02Title.
+  ///
+  /// In ru, this message translates to:
+  /// **'Запросы уходят за рубеж'**
+  String get d02Title;
+
+  /// No description provided for @d02Subtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваш вопрос, инструкция, память и найденные фрагменты документов отправляются к модели через сервер CraftAI. Сервер тексты не хранит.'**
+  String get d02Subtitle;
+
+  /// No description provided for @d02StepPhone.
+  ///
+  /// In ru, this message translates to:
+  /// **'Телефон'**
+  String get d02StepPhone;
+
+  /// No description provided for @d02StepCraftAi.
+  ///
+  /// In ru, this message translates to:
+  /// **'CraftAI'**
+  String get d02StepCraftAi;
+
+  /// No description provided for @d02StepModel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Модель'**
+  String get d02StepModel;
+
+  /// No description provided for @d02Warning.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не отправляйте данные учеников: ФИО, оценки, диагнозы, контакты родителей.'**
+  String get d02Warning;
+
+  /// No description provided for @d02Understand.
+  ///
+  /// In ru, this message translates to:
+  /// **'Понятно'**
+  String get d02Understand;
+
+  /// No description provided for @d02NotNow.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не сейчас'**
+  String get d02NotNow;
 }
 
 class _AppLocalizationsDelegate

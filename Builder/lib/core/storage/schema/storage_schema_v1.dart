@@ -20,6 +20,7 @@ abstract final class StorageSchemaV1 {
   static const String tableCourseProgress = 'course_progress';
   static const String tableQuizAttempts = 'quiz_attempts';
   static const String tableFileStagingJournal = 'file_staging_journal';
+  static const String tablePolicyAcknowledgments = 'policy_acknowledgments';
 
   static const List<String> createStatements = [
     // 1. Workspaces
@@ -288,6 +289,18 @@ abstract final class StorageSchemaV1 {
       target_path TEXT NOT NULL,
       status TEXT NOT NULL,
       created_at_utc TEXT NOT NULL
+    );
+    ''',
+
+    // 19. Policy Acknowledgments (D02 Cross-border data, etc.)
+    '''
+    CREATE TABLE IF NOT EXISTS $tablePolicyAcknowledgments (
+      owner_id TEXT NOT NULL,
+      policy_id TEXT NOT NULL,
+      policy_version TEXT NOT NULL,
+      acknowledged_at_utc TEXT NOT NULL,
+      PRIMARY KEY (owner_id, policy_id),
+      FOREIGN KEY (owner_id) REFERENCES $tableWorkspaces(owner_id) ON DELETE CASCADE
     );
     ''',
 

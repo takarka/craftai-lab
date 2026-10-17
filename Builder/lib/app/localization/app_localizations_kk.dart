@@ -365,4 +365,30 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get subjectOther => 'Басқа';
+
+  @override
+  String get d02Title => 'Сұраулар шетелге жіберіледі';
+
+  @override
+  String get d02Subtitle =>
+      'Сұрағыңыз, нұсқаулық, жад және табылған құжат үзінділері модельге CraftAI сервері арқылы жіберіледі. Сервер мәтіндерді сақтамайды.';
+
+  @override
+  String get d02StepPhone => 'Телефон';
+
+  @override
+  String get d02StepCraftAi => 'CraftAI';
+
+  @override
+  String get d02StepModel => 'Модель';
+
+  @override
+  String get d02Warning =>
+      'Оқушылардың деректерін жібермеңіз: ТАӘ, бағалар, диагноздар, ата-аналардың байланыстары.';
+
+  @override
+  String get d02Understand => 'Түсінікті';
+
+  @override
+  String get d02NotNow => 'Қазір емес';
 }

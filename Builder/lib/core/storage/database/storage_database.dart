@@ -74,6 +74,11 @@ final class StorageDatabase {
               await db.execute(statement);
             }
           },
+          onOpen: (db) async {
+            for (final statement in StorageSchemaV1.createStatements) {
+              await db.execute(statement);
+            }
+          },
           onUpgrade: (db, oldVersion, newVersion) async {
             await _runMigrations(db, oldVersion, newVersion);
           },

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/storage/storage_providers.dart';
 import '../../session/session_repository.dart';
 import '../domain/assistant_setup.dart';
 import '../domain/initial_workspace_repository.dart';
@@ -21,7 +22,10 @@ class OnboardingState {
 }
 
 final initialWorkspaceRepositoryProvider = Provider<InitialWorkspaceRepository>(
-  (ref) => const NotConnectedWorkspaceRepository(),
+  (ref) {
+    final persistent = ref.watch(persistentInitialWorkspaceRepositoryProvider);
+    return persistent ?? const NotConnectedWorkspaceRepository();
+  },
 );
 
 final onboardingControllerProvider = NotifierProvider.autoDispose

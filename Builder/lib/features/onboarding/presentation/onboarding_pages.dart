@@ -5,8 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/presentation/foundation_pages.dart';
 import '../../../ui_kit/ui_kit.dart';
+import '../../policy/policy_providers.dart';
 import '../application/onboarding_controller.dart';
 import '../domain/assistant_setup.dart';
+import 'd02_consent_sheet.dart';
 import 'onboarding_labels.dart';
 
 class OnboardingFrame extends StatelessWidget {
@@ -301,7 +303,27 @@ class OnboardingAssistantPage extends ConsumerWidget {
         loading: state.saving,
         loadingLabel: s.onbCreating,
         onPressed: available && state.draft.ready && !state.saving
-            ? controller.create
+            ? () async {
+                final policyRepo = ref.read(policyRepositoryProvider);
+                final acknowledged = await policyRepo.isPolicyAcknowledged(
+                  ownerId: ownerId,
+                  policyId: 'd02_cross_border_transfer',
+                );
+                if (!context.mounted) return;
+                bool? consentResult = true;
+                if (!acknowledged) {
+                  consentResult = await showD02ConsentSheet(context);
+                  if (consentResult == null) return;
+                }
+                await controller.create();
+                if (consentResult == true && !acknowledged) {
+                  await policyRepo.acknowledgePolicy(
+                    ownerId: ownerId,
+                    policyId: 'd02_cross_border_transfer',
+                    policyVersion: 'v1.0',
+                  );
+                }
+              }
             : null,
       ),
       child: Column(
