@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/errors/app_failure.dart';
 import '../domain/auth_gateway.dart';
 
-enum AuthFormKind { signIn, register, recovery }
+enum AuthFormKind { signIn, register, recovery, resetPassword }
 
 final authGatewayProvider = Provider<AuthGateway>(
   (ref) => const NotConnectedAuthGateway(),
@@ -14,10 +14,12 @@ class AuthSubmissionState {
     this.busy = false,
     this.failure,
     this.recoverySent = false,
+    this.resetComplete = false,
   });
   final bool busy;
   final AppFailure? failure;
   final bool recoverySent;
+  final bool resetComplete;
 }
 
 final authControllerProvider = NotifierProvider.autoDispose
@@ -38,7 +40,7 @@ class AuthController extends Notifier<AuthSubmissionState> {
   }
 
   Future<void> submit(Future<void> Function(AuthGateway) action) async {
-    if (state.busy || state.recoverySent) return;
+    if (state.busy || state.recoverySent || state.resetComplete) return;
     final gateway = ref.read(authGatewayProvider);
     if (!gateway.isAvailable) {
       state = const AuthSubmissionState(
@@ -52,6 +54,7 @@ class AuthController extends Notifier<AuthSubmissionState> {
       if (_active) {
         state = AuthSubmissionState(
           recoverySent: kind == AuthFormKind.recovery,
+          resetComplete: kind == AuthFormKind.resetPassword,
         );
       }
     } on AppFailure catch (failure) {

@@ -77,6 +77,15 @@ class TestAuthGateway implements AuthGateway {
     this.email = email;
     return _complete();
   }
+
+  @override
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  }) {
+    password = newPassword;
+    return _complete();
+  }
 }
 
 class ReadySessionRepository implements SessionRepository {

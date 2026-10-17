@@ -404,6 +404,36 @@ abstract class AppLocalizations {
   /// **'Отправка запроса'**
   String get authSubmitting;
 
+  /// No description provided for @authResetPasswordTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Смена пароля'**
+  String get authResetPasswordTitle;
+
+  /// No description provided for @authNewPassword.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новый пароль'**
+  String get authNewPassword;
+
+  /// No description provided for @authSaveNewPassword.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранить пароль'**
+  String get authSaveNewPassword;
+
+  /// No description provided for @authResetSuccess.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пароль успешно изменён. Теперь вы можете войти.'**
+  String get authResetSuccess;
+
+  /// No description provided for @authInvalidResetLink.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ссылка для смены пароля недействительна или устарела. Запросите новую ссылку.'**
+  String get authInvalidResetLink;
+
   /// No description provided for @onbWelcomeTitle.
   ///
   /// In ru, this message translates to:

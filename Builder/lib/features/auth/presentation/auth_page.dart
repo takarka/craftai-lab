@@ -13,8 +13,9 @@ import 'auth_validation.dart';
 typedef _DocumentRevision = ({String locale, String terms, String privacy});
 
 class AuthPage extends ConsumerStatefulWidget {
-  const AuthPage({super.key, required this.kind});
+  const AuthPage({super.key, required this.kind, this.resetToken});
   final AuthFormKind kind;
+  final String? resetToken;
   @override
   ConsumerState<AuthPage> createState() => _AuthPageState();
 }
@@ -101,6 +102,10 @@ class _AuthPageState extends ConsumerState<AuthPage>
               AuthFormKind.recovery => gateway.requestPasswordReset(
                 email: email,
               ),
+              AuthFormKind.resetPassword => gateway.resetPassword(
+                token: widget.resetToken ?? '',
+                newPassword: password,
+              ),
             },
           );
     } finally {
@@ -120,12 +125,19 @@ class _AuthPageState extends ConsumerState<AuthPage>
     final gateway = ref.watch(authGatewayProvider);
     final registering = widget.kind == AuthFormKind.register;
     final recovering = widget.kind == AuthFormKind.recovery;
+    final resetting = widget.kind == AuthFormKind.resetPassword;
+    final hasValidToken = widget.resetToken != null && widget.resetToken!.trim().isNotEmpty;
     final documents = _documents();
     final revision = _revision(documents);
     final accepted = revision != null && _acceptedRevision == revision;
     final canSubmit =
-        gateway.isAvailable && !submission.busy && (!registering || accepted);
-    final title = recovering
+        gateway.isAvailable &&
+        !submission.busy &&
+        (!resetting || hasValidToken) &&
+        (!registering || accepted);
+    final title = resetting
+        ? strings.authResetPasswordTitle
+        : recovering
         ? strings.authRecoveryTitle
         : registering
         ? strings.authRegister
@@ -179,7 +191,14 @@ class _AuthPageState extends ConsumerState<AuthPage>
                           _Message(strings.authUnavailable),
                           const SizedBox(height: 16),
                         ],
-                        if (submission.recoverySent) ...[
+                        if (resetting && !hasValidToken) ...[
+                          _Message(strings.authInvalidResetLink),
+                        ] else if (resetting && submission.resetComplete) ...[
+                          Semantics(
+                            liveRegion: true,
+                            child: _Message(strings.authResetSuccess),
+                          ),
+                        ] else if (submission.recoverySent) ...[
                           Semantics(
                             liveRegion: true,
                             child: _Message(strings.authResetSent),
@@ -201,47 +220,49 @@ class _AuthPageState extends ConsumerState<AuthPage>
                             ),
                             const SizedBox(height: 16),
                           ],
-                          TextFormField(
-                            key: const Key('auth.email'),
-                            controller: _email,
-                            enabled: !submission.busy,
-                            keyboardType: TextInputType.emailAddress,
-                            autocorrect: false,
-                            enableSuggestions: false,
-                            textInputAction: recovering
-                                ? TextInputAction.done
-                                : TextInputAction.next,
-                            autofillHints: const [AutofillHints.email],
-                            decoration: InputDecoration(
-                              labelText: strings.authEmail,
-                              hintText: 'name@school.kz',
-                              errorMaxLines: 3,
+                          if (!resetting) ...[
+                            TextFormField(
+                              key: const Key('auth.email'),
+                              controller: _email,
+                              enabled: !submission.busy,
+                              keyboardType: TextInputType.emailAddress,
+                              autocorrect: false,
+                              enableSuggestions: false,
+                              textInputAction: recovering
+                                  ? TextInputAction.done
+                                  : TextInputAction.next,
+                              autofillHints: const [AutofillHints.email],
+                              decoration: InputDecoration(
+                                labelText: strings.authEmail,
+                                hintText: 'name@school.kz',
+                                errorMaxLines: 3,
+                              ),
+                              onFieldSubmitted: recovering && canSubmit
+                                  ? (_) => _submit()
+                                  : null,
+                              validator: (value) =>
+                                  AuthValidation.email(value, strings),
                             ),
-                            onFieldSubmitted: recovering && canSubmit
-                                ? (_) => _submit()
-                                : null,
-                            validator: (value) =>
-                                AuthValidation.email(value, strings),
-                          ),
+                          ],
                           if (!recovering) ...[
-                            const SizedBox(height: 16),
+                            if (!resetting) const SizedBox(height: 16),
                             AuthPasswordField(
                               key: const Key('auth.password'),
                               controller: _password,
-                              label: strings.authPassword,
+                              label: resetting ? strings.authNewPassword : strings.authPassword,
                               enabled: !submission.busy,
-                              newPassword: registering,
-                              textInputAction: registering
+                              newPassword: registering || resetting,
+                              textInputAction: registering || resetting
                                   ? TextInputAction.next
                                   : TextInputAction.done,
                               validator: (value) =>
                                   AuthValidation.password(value, strings),
-                              onSubmitted: !registering && canSubmit
+                              onSubmitted: !registering && !resetting && canSubmit
                                   ? (_) => _submit()
                                   : null,
                             ),
                           ],
-                          if (registering) ...[
+                          if (registering || resetting) ...[
                             const SizedBox(height: 8),
                             Text(
                               strings.authPasswordHint,
@@ -262,6 +283,8 @@ class _AuthPageState extends ConsumerState<AuthPage>
                               ),
                               onSubmitted: canSubmit ? (_) => _submit() : null,
                             ),
+                          ],
+                          if (registering) ...[
                             const SizedBox(height: 12),
                             CheckboxListTile(
                               key: const Key('auth.consent'),
@@ -309,7 +332,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
                           ],
                           const SizedBox(height: 20),
                           BuilderButton(
-                            label: recovering
+                            label: resetting
+                                ? strings.authSaveNewPassword
+                                : recovering
                                 ? strings.authSendReset
                                 : registering
                                 ? strings.authRegister
@@ -318,7 +343,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
                             loading: submission.busy,
                             loadingLabel: strings.authSubmitting,
                           ),
-                          if (!registering && !recovering) ...[
+                          if (!registering && !recovering && !resetting) ...[
                             const SizedBox(height: 8),
                             TextButton(
                               onPressed: submission.busy
@@ -336,15 +361,15 @@ class _AuthPageState extends ConsumerState<AuthPage>
                             ),
                           ],
                         ],
-                        if (registering || recovering) ...[
+                        if (registering || recovering || resetting) ...[
                           const SizedBox(height: 12),
                           TextButton(
                             onPressed: submission.busy
-                                ? null
-                                : () {
-                                    _clearSecrets();
-                                    context.go('/sign-in');
-                                  },
+                              ? null
+                              : () {
+                                  _clearSecrets();
+                                  context.go('/sign-in');
+                                },
                             child: Text(strings.authBackToSignIn),
                           ),
                         ],

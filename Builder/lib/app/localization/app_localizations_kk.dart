@@ -180,6 +180,23 @@ class AppLocalizationsKk extends AppLocalizations {
   String get authSubmitting => 'Сұрау жіберілуде';
 
   @override
+  String get authResetPasswordTitle => 'Құпия сөзді өзгерту';
+
+  @override
+  String get authNewPassword => 'Жаңа құпия сөз';
+
+  @override
+  String get authSaveNewPassword => 'Құпия сөзді сақтау';
+
+  @override
+  String get authResetSuccess =>
+      'Құпия сөз сәтті өзгертілді. Енді кіре аласыз.';
+
+  @override
+  String get authInvalidResetLink =>
+      'Құпия сөзді өзгерту сілтемесі жарамсыз немесе мерзімі өткен. Жаңа сілтеме сұраңыз.';
+
+  @override
   String get onbWelcomeTitle => 'Өз ассистентіңізді құрастырыңыз';
 
   @override

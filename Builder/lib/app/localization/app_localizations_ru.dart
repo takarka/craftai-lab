@@ -178,6 +178,23 @@ class AppLocalizationsRu extends AppLocalizations {
   String get authSubmitting => 'Отправка запроса';
 
   @override
+  String get authResetPasswordTitle => 'Смена пароля';
+
+  @override
+  String get authNewPassword => 'Новый пароль';
+
+  @override
+  String get authSaveNewPassword => 'Сохранить пароль';
+
+  @override
+  String get authResetSuccess =>
+      'Пароль успешно изменён. Теперь вы можете войти.';
+
+  @override
+  String get authInvalidResetLink =>
+      'Ссылка для смены пароля недействительна или устарела. Запросите новую ссылку.';
+
+  @override
   String get onbWelcomeTitle => 'Соберите своего ассистента';
 
   @override

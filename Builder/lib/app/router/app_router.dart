@@ -36,6 +36,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               '/sign-in',
               '/register',
               '/recover-password',
+              '/reset-password',
             ].contains(path)
             ? null
             : '/sign-in';
@@ -64,6 +65,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         '/sign-in',
         '/register',
         '/recover-password',
+        '/reset-password',
         '/onboarding',
         '/',
       ].contains(path)) {
@@ -93,6 +95,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/recover-password',
         builder: (context, state) =>
             const AuthPage(kind: AuthFormKind.recovery),
+      ),
+      GoRoute(
+        path: '/reset-password',
+        builder: (context, state) {
+          final token = state.uri.queryParameters['token'] ??
+              state.uri.queryParameters['t'];
+          return AuthPage(
+            kind: AuthFormKind.resetPassword,
+            resetToken: token,
+          );
+        },
       ),
       GoRoute(
         path: '/legal/terms',
