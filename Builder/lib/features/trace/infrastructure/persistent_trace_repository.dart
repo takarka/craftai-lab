@@ -215,7 +215,7 @@ class InMemoryTraceRepository implements TraceRepository {
   }
 
   @override
-  Future<void> saveTrace(RequestTrace trace) async {
+  Future<void> saveTrace(RequestTrace trace, {bool isEphemeral = false}) async {
     _traces[trace.requestId] = trace;
   }
 

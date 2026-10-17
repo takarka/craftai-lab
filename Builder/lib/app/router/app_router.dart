@@ -4,6 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/session/session_repository.dart';
 import '../../features/assistant/presentation/assistant_page.dart';
+import '../../features/assistant/presentation/assistant_settings_page.dart';
+import '../../features/assistant/presentation/assistant_name_page.dart';
+import '../../features/assistant/presentation/assistant_versions_page.dart';
+import '../../features/assistant/presentation/local_data_settings_page.dart';
 import '../../features/models/presentation/model_selection_page.dart';
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/presentation/auth_page.dart';
@@ -151,6 +155,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     path: 'models',
                     builder: (context, state) =>
                         ModelSelectionPage(ownerId: ownerId!),
+                  ),
+                  GoRoute(
+                    path: 'settings',
+                    builder: (context, state) =>
+                        AssistantSettingsPage(ownerId: ownerId!),
+                    routes: [
+                      GoRoute(
+                        path: 'name',
+                        builder: (context, state) =>
+                            AssistantNamePage(ownerId: ownerId!),
+                      ),
+                      GoRoute(
+                        path: 'versions',
+                        builder: (context, state) =>
+                            AssistantVersionsPage(ownerId: ownerId!),
+                      ),
+                      GoRoute(
+                        path: 'data',
+                        builder: (context, state) =>
+                            LocalDataSettingsPage(ownerId: ownerId!),
+                      ),
+                    ],
                   ),
                 ],
               ),

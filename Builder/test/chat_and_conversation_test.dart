@@ -382,6 +382,44 @@ void main() {
   });
 
   group('F07-01 & S10 Presentation UI Flow', () {
+    testWidgets('error actions wrap on a narrow phone screen', (tester) async {
+      tester.view.physicalSize = const Size(390, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final repo = InMemoryChatRepository();
+      final conversation = await repo.createConversation(ownerId: 'narrow_owner');
+      await repo.saveMessage(ChatMessage(
+        id: 'failed_reply',
+        conversationId: conversation.id,
+        ownerId: 'narrow_owner',
+        role: MessageRole.assistant,
+        content: '',
+        status: MessageStatus.error,
+        requestId: 'failed_request',
+        errorMessage: 'Не удалось получить ответ от сервера.',
+        createdAtUtc: DateTime.now().toUtc(),
+      ));
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          chatRepositoryProvider.overrideWithValue(repo),
+          policyRepositoryProvider.overrideWithValue(MockPolicyRepository()),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: AssistantPage(ownerId: 'narrow_owner'),
+        ),
+      ));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final retry = find.byKey(const Key('chat.retryBtn'));
+      final trace = find.byKey(const Key('chat.errorTraceBtn_failed_reply'));
+      expect(retry, findsOneWidget);
+      expect(trace, findsOneWidget);
+      expect(tester.getTopLeft(trace).dy, greaterThan(tester.getTopLeft(retry).dy));
+    });
+
     testWidgets('renders S10 header, empty state starter prompts, and sends message', (tester) async {
       tester.view.physicalSize = const Size(800, 1000);
       tester.view.devicePixelRatio = 1.0;

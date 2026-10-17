@@ -1,4 +1,8 @@
 import 'dart:io';
+import 'package:builder/app/providers.dart';
+import 'package:builder/core/storage/database/storage_database.dart';
+import 'package:builder/core/storage/storage_providers.dart';
+import 'package:builder/features/session/session_repository.dart';
 import 'package:builder/app/localization/app_localizations.dart';
 import 'package:builder/core/storage/schema/storage_schema_v1.dart';
 import 'package:builder/features/assistant/presentation/assistant_page.dart';
@@ -90,6 +94,30 @@ void main() {
   });
 
   group('F08 Execution Trace Domain & Serialization', () {
+    test('trace provider saves traces under the authenticated workspace owner', () async {
+      await testDb.execute('PRAGMA foreign_keys = ON');
+      final storage = StorageDatabase(
+        databasePath: dbPath,
+        databaseFactory: databaseFactoryFfi,
+      );
+      await storage.open();
+      final container = ProviderContainer(overrides: [
+        storageDatabaseProvider.overrideWithValue(storage),
+        sessionProvider.overrideWithValue(AsyncData(
+          AuthenticatedSession(ownerId: 'owner_f08', onboardingComplete: true),
+        )),
+      ]);
+      addTearDown(container.dispose);
+      final repository = container.read(traceRepositoryProvider);
+      expect((repository as PersistentTraceRepository).ownerId, 'owner_f08');
+      final trace = RequestTrace.fromJson({
+        ...PersistentTraceRepository.createSampleFixture().toJson(),
+        'ownerId': 'owner_f08',
+      });
+      await repository.saveTrace(trace);
+      expect(await repository.getTrace(trace.requestId), isNotNull);
+    });
+
     test('RequestTrace serializes and deserializes accurately', () {
       final now = DateTime.utc(2026, 10, 17, 12, 0, 0);
       final trace = RequestTrace(

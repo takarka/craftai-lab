@@ -155,5 +155,148 @@
   "modelsAdvancedDesc": "Глубокий анализ сложных академических тем и нестандартных вопросов.",
   "modelsUnavailableBadge": "Временно недоступна",
   "modelsUnavailableWarning": "Выбранная категория сейчас недоступна на сервере. Рекомендуем переключиться на Рабочую категорию.",
-  "modelsSaveSuccess": "Модель сохранена"
+  "modelsSaveSuccess": "Модель сохранена",
+  "assistantSettingsTitle": "Настройки ассистента",
+  "assistantSettingsSubtitle": "Персонаж, возможности и локальные данные",
+  "assistantCharacterCardTitle": "Ваш ассистент",
+  "assistantEditName": "Изменить имя",
+  "assistantLevelBadge": "Уровень {level} из 5",
+  "@assistantLevelBadge": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "assistantModelRowTitle": "Модель",
+  "assistantInstructionsCardTitle": "Инструкции",
+  "assistantInstructionsCardSubtitle": "Правила поведения и тон общения",
+  "assistantVersionsLink": "История версий · v{version}",
+  "@assistantVersionsLink": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "assistantMemoryCardTitle": "Память",
+  "assistantMemoryCardSubtitle": "Сохранённые факты о классах и предмете",
+  "assistantDocumentsCardTitle": "База знаний (документы)",
+  "assistantDocumentsCardSubtitle": "Локальные файлы и учебные материалы",
+  "assistantToolsTitle": "Инструменты и MCP",
+  "assistantToolsSubtitle": "Календарь, поиск и внешние сервисы",
+  "assistantSkillsHeader": "Возможности ассистента",
+  "assistantLocalDataRowTitle": "Память и данные устройства",
+  "assistantLocalDataRowSubtitle": "Статистика хранения и политики",
+  "assistantUndoLastChange": "Отменить последнее изменение",
+  "assistantResetButton": "Начать заново",
+  "assistantNameTitle": "Имя ассистента",
+  "assistantNameSubtitle": "Как вы хотите называть своего помощника",
+  "assistantNameFieldLabel": "Имя",
+  "assistantNameFieldHint": "Например: Сова, Арыстан, Ментор...",
+  "assistantNameGraphemeLimit": "Максимум 30 символов",
+  "assistantNameEmptyError": "Имя не может быть пустым",
+  "assistantNameTooLongError": "Имя превышает 30 символов",
+  "assistantVersionsTitle": "История версий",
+  "assistantVersionsSubtitle": "Снимки настроек, правил и умений",
+  "assistantVersionCurrent": "Текущая",
+  "assistantVersionSaveManual": "Сохранить версию",
+  "assistantVersionSaveReasonHint": "Причина сохранения (необязательно)",
+  "assistantVersionMissingResources": "Частично доступно (удалены файлы)",
+  "rollbackDialogTitle": "Восстановить версию {version}?",
+  "@rollbackDialogTitle": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "rollbackDialogSubtitle": "Ассистент вернётся к состоянию на момент создания снимка.",
+  "rollbackWhatWillChange": "Что изменится:",
+  "rollbackWhatWillKeep": "Что сохранится:",
+  "rollbackKeepHistory": "История разговоров и прогресс курса не теряются",
+  "rollbackMissingResourcesWarning": "Некоторые документы были физически удалены и не будут восстановлены.",
+  "rollbackConfirmButton": "Восстановить",
+  "rollbackCancelButton": "Отмена",
+  "rollbackSuccess": "Версия {version} успешно восстановлена",
+  "@rollbackSuccess": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "localDataTitle": "Память и данные",
+  "localDataSubtitle": "Локальное хранилище и политики очистки",
+  "localDataDeviceWarning": "Все данные хранятся только на этом устройстве. При удалении приложения они будут безвозвратно удалены.",
+  "localDataMapHeader": "Карта сохранённых данных",
+  "localDataConversations": "Разговоры и сообщения: {count}",
+  "@localDataConversations": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "localDataMemoryFacts": "Факты в памяти: {count}",
+  "@localDataMemoryFacts": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "localDataDocuments": "Документы и индексы: {count}",
+  "@localDataDocuments": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "localDataTraces": "Трассировки запросов: {count}",
+  "@localDataTraces": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "localDataVersions": "История версий: {count}",
+  "@localDataVersions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "localDataRetentionHeader": "Политика хранения",
+  "localDataRetention30Days": "30 дней",
+  "localDataRetention90Days": "90 дней",
+  "localDataRetentionForever": "Бессрочно",
+  "localDataRetentionSubtitle": "Автоматическое удаление старых разговоров",
+  "resetDialogTitle": "Сбросить ассистента?",
+  "resetDialogSubtitle": "Это действие безвозвратно удалит все локальные материалы ассистента.",
+  "resetWhatWillBeDeleted": "Будет удалено:",
+  "resetDeleteInstructions": "Имя, инструкции и конфигурация ассистента",
+  "resetDeleteConversations": "Вся история разговоров и сообщений",
+  "resetDeleteMemory": "Все сохранённые факты памяти",
+  "resetDeleteDocuments": "Все загруженные документы и фрагменты знаний",
+  "resetDeleteVersions": "Вся история версий",
+  "resetDeleteTraces": "Все технические трассировки запросов",
+  "resetWhatWillStay": "Что сохранится:",
+  "resetKeepAccount": "Ваш аккаунт CraftAI и активная сессия",
+  "resetKeepD02": "Согласие на трансграничную передачу данных (D02)",
+  "resetTypeConfirmationPrompt": "Для подтверждения введите слово «{word}»:",
+  "@resetTypeConfirmationPrompt": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
+  "resetConfirmationWord": "СБРОС",
+  "resetConfirmButton": "Удалить всё и сбросить",
+  "resetCancelButton": "Отмена",
+  "resetInProgress": "Выполняется сброс ассистента..."
 }

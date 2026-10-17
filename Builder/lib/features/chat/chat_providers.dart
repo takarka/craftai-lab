@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../app/providers.dart';
+import '../../core/network/api_http_client.dart';
 import '../../core/storage/storage_providers.dart';
 import '../models/infrastructure/craft_ai_client.dart';
 import '../models/model_providers.dart';
@@ -22,7 +24,14 @@ final chatRepositoryProvider = Provider<ChatRepository>((ref) {
 
 final chatStreamClientProvider = Provider<ChatStreamClient>((ref) {
   final tokens = ref.watch(secureTokenStorageProvider);
-  return ChatStreamClient(tokenStorage: tokens);
+  final config = ref.watch(appConfigProvider);
+  final client = createApiHttpClient(config);
+  ref.onDispose(client.close);
+  return ChatStreamClient(
+    tokenStorage: tokens,
+    baseUrl: config?.apiBaseUri?.toString() ?? ChatStreamClient.defaultBaseUrl,
+    client: client,
+  );
 });
 
 class ConversationsNotifier extends Notifier<List<Conversation>> {
@@ -281,7 +290,7 @@ class ChatSessionNotifier extends Notifier<ChatState> {
       category: selectedCategory.id,
       catalogRevision: '2026-03-31-01',
       contextWindow: 128000,
-      conversationHistory: initialNewMessages,
+      conversationHistory: initialNewMessages.where((message) => message.id != userMsg.id).toList(),
       userPrompt: trimmed,
     );
     await repo.saveContextManifest(manifest);
@@ -321,6 +330,8 @@ class ChatSessionNotifier extends Notifier<ChatState> {
     final startTime = DateTime.now().toUtc();
     int? serverPromptTokens;
     int? serverCompletionTokens;
+    int? serverTotalTokens;
+    String? currentModelId;
 
     // Setup coalescing timer (flushes text updates every 50ms)
     _coalescingTimer?.cancel();
@@ -338,7 +349,7 @@ class ChatSessionNotifier extends Notifier<ChatState> {
         cancellationToken: _currentCancellationToken,
       );
 
-      String currentModelId = selectedCategory.defaultModelId;
+
 
       await for (final event in stream) {
         if (event is StartStreamEvent) {
@@ -349,6 +360,7 @@ class ChatSessionNotifier extends Notifier<ChatState> {
         } else if (event is UsageStreamEvent) {
           serverPromptTokens = event.inputTokens;
           serverCompletionTokens = event.outputTokens;
+          serverTotalTokens = event.totalTokens;
         } else if (event is TerminalStreamEvent) {
           _slowTimer?.cancel();
           _coalescingTimer?.cancel();
@@ -383,6 +395,10 @@ class ChatSessionNotifier extends Notifier<ChatState> {
           // Save Execution Trace
           final durationMs = DateTime.now().toUtc().difference(startTime).inMilliseconds;
           final trace = RequestTrace.fromExecution(
+            manifest: manifest,
+            modelId: currentModelId,
+            serverTotalTokens: serverTotalTokens,
+            isEphemeral: conversation.isEphemeral,
             requestId: requestId,
             ownerId: ownerId,
             conversationId: conversation.id,
@@ -400,7 +416,7 @@ class ChatSessionNotifier extends Notifier<ChatState> {
             serverCompletionTokens: serverCompletionTokens,
             costTier: selectedCategory.priceRating,
           );
-          await ref.read(traceRepositoryProvider).saveTrace(trace);
+          await ref.read(traceRepositoryProvider).saveTrace(trace, isEphemeral: conversation.isEphemeral);
           break;
         }
       }
@@ -435,6 +451,12 @@ class ChatSessionNotifier extends Notifier<ChatState> {
       // Save Execution Trace on catch
       final durationMs = DateTime.now().toUtc().difference(startTime).inMilliseconds;
       final trace = RequestTrace.fromExecution(
+        manifest: manifest,
+        modelId: currentModelId,
+        serverPromptTokens: serverPromptTokens,
+        serverCompletionTokens: serverCompletionTokens,
+        serverTotalTokens: serverTotalTokens,
+        isEphemeral: conversation.isEphemeral,
         requestId: requestId,
         ownerId: ownerId,
         conversationId: conversation.id,
@@ -448,7 +470,7 @@ class ChatSessionNotifier extends Notifier<ChatState> {
         createdAtUtc: startTime,
         costTier: selectedCategory.priceRating,
       );
-      await ref.read(traceRepositoryProvider).saveTrace(trace);
+      await ref.read(traceRepositoryProvider).saveTrace(trace, isEphemeral: conversation.isEphemeral);
     } finally {
       _slowTimer?.cancel();
       _coalescingTimer?.cancel();

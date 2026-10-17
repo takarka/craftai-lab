@@ -172,6 +172,17 @@ final class PersistentSessionRepository implements SessionRepository {
     }
   }
 
+  /// Updates active session snapshot to reflect that onboarding needs to be redone (e.g. after D05 reset).
+  void markOnboardingIncomplete(String ownerId) {
+    if (_currentSnapshot is AuthenticatedSession &&
+        (_currentSnapshot as AuthenticatedSession).ownerId == ownerId) {
+      _emit(AuthenticatedSession(
+        ownerId: ownerId,
+        onboardingComplete: false,
+      ));
+    }
+  }
+
   void _emit(SessionSnapshot snapshot) {
     _currentSnapshot = snapshot;
     if (!_controller.isClosed) {

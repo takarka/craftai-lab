@@ -260,15 +260,7 @@ void main() {
 
       // Verified: Navigated to /assistant (S10)
       expect(find.byType(AssistantPage), findsOneWidget);
-      expect(find.text('Согласие на трансграничную передачу (D02): получено'), findsOneWidget);
-
-      // Attempt cloud request succeeds directly
-      final cloudBtn = find.byKey(const Key('assistant.cloudAction'));
-      await tester.ensureVisible(cloudBtn);
-      await tester.tap(cloudBtn);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Запрос к облаку выполнен'), findsOneWidget);
+      expect(find.byKey(const Key('assistant.cloudAction')), findsNothing);
     });
 
     testWidgets('Deferred D02 ("Не сейчас"): proceeds in local mode, prompts D02 on cloud attempt', (tester) async {
@@ -350,32 +342,20 @@ void main() {
 
       // Navigated to /assistant in local mode!
       expect(find.byType(AssistantPage), findsOneWidget);
-      expect(find.text('Режим без облака: согласие D02 отложено'), findsOneWidget);
-
-      // Now user attempts cloud request in /assistant -> D02 prompts again!
-      final cloudBtn = find.byKey(const Key('assistant.cloudAction'));
-      await tester.ensureVisible(cloudBtn);
-      await tester.tap(cloudBtn);
+      expect(find.byKey(const Key('assistant.cloudAction')), findsNothing);
+      await tester.enterText(find.byKey(const Key('chat.inputField')), 'Hello');
+      await tester.tap(find.byKey(const Key('chat.sendBtn')));
       await tester.pumpAndSettle();
-
-      expect(find.text('Запросы уходят за рубеж'), findsOneWidget);
-
-      // User confirms this time
-      final confirmBtn = find.byKey(const Key('d02.understand'));
-      await tester.ensureVisible(confirmBtn);
-      await tester.tap(confirmBtn);
+      expect(find.byKey(const Key('d02.understand')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('d02.notNow')));
       await tester.pumpAndSettle();
-
-      // Now policy is acknowledged
       expect(
         await inMemPolicyRepo.isPolicyAcknowledged(
           ownerId: ownerId,
           policyId: 'd02_cross_border_transfer',
         ),
-        isTrue,
+        isFalse,
       );
-      expect(find.text('Согласие на трансграничную передачу (D02): получено'), findsOneWidget);
-      expect(find.text('Запрос к облаку разрешён (согласие получено)'), findsOneWidget);
     });
   });
 }

@@ -153,6 +153,30 @@ final class PersistentInitialWorkspaceRepository implements InitialWorkspaceRepo
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
+      final initialSnapshot = {
+        'name': normalized.name,
+        'selected_category': null,
+        'enabled_skills': <String>[],
+        'system_rules': <String>[],
+        'memory_facts_count': 0,
+        'documents_count': 0,
+        'document_ids': <String>[],
+      };
+
+      await txn.insert(
+        StorageSchemaV1.tableAssistantVersions,
+        {
+          'owner_id': ownerId,
+          'version_number': 1,
+          'created_at_utc': nowUtc,
+          'reason': 'Создание ассистента',
+          'parent_id': null,
+          'schema_version': 1,
+          'snapshot_json': jsonEncode(initialSnapshot),
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+
       // 4. Final check before commit: permit must still be valid
       if (!permit.isCurrent) {
         throw const PermitRevokedException();

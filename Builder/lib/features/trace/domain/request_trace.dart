@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../chat/domain/context_assembler.dart';
 
 enum TraceLayerType {
   instruction,
@@ -10,18 +11,9 @@ enum TraceLayerType {
   appAction,
 }
 
-enum LocationTag {
-  onDevice,
-  craftAi,
-  abroad,
-}
+enum LocationTag { onDevice, craftAi, abroad }
 
-enum TraceStatus {
-  completed,
-  streaming,
-  interrupted,
-  error,
-}
+enum TraceStatus { completed, streaming, interrupted, error }
 
 @immutable
 class TraceLayer {
@@ -215,7 +207,9 @@ class RequestTrace {
         orElse: () => TraceStatus.completed,
       ),
       errorCode: json['errorCode'] as String?,
-      createdAtUtc: DateTime.tryParse(json['createdAtUtc'] as String? ?? '') ?? DateTime.now().toUtc(),
+      createdAtUtc:
+          DateTime.tryParse(json['createdAtUtc'] as String? ?? '') ??
+          DateTime.now().toUtc(),
       isExample: json['isExample'] as bool? ?? false,
     );
   }
@@ -242,29 +236,67 @@ class RequestTrace {
     String? retrievalSnippet,
     int retrievalTokens = 0,
     int historyTokens = 0,
+    ContextManifest? manifest,
+    String? modelId,
+    int? serverTotalTokens,
+    bool isEphemeral = false,
   }) {
+    if (manifest != null) {
+      const estimator = ContextAssembler();
+      instructionSnippet = manifest.messages
+          .where((message) => message['role'] == 'system')
+          .map((message) => message['content'] ?? '')
+          .join('\n\n');
+      instructionTokens = estimator.estimateTokens(instructionSnippet);
+      memoryTokens = 0;
+      retrievalTokens = 0;
+      historyTokens = manifest.messages
+          .where((message) => message['role'] != 'system')
+          .take(
+            manifest.messages
+                    .where((message) => message['role'] != 'system')
+                    .length -
+                1,
+          )
+          .fold(
+            0,
+            (sum, message) =>
+                sum + estimator.estimateTokens(message['content'] ?? ''),
+          );
+    }
     final now = createdAtUtc ?? DateTime.now().toUtc();
-    final promptEst = instructionTokens + memoryTokens + retrievalTokens + historyTokens + (userPrompt.length ~/ 4);
+    final promptEst =
+        manifest?.estimatedTokens ??
+        (instructionTokens +
+            memoryTokens +
+            retrievalTokens +
+            historyTokens +
+            (userPrompt.length ~/ 4));
     final compEst = (responseText.length ~/ 4);
 
     final finalPrompt = serverPromptTokens ?? promptEst;
     final finalComp = serverCompletionTokens ?? (compEst > 0 ? compEst : 1);
-    final isServer = serverPromptTokens != null && serverCompletionTokens != null;
+    final isServer =
+        serverPromptTokens != null && serverCompletionTokens != null;
 
     final layers = <TraceLayer>[
-      TraceLayer(
-        type: TraceLayerType.instruction,
-        title: '1 · Инструкция v$assistantVersion',
-        contentSnippet: instructionSnippet ?? 'Ты — помощник учителя. Отвечай кратко, объясняй пошагово…',
-        tokenCount: instructionTokens,
-        location: LocationTag.onDevice,
-        extraChip: 'на телефоне',
-      ),
+      if (manifest == null || instructionTokens > 0)
+        TraceLayer(
+          type: TraceLayerType.instruction,
+          title: '1 · Инструкция v$assistantVersion',
+          contentSnippet:
+              instructionSnippet ??
+              'Ты — помощник учителя. Отвечай кратко, объясняй пошагово…',
+          tokenCount: instructionTokens,
+          location: LocationTag.onDevice,
+          extraChip: 'на телефоне',
+        ),
       if (memoryTokens > 0)
         TraceLayer(
           type: TraceLayerType.memory,
           title: '2 · Память',
-          contentSnippet: memorySnippet ?? 'В классе 28 учеников. Урок 45 минут.',
+          contentSnippet:
+              memorySnippet ?? 'В классе 28 учеников. Урок 45 минут.',
           tokenCount: memoryTokens,
           location: LocationTag.onDevice,
           extraChip: 'на телефоне',
@@ -278,26 +310,49 @@ class RequestTrace {
           location: LocationTag.onDevice,
           extraChip: 'фрагменты',
         ),
+      if (manifest != null && historyTokens > 0)
+        TraceLayer(
+          type: TraceLayerType.history,
+          title: 'История диалога',
+          contentSnippet: manifest.messages
+              .where((message) => message['role'] != 'system')
+              .take(
+                manifest.messages
+                        .where((message) => message['role'] != 'system')
+                        .length -
+                    1,
+              )
+              .map((message) => '${message['role']}: ${message['content']}')
+              .join('\n\n'),
+          tokenCount: historyTokens,
+          location: LocationTag.onDevice,
+        ),
       TraceLayer(
         type: TraceLayerType.userPrompt,
         title: '4 · Ваш вопрос',
         contentSnippet: userPrompt,
-        tokenCount: userPrompt.length ~/ 4,
+        tokenCount: manifest == null
+            ? userPrompt.length ~/ 4
+            : const ContextAssembler().estimateTokens(userPrompt),
         location: LocationTag.onDevice,
         extraChip: 'вы',
       ),
       TraceLayer(
         type: TraceLayerType.response,
         title: 'Текст ответа',
-        contentSnippet: responseText.isEmpty && errorCode != null ? 'Ошибка: $errorCode' : responseText,
+        contentSnippet: responseText.isEmpty && errorCode != null
+            ? 'Ошибка: $errorCode'
+            : responseText,
         tokenCount: finalComp,
         location: LocationTag.abroad,
         extraChip: 'за рубежом',
       ),
-      const TraceLayer(
+      TraceLayer(
         type: TraceLayerType.appAction,
         title: 'Приложение сделало',
-        contentSnippet: 'Показало ответ и сохранило его в истории',
+        contentSnippet: isEphemeral
+            ? 'Показало ответ без сохранения истории'
+            : 'Показало ответ и сохранило его в истории',
         tokenCount: 0,
         location: LocationTag.onDevice,
       ),
@@ -314,7 +369,9 @@ class RequestTrace {
       TraceStep(
         stepIndex: 2,
         title: 'Приложение собрало запрос',
-        description: 'К вашему вопросу добавлены инструкция, память и фрагменты.',
+        description: manifest == null
+            ? 'К вашему вопросу добавлены инструкция, память и фрагменты.'
+            : 'Собран фактически отправленный контекст: ${manifest.messages.length} сообщений.',
         location: LocationTag.onDevice,
         isCompleted: true,
       ),
@@ -327,12 +384,12 @@ class RequestTrace {
       ),
       TraceStep(
         stepIndex: 4,
-        title: 'Модель «$modelCategory»',
+        title: 'Модель «${modelId ?? modelCategory}»',
         description: status == TraceStatus.error
             ? 'Сбой при обращении к модели: ${errorCode ?? 'Неизвестная ошибка'}'
             : (status == TraceStatus.interrupted
-                ? 'Генерация прервана пользователем.'
-                : 'Читает весь запрос целиком и пишет ответ: $finalComp токенов.'),
+                  ? 'Генерация прервана пользователем.'
+                  : 'Читает весь запрос целиком и пишет ответ: $finalComp токенов.'),
         location: LocationTag.abroad,
         isCompleted: status == TraceStatus.completed,
         durationMs: durationMs,
@@ -342,7 +399,9 @@ class RequestTrace {
         title: 'Ответ на телефоне',
         description: status == TraceStatus.error
             ? 'Приложение показало сообщение об ошибке.'
-            : 'Приложение показало текст и сохранило его в истории диалога.',
+            : (isEphemeral
+                  ? 'Приложение показало текст без сохранения истории.'
+                  : 'Приложение показало текст и сохранило его в истории диалога.'),
         location: LocationTag.onDevice,
         isCompleted: status != TraceStatus.error,
       ),
@@ -359,7 +418,7 @@ class RequestTrace {
       usage: TraceUsage(
         promptTokens: finalPrompt,
         completionTokens: finalComp,
-        totalTokens: finalPrompt + finalComp,
+        totalTokens: serverTotalTokens ?? (finalPrompt + finalComp),
         durationMs: durationMs,
         isServerReported: isServer,
         costTier: costTier,
@@ -371,4 +430,3 @@ class RequestTrace {
     );
   }
 }
-

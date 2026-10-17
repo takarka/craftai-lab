@@ -173,4 +173,15 @@ class OnboardingController extends Notifier<OnboardingState> {
       }
     }
   }
+
+  void resetForRecreation() {
+    final sessionRepo = ref.read(sessionRepositoryProvider);
+    if (sessionRepo is PersistentSessionRepository) {
+      sessionRepo.markOnboardingIncomplete(ownerId);
+    }
+    state = OnboardingState(
+      draft: state.draft.copyWith(name: '', nameEdited: false),
+      completed: false,
+    );
+  }
 }

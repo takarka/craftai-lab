@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Builder: connect Android API",
+      "type": "process",
+      "isBackground": true,
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-File", "${workspaceFolder}/Builder/tool/Connect-AndroidApi.ps1",
+        "-Watch"
+      ],
+      "problemMatcher": {
+        "owner": "builder-api",
+        "pattern": { "regexp": "^(NEVER_MATCH_BUILDER_ERROR)$", "message": 1 },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^Builder: connecting",
+          "endsPattern": "^Builder: Android localhost:5001 is connected"
+        }
+      }
+    }
+  ]
+}

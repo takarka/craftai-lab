@@ -889,6 +889,444 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Модель сохранена'**
   String get modelsSaveSuccess;
+
+  /// No description provided for @assistantSettingsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Настройки ассистента'**
+  String get assistantSettingsTitle;
+
+  /// No description provided for @assistantSettingsSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Персонаж, возможности и локальные данные'**
+  String get assistantSettingsSubtitle;
+
+  /// No description provided for @assistantCharacterCardTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваш ассистент'**
+  String get assistantCharacterCardTitle;
+
+  /// No description provided for @assistantEditName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменить имя'**
+  String get assistantEditName;
+
+  /// No description provided for @assistantLevelBadge.
+  ///
+  /// In ru, this message translates to:
+  /// **'Уровень {level} из 5'**
+  String assistantLevelBadge(int level);
+
+  /// No description provided for @assistantModelRowTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Модель'**
+  String get assistantModelRowTitle;
+
+  /// No description provided for @assistantInstructionsCardTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Инструкции'**
+  String get assistantInstructionsCardTitle;
+
+  /// No description provided for @assistantInstructionsCardSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Правила поведения и тон общения'**
+  String get assistantInstructionsCardSubtitle;
+
+  /// No description provided for @assistantVersionsLink.
+  ///
+  /// In ru, this message translates to:
+  /// **'История версий · v{version}'**
+  String assistantVersionsLink(int version);
+
+  /// No description provided for @assistantMemoryCardTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Память'**
+  String get assistantMemoryCardTitle;
+
+  /// No description provided for @assistantMemoryCardSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранённые факты о классах и предмете'**
+  String get assistantMemoryCardSubtitle;
+
+  /// No description provided for @assistantDocumentsCardTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'База знаний (документы)'**
+  String get assistantDocumentsCardTitle;
+
+  /// No description provided for @assistantDocumentsCardSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Локальные файлы и учебные материалы'**
+  String get assistantDocumentsCardSubtitle;
+
+  /// No description provided for @assistantToolsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Инструменты и MCP'**
+  String get assistantToolsTitle;
+
+  /// No description provided for @assistantToolsSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Календарь, поиск и внешние сервисы'**
+  String get assistantToolsSubtitle;
+
+  /// No description provided for @assistantSkillsHeader.
+  ///
+  /// In ru, this message translates to:
+  /// **'Возможности ассистента'**
+  String get assistantSkillsHeader;
+
+  /// No description provided for @assistantLocalDataRowTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Память и данные устройства'**
+  String get assistantLocalDataRowTitle;
+
+  /// No description provided for @assistantLocalDataRowSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Статистика хранения и политики'**
+  String get assistantLocalDataRowSubtitle;
+
+  /// No description provided for @assistantUndoLastChange.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отменить последнее изменение'**
+  String get assistantUndoLastChange;
+
+  /// No description provided for @assistantResetButton.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начать заново'**
+  String get assistantResetButton;
+
+  /// No description provided for @assistantNameTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Имя ассистента'**
+  String get assistantNameTitle;
+
+  /// No description provided for @assistantNameSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Как вы хотите называть своего помощника'**
+  String get assistantNameSubtitle;
+
+  /// No description provided for @assistantNameFieldLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Имя'**
+  String get assistantNameFieldLabel;
+
+  /// No description provided for @assistantNameFieldHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Например: Сова, Арыстан, Ментор...'**
+  String get assistantNameFieldHint;
+
+  /// No description provided for @assistantNameGraphemeLimit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Максимум 30 символов'**
+  String get assistantNameGraphemeLimit;
+
+  /// No description provided for @assistantNameEmptyError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Имя не может быть пустым'**
+  String get assistantNameEmptyError;
+
+  /// No description provided for @assistantNameTooLongError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Имя превышает 30 символов'**
+  String get assistantNameTooLongError;
+
+  /// No description provided for @assistantVersionsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'История версий'**
+  String get assistantVersionsTitle;
+
+  /// No description provided for @assistantVersionsSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Снимки настроек, правил и умений'**
+  String get assistantVersionsSubtitle;
+
+  /// No description provided for @assistantVersionCurrent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Текущая'**
+  String get assistantVersionCurrent;
+
+  /// No description provided for @assistantVersionSaveManual.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранить версию'**
+  String get assistantVersionSaveManual;
+
+  /// No description provided for @assistantVersionSaveReasonHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Причина сохранения (необязательно)'**
+  String get assistantVersionSaveReasonHint;
+
+  /// No description provided for @assistantVersionMissingResources.
+  ///
+  /// In ru, this message translates to:
+  /// **'Частично доступно (удалены файлы)'**
+  String get assistantVersionMissingResources;
+
+  /// No description provided for @rollbackDialogTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Восстановить версию {version}?'**
+  String rollbackDialogTitle(int version);
+
+  /// No description provided for @rollbackDialogSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ассистент вернётся к состоянию на момент создания снимка.'**
+  String get rollbackDialogSubtitle;
+
+  /// No description provided for @rollbackWhatWillChange.
+  ///
+  /// In ru, this message translates to:
+  /// **'Что изменится:'**
+  String get rollbackWhatWillChange;
+
+  /// No description provided for @rollbackWhatWillKeep.
+  ///
+  /// In ru, this message translates to:
+  /// **'Что сохранится:'**
+  String get rollbackWhatWillKeep;
+
+  /// No description provided for @rollbackKeepHistory.
+  ///
+  /// In ru, this message translates to:
+  /// **'История разговоров и прогресс курса не теряются'**
+  String get rollbackKeepHistory;
+
+  /// No description provided for @rollbackMissingResourcesWarning.
+  ///
+  /// In ru, this message translates to:
+  /// **'Некоторые документы были физически удалены и не будут восстановлены.'**
+  String get rollbackMissingResourcesWarning;
+
+  /// No description provided for @rollbackConfirmButton.
+  ///
+  /// In ru, this message translates to:
+  /// **'Восстановить'**
+  String get rollbackConfirmButton;
+
+  /// No description provided for @rollbackCancelButton.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отмена'**
+  String get rollbackCancelButton;
+
+  /// No description provided for @rollbackSuccess.
+  ///
+  /// In ru, this message translates to:
+  /// **'Версия {version} успешно восстановлена'**
+  String rollbackSuccess(int version);
+
+  /// No description provided for @localDataTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Память и данные'**
+  String get localDataTitle;
+
+  /// No description provided for @localDataSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Локальное хранилище и политики очистки'**
+  String get localDataSubtitle;
+
+  /// No description provided for @localDataDeviceWarning.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все данные хранятся только на этом устройстве. При удалении приложения они будут безвозвратно удалены.'**
+  String get localDataDeviceWarning;
+
+  /// No description provided for @localDataMapHeader.
+  ///
+  /// In ru, this message translates to:
+  /// **'Карта сохранённых данных'**
+  String get localDataMapHeader;
+
+  /// No description provided for @localDataConversations.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разговоры и сообщения: {count}'**
+  String localDataConversations(int count);
+
+  /// No description provided for @localDataMemoryFacts.
+  ///
+  /// In ru, this message translates to:
+  /// **'Факты в памяти: {count}'**
+  String localDataMemoryFacts(int count);
+
+  /// No description provided for @localDataDocuments.
+  ///
+  /// In ru, this message translates to:
+  /// **'Документы и индексы: {count}'**
+  String localDataDocuments(int count);
+
+  /// No description provided for @localDataTraces.
+  ///
+  /// In ru, this message translates to:
+  /// **'Трассировки запросов: {count}'**
+  String localDataTraces(int count);
+
+  /// No description provided for @localDataVersions.
+  ///
+  /// In ru, this message translates to:
+  /// **'История версий: {count}'**
+  String localDataVersions(int count);
+
+  /// No description provided for @localDataRetentionHeader.
+  ///
+  /// In ru, this message translates to:
+  /// **'Политика хранения'**
+  String get localDataRetentionHeader;
+
+  /// No description provided for @localDataRetention30Days.
+  ///
+  /// In ru, this message translates to:
+  /// **'30 дней'**
+  String get localDataRetention30Days;
+
+  /// No description provided for @localDataRetention90Days.
+  ///
+  /// In ru, this message translates to:
+  /// **'90 дней'**
+  String get localDataRetention90Days;
+
+  /// No description provided for @localDataRetentionForever.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бессрочно'**
+  String get localDataRetentionForever;
+
+  /// No description provided for @localDataRetentionSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Автоматическое удаление старых разговоров'**
+  String get localDataRetentionSubtitle;
+
+  /// No description provided for @resetDialogTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сбросить ассистента?'**
+  String get resetDialogTitle;
+
+  /// No description provided for @resetDialogSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Это действие безвозвратно удалит все локальные материалы ассистента.'**
+  String get resetDialogSubtitle;
+
+  /// No description provided for @resetWhatWillBeDeleted.
+  ///
+  /// In ru, this message translates to:
+  /// **'Будет удалено:'**
+  String get resetWhatWillBeDeleted;
+
+  /// No description provided for @resetDeleteInstructions.
+  ///
+  /// In ru, this message translates to:
+  /// **'Имя, инструкции и конфигурация ассистента'**
+  String get resetDeleteInstructions;
+
+  /// No description provided for @resetDeleteConversations.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вся история разговоров и сообщений'**
+  String get resetDeleteConversations;
+
+  /// No description provided for @resetDeleteMemory.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все сохранённые факты памяти'**
+  String get resetDeleteMemory;
+
+  /// No description provided for @resetDeleteDocuments.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все загруженные документы и фрагменты знаний'**
+  String get resetDeleteDocuments;
+
+  /// No description provided for @resetDeleteVersions.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вся история версий'**
+  String get resetDeleteVersions;
+
+  /// No description provided for @resetDeleteTraces.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все технические трассировки запросов'**
+  String get resetDeleteTraces;
+
+  /// No description provided for @resetWhatWillStay.
+  ///
+  /// In ru, this message translates to:
+  /// **'Что сохранится:'**
+  String get resetWhatWillStay;
+
+  /// No description provided for @resetKeepAccount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваш аккаунт CraftAI и активная сессия'**
+  String get resetKeepAccount;
+
+  /// No description provided for @resetKeepD02.
+  ///
+  /// In ru, this message translates to:
+  /// **'Согласие на трансграничную передачу данных (D02)'**
+  String get resetKeepD02;
+
+  /// No description provided for @resetTypeConfirmationPrompt.
+  ///
+  /// In ru, this message translates to:
+  /// **'Для подтверждения введите слово «{word}»:'**
+  String resetTypeConfirmationPrompt(String word);
+
+  /// No description provided for @resetConfirmationWord.
+  ///
+  /// In ru, this message translates to:
+  /// **'СБРОС'**
+  String get resetConfirmationWord;
+
+  /// No description provided for @resetConfirmButton.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить всё и сбросить'**
+  String get resetConfirmButton;
+
+  /// No description provided for @resetCancelButton.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отмена'**
+  String get resetCancelButton;
+
+  /// No description provided for @resetInProgress.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выполняется сброс ассистента...'**
+  String get resetInProgress;
 }
 
 class _AppLocalizationsDelegate

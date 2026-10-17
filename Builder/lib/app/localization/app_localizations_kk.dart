@@ -448,4 +448,262 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get modelsSaveSuccess => 'Модель сақталды';
+
+  @override
+  String get assistantSettingsTitle => 'Ассистент баптаулары';
+
+  @override
+  String get assistantSettingsSubtitle =>
+      'Кейіпкер, мүмкіндіктер және жергілікті деректер';
+
+  @override
+  String get assistantCharacterCardTitle => 'Сіздің ассистентіңіз';
+
+  @override
+  String get assistantEditName => 'Атын өзгерту';
+
+  @override
+  String assistantLevelBadge(int level) {
+    return '$level деңгей (барлығы 5)';
+  }
+
+  @override
+  String get assistantModelRowTitle => 'Үлгі';
+
+  @override
+  String get assistantInstructionsCardTitle => 'Нұсқаулықтар';
+
+  @override
+  String get assistantInstructionsCardSubtitle =>
+      'Мінез-құлық ережелері мен сөйлесу мәнері';
+
+  @override
+  String assistantVersionsLink(int version) {
+    return 'Нұсқалар тарихы · v$version';
+  }
+
+  @override
+  String get assistantMemoryCardTitle => 'Жад';
+
+  @override
+  String get assistantMemoryCardSubtitle =>
+      'Сыныптар мен пән туралы сақталған фактілер';
+
+  @override
+  String get assistantDocumentsCardTitle => 'Білім базасы (құжаттар)';
+
+  @override
+  String get assistantDocumentsCardSubtitle =>
+      'Жергілікті файлдар мен оқу материалдары';
+
+  @override
+  String get assistantToolsTitle => 'Құралдар және MCP';
+
+  @override
+  String get assistantToolsSubtitle => 'Күнтізбе, іздеу және сыртқы қызметтер';
+
+  @override
+  String get assistantSkillsHeader => 'Ассистент мүмкіндіктері';
+
+  @override
+  String get assistantLocalDataRowTitle => 'Құрылғының жады мен деректері';
+
+  @override
+  String get assistantLocalDataRowSubtitle =>
+      'Сақтау статистикасы мен саясаттары';
+
+  @override
+  String get assistantUndoLastChange => 'Соңғы өзгерісті қайтару';
+
+  @override
+  String get assistantResetButton => 'Басынан бастау';
+
+  @override
+  String get assistantNameTitle => 'Ассистенттің аты';
+
+  @override
+  String get assistantNameSubtitle => 'Көмекшіңізді қалай атағыңыз келеді';
+
+  @override
+  String get assistantNameFieldLabel => 'Аты';
+
+  @override
+  String get assistantNameFieldHint => 'Мысалы: Үкі, Арыстан, Ұстаз...';
+
+  @override
+  String get assistantNameGraphemeLimit => 'Ең көбі 30 таңба';
+
+  @override
+  String get assistantNameEmptyError => 'Аты бос болмауы керек';
+
+  @override
+  String get assistantNameTooLongError => 'Аты 30 таңбадан аспауы керек';
+
+  @override
+  String get assistantVersionsTitle => 'Нұсқалар тарихы';
+
+  @override
+  String get assistantVersionsSubtitle =>
+      'Баптаулар, ережелер мен дағдылардың суреттері';
+
+  @override
+  String get assistantVersionCurrent => 'Ағымдағы';
+
+  @override
+  String get assistantVersionSaveManual => 'Нұсқаны сақтау';
+
+  @override
+  String get assistantVersionSaveReasonHint => 'Сақтау себебі (міндетті емес)';
+
+  @override
+  String get assistantVersionMissingResources =>
+      'Жартылай қолжетімді (файлдар жойылған)';
+
+  @override
+  String rollbackDialogTitle(int version) {
+    return '$version нұсқасын қалпына келтіру?';
+  }
+
+  @override
+  String get rollbackDialogSubtitle =>
+      'Ассистент сурет түсірілген кездегі күйге оралады.';
+
+  @override
+  String get rollbackWhatWillChange => 'Не өзгереді:';
+
+  @override
+  String get rollbackWhatWillKeep => 'Не сақталады:';
+
+  @override
+  String get rollbackKeepHistory =>
+      'Әңгімелер тарихы мен курс үлгерімі жойылмайды';
+
+  @override
+  String get rollbackMissingResourcesWarning =>
+      'Кейбір құжаттар физикалық түрде жойылған және қайта қалпына келтірілмейді.';
+
+  @override
+  String get rollbackConfirmButton => 'Қалпына келтіру';
+
+  @override
+  String get rollbackCancelButton => 'Бас тарту';
+
+  @override
+  String rollbackSuccess(int version) {
+    return '$version нұсқасы сәтті қалпына келтірілді';
+  }
+
+  @override
+  String get localDataTitle => 'Жад және деректер';
+
+  @override
+  String get localDataSubtitle =>
+      'Жергілікті сақтау орны және тазалау саясаттары';
+
+  @override
+  String get localDataDeviceWarning =>
+      'Барлық деректер тек осы құрылғыда сақталады. Қолданбаны жойған кезде олар қайтарымсыз жойылады.';
+
+  @override
+  String get localDataMapHeader => 'Сақталған деректер картасы';
+
+  @override
+  String localDataConversations(int count) {
+    return 'Әңгімелер мен хабарламалар: $count';
+  }
+
+  @override
+  String localDataMemoryFacts(int count) {
+    return 'Жадтағы фактілер: $count';
+  }
+
+  @override
+  String localDataDocuments(int count) {
+    return 'Құжаттар мен индекстер: $count';
+  }
+
+  @override
+  String localDataTraces(int count) {
+    return 'Сұраныстар трассировкасы: $count';
+  }
+
+  @override
+  String localDataVersions(int count) {
+    return 'Нұсқалар тарихы: $count';
+  }
+
+  @override
+  String get localDataRetentionHeader => 'Сақтау саясаты';
+
+  @override
+  String get localDataRetention30Days => '30 күн';
+
+  @override
+  String get localDataRetention90Days => '90 күн';
+
+  @override
+  String get localDataRetentionForever => 'Мерзімсіз';
+
+  @override
+  String get localDataRetentionSubtitle =>
+      'Ескі әңгімелерді автоматты түрде жою';
+
+  @override
+  String get resetDialogTitle => 'Ассистентті тазарту керек пе?';
+
+  @override
+  String get resetDialogSubtitle =>
+      'Бұл әрекет ассистенттің барлық жергілікті материалдарын қайтарымсыз жояды.';
+
+  @override
+  String get resetWhatWillBeDeleted => 'Жойылады:';
+
+  @override
+  String get resetDeleteInstructions =>
+      'Ассистенттің аты, нұсқаулықтары мен конфигурациясы';
+
+  @override
+  String get resetDeleteConversations =>
+      'Барлық әңгімелер мен хабарламалар тарихы';
+
+  @override
+  String get resetDeleteMemory => 'Барлық сақталған жад фактілері';
+
+  @override
+  String get resetDeleteDocuments =>
+      'Барлық жүктелген құжаттар мен білім үзінділері';
+
+  @override
+  String get resetDeleteVersions => 'Барлық нұсқалар тарихы';
+
+  @override
+  String get resetDeleteTraces =>
+      'Сұраныстардың барлық техникалық трассировкалары';
+
+  @override
+  String get resetWhatWillStay => 'Не сақталады:';
+
+  @override
+  String get resetKeepAccount =>
+      'Сіздің CraftAI аккаунтыңыз бен белсенді сессияңыз';
+
+  @override
+  String get resetKeepD02 => 'Деректерді шетелге беруге келісім (D02)';
+
+  @override
+  String resetTypeConfirmationPrompt(String word) {
+    return 'Растау үшін «$word» сөзін енгізіңіз:';
+  }
+
+  @override
+  String get resetConfirmationWord => 'ТАЗАРТУ';
+
+  @override
+  String get resetConfirmButton => 'Барлығын жойып, тазарту';
+
+  @override
+  String get resetCancelButton => 'Бас тарту';
+
+  @override
+  String get resetInProgress => 'Ассистентті тазарту орындалуда...';
 }

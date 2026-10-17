@@ -45,6 +45,26 @@ abstract final class BuilderTheme {
         color: BuilderColors.ink,
       ),
     ),
+    navigationBarTheme: NavigationBarThemeData(
+      indicatorColor: BuilderColors.primaryTint,
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        return IconThemeData(
+          color: states.contains(WidgetState.selected)
+              ? BuilderColors.primary
+              : BuilderColors.inkSecondary,
+        );
+      }),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        return TextStyle(
+          fontFamily: 'Onest',
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: states.contains(WidgetState.selected)
+              ? BuilderColors.primary
+              : BuilderColors.inkSecondary,
+        );
+      }),
+    ),
     dividerTheme: const DividerThemeData(
       color: BuilderColors.line,
       thickness: 1,

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
+import '../../core/network/api_http_client.dart';
 import '../../core/storage/storage_providers.dart';
 import '../session/session_providers.dart';
 import 'domain/model_catalog.dart';
@@ -14,7 +15,9 @@ final craftAiClientProvider = Provider<CraftAiClient?>((ref) {
   if (uri == null) return null;
 
   final tokenStorage = ref.watch(secureTokenStorageProvider);
-  return CraftAiClient(baseUri: uri, tokenStorage: tokenStorage);
+  final client = createApiHttpClient(config);
+  ref.onDispose(client.close);
+  return CraftAiClient(baseUri: uri, tokenStorage: tokenStorage, httpClient: client);
 });
 
 final modelCatalogRepositoryProvider = Provider<ModelCatalogRepository>((ref) {
@@ -41,7 +44,9 @@ class SelectedCategoryController extends Notifier<ModelCategory> {
   ModelCategory build() {
     final repo = ref.watch(modelCatalogRepositoryProvider);
     repo.getSelectedCategory(ownerId).then((loaded) {
-      state = loaded;
+      if (ref.mounted) {
+        state = loaded;
+      }
     });
     return ModelCategory.standard;
   }

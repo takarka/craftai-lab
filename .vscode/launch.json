@@ -6,6 +6,7 @@
   "configurations": [
     {
       "name": "Builder (Обычный запуск)",
+      "preLaunchTask": "Builder: connect Android API",
       "cwd": "Builder",
       "request": "launch",
       "type": "dart",
@@ -20,6 +21,7 @@
     },
     {
       "name": "Builder (Debug режим)",
+      "preLaunchTask": "Builder: connect Android API",
       "cwd": "Builder",
       "request": "launch",
       "type": "dart",

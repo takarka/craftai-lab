@@ -446,4 +446,257 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get modelsSaveSuccess => 'Модель сохранена';
+
+  @override
+  String get assistantSettingsTitle => 'Настройки ассистента';
+
+  @override
+  String get assistantSettingsSubtitle =>
+      'Персонаж, возможности и локальные данные';
+
+  @override
+  String get assistantCharacterCardTitle => 'Ваш ассистент';
+
+  @override
+  String get assistantEditName => 'Изменить имя';
+
+  @override
+  String assistantLevelBadge(int level) {
+    return 'Уровень $level из 5';
+  }
+
+  @override
+  String get assistantModelRowTitle => 'Модель';
+
+  @override
+  String get assistantInstructionsCardTitle => 'Инструкции';
+
+  @override
+  String get assistantInstructionsCardSubtitle =>
+      'Правила поведения и тон общения';
+
+  @override
+  String assistantVersionsLink(int version) {
+    return 'История версий · v$version';
+  }
+
+  @override
+  String get assistantMemoryCardTitle => 'Память';
+
+  @override
+  String get assistantMemoryCardSubtitle =>
+      'Сохранённые факты о классах и предмете';
+
+  @override
+  String get assistantDocumentsCardTitle => 'База знаний (документы)';
+
+  @override
+  String get assistantDocumentsCardSubtitle =>
+      'Локальные файлы и учебные материалы';
+
+  @override
+  String get assistantToolsTitle => 'Инструменты и MCP';
+
+  @override
+  String get assistantToolsSubtitle => 'Календарь, поиск и внешние сервисы';
+
+  @override
+  String get assistantSkillsHeader => 'Возможности ассистента';
+
+  @override
+  String get assistantLocalDataRowTitle => 'Память и данные устройства';
+
+  @override
+  String get assistantLocalDataRowSubtitle => 'Статистика хранения и политики';
+
+  @override
+  String get assistantUndoLastChange => 'Отменить последнее изменение';
+
+  @override
+  String get assistantResetButton => 'Начать заново';
+
+  @override
+  String get assistantNameTitle => 'Имя ассистента';
+
+  @override
+  String get assistantNameSubtitle => 'Как вы хотите называть своего помощника';
+
+  @override
+  String get assistantNameFieldLabel => 'Имя';
+
+  @override
+  String get assistantNameFieldHint => 'Например: Сова, Арыстан, Ментор...';
+
+  @override
+  String get assistantNameGraphemeLimit => 'Максимум 30 символов';
+
+  @override
+  String get assistantNameEmptyError => 'Имя не может быть пустым';
+
+  @override
+  String get assistantNameTooLongError => 'Имя превышает 30 символов';
+
+  @override
+  String get assistantVersionsTitle => 'История версий';
+
+  @override
+  String get assistantVersionsSubtitle => 'Снимки настроек, правил и умений';
+
+  @override
+  String get assistantVersionCurrent => 'Текущая';
+
+  @override
+  String get assistantVersionSaveManual => 'Сохранить версию';
+
+  @override
+  String get assistantVersionSaveReasonHint =>
+      'Причина сохранения (необязательно)';
+
+  @override
+  String get assistantVersionMissingResources =>
+      'Частично доступно (удалены файлы)';
+
+  @override
+  String rollbackDialogTitle(int version) {
+    return 'Восстановить версию $version?';
+  }
+
+  @override
+  String get rollbackDialogSubtitle =>
+      'Ассистент вернётся к состоянию на момент создания снимка.';
+
+  @override
+  String get rollbackWhatWillChange => 'Что изменится:';
+
+  @override
+  String get rollbackWhatWillKeep => 'Что сохранится:';
+
+  @override
+  String get rollbackKeepHistory =>
+      'История разговоров и прогресс курса не теряются';
+
+  @override
+  String get rollbackMissingResourcesWarning =>
+      'Некоторые документы были физически удалены и не будут восстановлены.';
+
+  @override
+  String get rollbackConfirmButton => 'Восстановить';
+
+  @override
+  String get rollbackCancelButton => 'Отмена';
+
+  @override
+  String rollbackSuccess(int version) {
+    return 'Версия $version успешно восстановлена';
+  }
+
+  @override
+  String get localDataTitle => 'Память и данные';
+
+  @override
+  String get localDataSubtitle => 'Локальное хранилище и политики очистки';
+
+  @override
+  String get localDataDeviceWarning =>
+      'Все данные хранятся только на этом устройстве. При удалении приложения они будут безвозвратно удалены.';
+
+  @override
+  String get localDataMapHeader => 'Карта сохранённых данных';
+
+  @override
+  String localDataConversations(int count) {
+    return 'Разговоры и сообщения: $count';
+  }
+
+  @override
+  String localDataMemoryFacts(int count) {
+    return 'Факты в памяти: $count';
+  }
+
+  @override
+  String localDataDocuments(int count) {
+    return 'Документы и индексы: $count';
+  }
+
+  @override
+  String localDataTraces(int count) {
+    return 'Трассировки запросов: $count';
+  }
+
+  @override
+  String localDataVersions(int count) {
+    return 'История версий: $count';
+  }
+
+  @override
+  String get localDataRetentionHeader => 'Политика хранения';
+
+  @override
+  String get localDataRetention30Days => '30 дней';
+
+  @override
+  String get localDataRetention90Days => '90 дней';
+
+  @override
+  String get localDataRetentionForever => 'Бессрочно';
+
+  @override
+  String get localDataRetentionSubtitle =>
+      'Автоматическое удаление старых разговоров';
+
+  @override
+  String get resetDialogTitle => 'Сбросить ассистента?';
+
+  @override
+  String get resetDialogSubtitle =>
+      'Это действие безвозвратно удалит все локальные материалы ассистента.';
+
+  @override
+  String get resetWhatWillBeDeleted => 'Будет удалено:';
+
+  @override
+  String get resetDeleteInstructions =>
+      'Имя, инструкции и конфигурация ассистента';
+
+  @override
+  String get resetDeleteConversations => 'Вся история разговоров и сообщений';
+
+  @override
+  String get resetDeleteMemory => 'Все сохранённые факты памяти';
+
+  @override
+  String get resetDeleteDocuments =>
+      'Все загруженные документы и фрагменты знаний';
+
+  @override
+  String get resetDeleteVersions => 'Вся история версий';
+
+  @override
+  String get resetDeleteTraces => 'Все технические трассировки запросов';
+
+  @override
+  String get resetWhatWillStay => 'Что сохранится:';
+
+  @override
+  String get resetKeepAccount => 'Ваш аккаунт CraftAI и активная сессия';
+
+  @override
+  String get resetKeepD02 => 'Согласие на трансграничную передачу данных (D02)';
+
+  @override
+  String resetTypeConfirmationPrompt(String word) {
+    return 'Для подтверждения введите слово «$word»:';
+  }
+
+  @override
+  String get resetConfirmationWord => 'СБРОС';
+
+  @override
+  String get resetConfirmButton => 'Удалить всё и сбросить';
+
+  @override
+  String get resetCancelButton => 'Отмена';
+
+  @override
+  String get resetInProgress => 'Выполняется сброс ассистента...';
 }

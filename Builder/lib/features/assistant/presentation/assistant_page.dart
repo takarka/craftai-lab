@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../app/localization/app_localizations.dart';
-import '../../../app/presentation/foundation_pages.dart';
 import '../../../ui_kit/ui_kit.dart';
 import '../../chat/chat_providers.dart';
 import '../../chat/domain/chat_message.dart';
@@ -30,66 +29,12 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
 
-  bool _isAcknowledged = false;
-  String? _cloudMessage;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkPolicy();
-  }
-
   @override
   void dispose() {
     _textController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
     super.dispose();
-  }
-
-  Future<void> _checkPolicy() async {
-    final repo = ref.read(policyRepositoryProvider);
-    final ack = await repo.isPolicyAcknowledged(
-      ownerId: widget.ownerId,
-      policyId: 'd02_cross_border_transfer',
-    );
-    if (mounted) {
-      setState(() {
-        _isAcknowledged = ack;
-      });
-    }
-  }
-
-  Future<void> attemptCloudRequest() async {
-    final policyRepo = ref.read(policyRepositoryProvider);
-    final ack = await policyRepo.isPolicyAcknowledged(
-      ownerId: widget.ownerId,
-      policyId: 'd02_cross_border_transfer',
-    );
-
-    if (!ack) {
-      if (!mounted) return;
-      final consentGiven = await showD02ConsentSheet(context);
-      if (consentGiven == true) {
-        await policyRepo.acknowledgePolicy(
-          ownerId: widget.ownerId,
-          policyId: 'd02_cross_border_transfer',
-          policyVersion: 'v1.0',
-        );
-        if (mounted) {
-          setState(() {
-            _isAcknowledged = true;
-            _cloudMessage = 'Запрос к облаку разрешён (согласие получено)';
-          });
-        }
-      }
-    } else {
-      if (mounted) {
-        setState(() {
-          _cloudMessage = 'Запрос к облаку выполнен';
-        });
-      }
-    }
   }
 
   void _scrollToBottomIfNeeded() {
@@ -120,11 +65,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
           policyId: 'd02_cross_border_transfer',
           policyVersion: 'v1.0',
         );
-        if (mounted) {
-          setState(() {
-            _isAcknowledged = true;
-          });
-        }
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -201,65 +141,16 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             onPressed: () => ConversationHistorySheet.show(context, ownerId: widget.ownerId),
           ),
           IconButton(
-            key: const Key('assistant.newBtn'),
-            icon: const Icon(Icons.add_comment_outlined),
-            tooltip: 'Новый разговор',
-            onPressed: () => ref.read(chatSessionProvider(widget.ownerId).notifier).startNewConversation(),
+            key: const Key('assistant.settingsBtn'),
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: 'Настройки ассистента',
+            onPressed: () => context.push('/assistant/settings'),
           ),
-          const LanguageSelector(),
         ],
       ),
       body: SafeArea(
         child: Column(
           children: [
-            // Unified D02 status notice and cloud test action
-            Container(
-              color: _isAcknowledged ? BuilderColors.primaryTint : BuilderColors.warningTint,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Icon(
-                    _isAcknowledged ? Icons.check_circle_outline : Icons.shield_outlined,
-                    size: 16,
-                    color: _isAcknowledged ? BuilderColors.primary : BuilderColors.warning,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _isAcknowledged
-                              ? 'Согласие на трансграничную передачу (D02): получено'
-                              : 'Режим без облака: согласие D02 отложено',
-                          style: TextStyle(
-                            color: _isAcknowledged ? BuilderColors.primary : BuilderColors.warning,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        if (_cloudMessage != null)
-                          Text(
-                            _cloudMessage!,
-                            style: const TextStyle(
-                              color: BuilderColors.inkSecondary,
-                              fontSize: 11,
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  BuilderButton(
-                    key: const Key('assistant.cloudAction'),
-                    label: _isAcknowledged ? 'Тест облака' : 'Разрешить',
-                    variant: BuilderButtonVariant.secondary,
-                    onPressed: attemptCloudRequest,
-                  ),
-                ],
-              ),
-            ),
-
             // Ephemeral mode notice
             if (isEphemeral)
               Container(
@@ -541,7 +432,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Row(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
                           children: [
                             BuilderButton(
                               key: const Key('chat.retryBtn'),
@@ -550,7 +443,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                               onPressed: () => ref.read(chatSessionProvider(widget.ownerId).notifier).retryLast(),
                             ),
                             if (message.requestId != null) ...[
-                              const SizedBox(width: 8),
                               BuilderButton(
                                 key: Key('chat.errorTraceBtn_${message.id}'),
                                 label: 'Под капотом',
