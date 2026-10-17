@@ -178,4 +178,174 @@ class AppLocalizationsKk extends AppLocalizations {
 
   @override
   String get authSubmitting => 'Сұрау жіберілуде';
+
+  @override
+  String get onbWelcomeTitle => 'Өз ассистентіңізді құрастырыңыз';
+
+  @override
+  String get onbWelcomeBody =>
+      'Бес деңгей. Әр деңгейде ассистентіңіз жаңа дағдыға ие болады, ал сіз оның қалай жұмыс істейтінін білесіз.';
+
+  @override
+  String get onbBenefitWork => 'Ассистентті өз жұмысыңызға үйретіңіз';
+
+  @override
+  String get onbBenefitWorkBody =>
+      'Пәніңізге арналған нұсқаулықтар, жад және құжаттар.';
+
+  @override
+  String get onbBenefitUnderstand => 'Әр қадамды түсініңіз';
+
+  @override
+  String get onbBenefitUnderstandBody =>
+      'Модельге не жіберілгенін және жауаптың қайдан алынғанын қараңыз.';
+
+  @override
+  String get onbBenefitControl => 'Деректерді басқарыңыз';
+
+  @override
+  String get onbBenefitControlBody =>
+      'Қандай деректер жіберілетінін және қандай әрекеттерге рұқсат берілетінін өзіңіз шешесіз.';
+
+  @override
+  String get onbStart => 'Бастау';
+
+  @override
+  String get onbNext => 'Келесі';
+
+  @override
+  String get onbPreferencesTitle => 'Пәніңіз бен сыныптарыңыз';
+
+  @override
+  String get onbSubject => 'Пән';
+
+  @override
+  String get onbSearchSubject => 'Пәнді іздеу';
+
+  @override
+  String get onbNoSubjects =>
+      'Бұл сұрау бойынша пән табылмады. «Басқа» нұсқасын таңдап, пәніңізді енгізіңіз.';
+
+  @override
+  String get onbOtherSubject => 'Пәніңіздің атауы';
+
+  @override
+  String get onbGrades => 'Сыныптар';
+
+  @override
+  String get onbAssistantLanguage => 'Ассистент тілі';
+
+  @override
+  String get onbRussian => 'Орысша';
+
+  @override
+  String get onbKazakh => 'Қазақша';
+
+  @override
+  String get onbBilingual => 'Орысша және қазақша';
+
+  @override
+  String get onbChooseSubject => 'Пәнді таңдаңыз';
+
+  @override
+  String get onbChooseGrades => 'Кемінде бір сыныпты таңдаңыз';
+
+  @override
+  String get onbSummaryTitle => 'Таңдауыңыз';
+
+  @override
+  String get onbCanChange => 'Бұл баптауларды кейін өзгертуге болады.';
+
+  @override
+  String get onbMeetTitle => 'Ассистентіңізбен танысыңыз';
+
+  @override
+  String get onbMeetBody =>
+      'Алдымен базалық ассистенттен бастайсыз. Курс барысында жаңа дағдылар қосылады.';
+
+  @override
+  String get onbName => 'Ассистентті қалай атайсыз?';
+
+  @override
+  String get onbCreate => 'Ассистент жасау';
+
+  @override
+  String get onbCreating => 'Ассистент жасалуда';
+
+  @override
+  String get onbStorageUnavailable =>
+      'Ассистентті сақтау әзірге қолжетімсіз. Баптаулар тек ағымдағы нобайда сақталады.';
+
+  @override
+  String get onbLocalOnly =>
+      'Бұл баптаулар модельге автоматты түрде жіберілмейді.';
+
+  @override
+  String get onbSaveError =>
+      'Ассистентті сақтау мүмкін болмады. Нобайыңыз экранда қалды. Қайталап көріңіз.';
+
+  @override
+  String get onbInvalidDraft =>
+      'Пәнді, сыныптарды және ассистент атын тексеріңіз.';
+
+  @override
+  String get onbSessionChanged => 'Аккаунт өзгерді. Баптауды қайта ашыңыз.';
+
+  @override
+  String get onbPreviewBanner =>
+      'DEV · Онбордингті алдын ала қарау. Деректер тек жадта, API жоқ.';
+
+  @override
+  String get onbHeroLabel => 'Craft Builder базалық кейіпкері';
+
+  @override
+  String onbDefaultName(String subject) {
+    return 'Ассистент: $subject';
+  }
+
+  @override
+  String onbStep(int current, int total) {
+    return '$current/$total қадам';
+  }
+
+  @override
+  String onbGradeLabel(int grade) {
+    return '$grade-сынып';
+  }
+
+  @override
+  String get subjectMathematics => 'Математика';
+
+  @override
+  String get subjectRussian => 'Орыс тілі';
+
+  @override
+  String get subjectKazakh => 'Қазақ тілі';
+
+  @override
+  String get subjectEnglish => 'Ағылшын тілі';
+
+  @override
+  String get subjectHistory => 'Тарих';
+
+  @override
+  String get subjectBiology => 'Биология';
+
+  @override
+  String get subjectGeography => 'География';
+
+  @override
+  String get subjectPhysics => 'Физика';
+
+  @override
+  String get subjectChemistry => 'Химия';
+
+  @override
+  String get subjectInformatics => 'Информатика';
+
+  @override
+  String get subjectPrimary => 'Бастауыш сыныптар';
+
+  @override
+  String get subjectOther => 'Басқа';
 }

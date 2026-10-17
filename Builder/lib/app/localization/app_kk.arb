@@ -50,5 +50,80 @@
   "authRateLimited": "Әрекет саны тым көп. Кейінірек қайталап көріңіз.",
   "authUnexpectedError": "Әрекетті орындау мүмкін болмады. Қайталап көріңіз.",
   "closePage": "Жабу",
-  "authSubmitting": "Сұрау жіберілуде"
+  "authSubmitting": "Сұрау жіберілуде",
+  "onbWelcomeTitle": "Өз ассистентіңізді құрастырыңыз",
+  "onbWelcomeBody": "Бес деңгей. Әр деңгейде ассистентіңіз жаңа дағдыға ие болады, ал сіз оның қалай жұмыс істейтінін білесіз.",
+  "onbBenefitWork": "Ассистентті өз жұмысыңызға үйретіңіз",
+  "onbBenefitWorkBody": "Пәніңізге арналған нұсқаулықтар, жад және құжаттар.",
+  "onbBenefitUnderstand": "Әр қадамды түсініңіз",
+  "onbBenefitUnderstandBody": "Модельге не жіберілгенін және жауаптың қайдан алынғанын қараңыз.",
+  "onbBenefitControl": "Деректерді басқарыңыз",
+  "onbBenefitControlBody": "Қандай деректер жіберілетінін және қандай әрекеттерге рұқсат берілетінін өзіңіз шешесіз.",
+  "onbStart": "Бастау",
+  "onbNext": "Келесі",
+  "onbPreferencesTitle": "Пәніңіз бен сыныптарыңыз",
+  "onbSubject": "Пән",
+  "onbSearchSubject": "Пәнді іздеу",
+  "onbNoSubjects": "Бұл сұрау бойынша пән табылмады. «Басқа» нұсқасын таңдап, пәніңізді енгізіңіз.",
+  "onbOtherSubject": "Пәніңіздің атауы",
+  "onbGrades": "Сыныптар",
+  "onbAssistantLanguage": "Ассистент тілі",
+  "onbRussian": "Орысша",
+  "onbKazakh": "Қазақша",
+  "onbBilingual": "Орысша және қазақша",
+  "onbChooseSubject": "Пәнді таңдаңыз",
+  "onbChooseGrades": "Кемінде бір сыныпты таңдаңыз",
+  "onbSummaryTitle": "Таңдауыңыз",
+  "onbCanChange": "Бұл баптауларды кейін өзгертуге болады.",
+  "onbMeetTitle": "Ассистентіңізбен танысыңыз",
+  "onbMeetBody": "Алдымен базалық ассистенттен бастайсыз. Курс барысында жаңа дағдылар қосылады.",
+  "onbName": "Ассистентті қалай атайсыз?",
+  "onbCreate": "Ассистент жасау",
+  "onbCreating": "Ассистент жасалуда",
+  "onbStorageUnavailable": "Ассистентті сақтау әзірге қолжетімсіз. Баптаулар тек ағымдағы нобайда сақталады.",
+  "onbLocalOnly": "Бұл баптаулар модельге автоматты түрде жіберілмейді.",
+  "onbSaveError": "Ассистентті сақтау мүмкін болмады. Нобайыңыз экранда қалды. Қайталап көріңіз.",
+  "onbInvalidDraft": "Пәнді, сыныптарды және ассистент атын тексеріңіз.",
+  "onbSessionChanged": "Аккаунт өзгерді. Баптауды қайта ашыңыз.",
+  "onbPreviewBanner": "DEV · Онбордингті алдын ала қарау. Деректер тек жадта, API жоқ.",
+  "onbHeroLabel": "Craft Builder базалық кейіпкері",
+  "onbDefaultName": "Ассистент: {subject}",
+  "onbStep": "{current}/{total} қадам",
+  "onbGradeLabel": "{grade}-сынып",
+  "subjectMathematics": "Математика",
+  "subjectRussian": "Орыс тілі",
+  "subjectKazakh": "Қазақ тілі",
+  "subjectEnglish": "Ағылшын тілі",
+  "subjectHistory": "Тарих",
+  "subjectBiology": "Биология",
+  "subjectGeography": "География",
+  "subjectPhysics": "Физика",
+  "subjectChemistry": "Химия",
+  "subjectInformatics": "Информатика",
+  "subjectPrimary": "Бастауыш сыныптар",
+  "subjectOther": "Басқа",
+  "@onbDefaultName": {
+    "placeholders": {
+      "subject": {
+        "type": "String"
+      }
+    }
+  },
+  "@onbStep": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "@onbGradeLabel": {
+    "placeholders": {
+      "grade": {
+        "type": "int"
+      }
+    }
+  }
 }
