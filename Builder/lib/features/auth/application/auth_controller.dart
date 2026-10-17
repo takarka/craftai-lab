@@ -1,0 +1,67 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/errors/app_failure.dart';
+import '../domain/auth_gateway.dart';
+
+enum AuthFormKind { signIn, register, recovery }
+
+final authGatewayProvider = Provider<AuthGateway>(
+  (ref) => const NotConnectedAuthGateway(),
+);
+
+class AuthSubmissionState {
+  const AuthSubmissionState({
+    this.busy = false,
+    this.failure,
+    this.recoverySent = false,
+  });
+  final bool busy;
+  final AppFailure? failure;
+  final bool recoverySent;
+}
+
+final authControllerProvider = NotifierProvider.autoDispose
+    .family<AuthController, AuthSubmissionState, AuthFormKind>(
+      AuthController.new,
+    );
+
+class AuthController extends Notifier<AuthSubmissionState> {
+  AuthController(this.kind);
+  final AuthFormKind kind;
+  bool _active = true;
+
+  @override
+  AuthSubmissionState build() {
+    _active = true;
+    ref.onDispose(() => _active = false);
+    return const AuthSubmissionState();
+  }
+
+  Future<void> submit(Future<void> Function(AuthGateway) action) async {
+    if (state.busy || state.recoverySent) return;
+    final gateway = ref.read(authGatewayProvider);
+    if (!gateway.isAvailable) {
+      state = const AuthSubmissionState(
+        failure: AppFailure(AppFailureCode.serviceUnavailable),
+      );
+      return;
+    }
+    state = const AuthSubmissionState(busy: true);
+    try {
+      await action(gateway);
+      if (_active) {
+        state = AuthSubmissionState(
+          recoverySent: kind == AuthFormKind.recovery,
+        );
+      }
+    } on AppFailure catch (failure) {
+      if (_active) state = AuthSubmissionState(failure: failure);
+    } catch (_) {
+      if (_active) {
+        state = const AuthSubmissionState(
+          failure: AppFailure(AppFailureCode.unexpected),
+        );
+      }
+    }
+  }
+}

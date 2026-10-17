@@ -67,19 +67,6 @@ class StartupPage extends ConsumerWidget {
   }
 }
 
-class SignInPage extends StatelessWidget {
-  const SignInPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final strings = AppLocalizations.of(context);
-    return FoundationPage(
-      title: strings.appTitle,
-      message: strings.signInPending,
-    );
-  }
-}
-
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
 

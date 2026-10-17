@@ -140,12 +140,6 @@ abstract class AppLocalizations {
   /// **'Не удалось запустить приложение с текущими настройками. Обратитесь в поддержку.'**
   String get configurationError;
 
-  /// No description provided for @signInPending.
-  ///
-  /// In ru, this message translates to:
-  /// **'Добро пожаловать в Craft Builder. Вход через аккаунт CraftAI пока недоступен: подключение авторизации находится в разработке.'**
-  String get signInPending;
-
   /// No description provided for @onboardingTitle.
   ///
   /// In ru, this message translates to:
@@ -193,6 +187,222 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Эта функция пока недоступна.'**
   String get featurePending;
+
+  /// No description provided for @authIntro.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соберите собственного ИИ-ассистента и поймите, как он устроен.'**
+  String get authIntro;
+
+  /// No description provided for @authAccount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Аккаунт CraftAI'**
+  String get authAccount;
+
+  /// No description provided for @authEmail.
+  ///
+  /// In ru, this message translates to:
+  /// **'Почта'**
+  String get authEmail;
+
+  /// No description provided for @authPassword.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пароль'**
+  String get authPassword;
+
+  /// No description provided for @authName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Имя'**
+  String get authName;
+
+  /// No description provided for @authConfirmPassword.
+  ///
+  /// In ru, this message translates to:
+  /// **'Повторите пароль'**
+  String get authConfirmPassword;
+
+  /// No description provided for @authSignIn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Войти'**
+  String get authSignIn;
+
+  /// No description provided for @authRegister.
+  ///
+  /// In ru, this message translates to:
+  /// **'Создать аккаунт'**
+  String get authRegister;
+
+  /// No description provided for @authForgotPassword.
+  ///
+  /// In ru, this message translates to:
+  /// **'Забыли пароль?'**
+  String get authForgotPassword;
+
+  /// No description provided for @authBackToSignIn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вернуться ко входу'**
+  String get authBackToSignIn;
+
+  /// No description provided for @authRecoveryTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Восстановление пароля'**
+  String get authRecoveryTitle;
+
+  /// No description provided for @authRecoveryDescription.
+  ///
+  /// In ru, this message translates to:
+  /// **'Укажите почту вашего аккаунта CraftAI. Мы отправим ссылку для смены пароля.'**
+  String get authRecoveryDescription;
+
+  /// No description provided for @authSendReset.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить ссылку'**
+  String get authSendReset;
+
+  /// No description provided for @authCheckInbox.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверьте почту'**
+  String get authCheckInbox;
+
+  /// No description provided for @authResetSent.
+  ///
+  /// In ru, this message translates to:
+  /// **'Если аккаунт с этой почтой существует, на неё придёт ссылка для восстановления пароля. Проверьте также папку «Спам».'**
+  String get authResetSent;
+
+  /// No description provided for @authUnavailable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вход и регистрация пока недоступны. Подключение аккаунта CraftAI ещё не завершено.'**
+  String get authUnavailable;
+
+  /// No description provided for @authSharedAccount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Один аккаунт CraftAI для всех продуктов.'**
+  String get authSharedAccount;
+
+  /// No description provided for @authPasswordHint.
+  ///
+  /// In ru, this message translates to:
+  /// **'Используйте уникальный пароль для аккаунта CraftAI.'**
+  String get authPasswordHint;
+
+  /// No description provided for @authAcceptDocuments.
+  ///
+  /// In ru, this message translates to:
+  /// **'Я принимаю условия использования и политику конфиденциальности.'**
+  String get authAcceptDocuments;
+
+  /// No description provided for @authTerms.
+  ///
+  /// In ru, this message translates to:
+  /// **'Условия использования'**
+  String get authTerms;
+
+  /// No description provided for @authPrivacy.
+  ///
+  /// In ru, this message translates to:
+  /// **'Политика конфиденциальности'**
+  String get authPrivacy;
+
+  /// No description provided for @authLegalUnavailable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Документы пока недоступны. До их публикации регистрация отключена.'**
+  String get authLegalUnavailable;
+
+  /// No description provided for @authShowPassword.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показать пароль'**
+  String get authShowPassword;
+
+  /// No description provided for @authHidePassword.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скрыть пароль'**
+  String get authHidePassword;
+
+  /// No description provided for @authHeroLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Символ Craft Builder'**
+  String get authHeroLabel;
+
+  /// No description provided for @fieldRequired.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заполните поле.'**
+  String get fieldRequired;
+
+  /// No description provided for @invalidEmail.
+  ///
+  /// In ru, this message translates to:
+  /// **'Введите корректную почту.'**
+  String get invalidEmail;
+
+  /// No description provided for @passwordMismatch.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пароли не совпадают.'**
+  String get passwordMismatch;
+
+  /// No description provided for @authInvalidCredentials.
+  ///
+  /// In ru, this message translates to:
+  /// **'Неверная почта или пароль.'**
+  String get authInvalidCredentials;
+
+  /// No description provided for @authAccountExists.
+  ///
+  /// In ru, this message translates to:
+  /// **'У вас уже есть аккаунт CraftAI — войдите.'**
+  String get authAccountExists;
+
+  /// No description provided for @authWeakPassword.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пароль не соответствует требованиям CraftAI. Выберите более надёжный пароль.'**
+  String get authWeakPassword;
+
+  /// No description provided for @authNetworkError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось подключиться. Проверьте интернет и попробуйте ещё раз.'**
+  String get authNetworkError;
+
+  /// No description provided for @authRateLimited.
+  ///
+  /// In ru, this message translates to:
+  /// **'Слишком много попыток. Попробуйте позже.'**
+  String get authRateLimited;
+
+  /// No description provided for @authUnexpectedError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось выполнить действие. Попробуйте ещё раз.'**
+  String get authUnexpectedError;
+
+  /// No description provided for @closePage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Закрыть'**
+  String get closePage;
+
+  /// No description provided for @authSubmitting.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправка запроса'**
+  String get authSubmitting;
 }
 
 class _AppLocalizationsDelegate

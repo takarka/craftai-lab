@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/session/session_repository.dart';
+import '../../features/auth/application/auth_controller.dart';
+import '../../features/auth/presentation/auth_page.dart';
 import '../localization/app_localizations.dart';
 import '../presentation/foundation_pages.dart';
 import '../providers.dart';
@@ -16,22 +18,38 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     }),
   );
   final router = GoRouter(
+    navigatorKey: GlobalKey<NavigatorState>(),
     initialLocation: '/assistant',
     redirect: (context, state) {
       final session = ref.read(sessionProvider);
       final path = state.uri.path;
+      final legal = const ['/legal/terms', '/legal/privacy'].contains(path);
+      if (legal) return null;
       if (!session.hasValue || session.hasError) {
         return path == '/startup' ? null : '/startup';
       }
       final value = session.requireValue;
       if (value is SignedOut) {
-        return path == '/sign-in' ? null : '/sign-in';
+        return const [
+              '/sign-in',
+              '/register',
+              '/recover-password',
+            ].contains(path)
+            ? null
+            : '/sign-in';
       }
       final account = value as AuthenticatedSession;
       if (!account.onboardingComplete) {
         return path == '/onboarding' ? null : '/onboarding';
       }
-      if (const ['/startup', '/sign-in', '/onboarding', '/'].contains(path)) {
+      if (const [
+        '/startup',
+        '/sign-in',
+        '/register',
+        '/recover-password',
+        '/onboarding',
+        '/',
+      ].contains(path)) {
         return '/assistant';
       }
       return null;
@@ -47,7 +65,33 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/sign-in',
-        builder: (context, state) => const SignInPage(),
+        builder: (context, state) => const AuthPage(kind: AuthFormKind.signIn),
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) =>
+            const AuthPage(kind: AuthFormKind.register),
+      ),
+      GoRoute(
+        path: '/recover-password',
+        builder: (context, state) =>
+            const AuthPage(kind: AuthFormKind.recovery),
+      ),
+      GoRoute(
+        path: '/legal/terms',
+        pageBuilder: (context, state) => MaterialPage<void>(
+          key: state.pageKey,
+          fullscreenDialog: true,
+          child: const AuthLegalPage(privacy: false),
+        ),
+      ),
+      GoRoute(
+        path: '/legal/privacy',
+        pageBuilder: (context, state) => MaterialPage<void>(
+          key: state.pageKey,
+          fullscreenDialog: true,
+          child: const AuthLegalPage(privacy: true),
+        ),
       ),
       GoRoute(
         path: '/onboarding',

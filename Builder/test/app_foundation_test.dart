@@ -139,12 +139,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Craft Builder'), findsOneWidget);
       expect(
-        find.textContaining('Вход через аккаунт CraftAI пока недоступен'),
+        find.textContaining('Вход и регистрация пока недоступны'),
         findsOneWidget,
       );
       expect(find.text('UI Kit'), findsNothing);
       expect(find.byType(NavigationBar), findsNothing);
-      expect(find.byType(TextField), findsNothing);
+      expect(find.byType(TextField), findsNWidgets(2));
     },
   );
 
@@ -279,7 +279,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byTooltip('Интерфейс тілі'), findsOneWidget);
     expect(
-      find.textContaining('Craft Builder қолданбасына қош келдіңіз'),
+      find.textContaining('Кіру және тіркелу әзірге қолжетімсіз'),
       findsOneWidget,
     );
   });

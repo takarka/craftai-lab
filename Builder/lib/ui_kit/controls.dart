@@ -12,6 +12,7 @@ class BuilderButton extends StatelessWidget {
     this.variant = BuilderButtonVariant.primary,
     this.icon,
     this.loading = false,
+    this.loadingLabel,
     this.previewPressed = false,
   });
   final String label;
@@ -19,6 +20,7 @@ class BuilderButton extends StatelessWidget {
   final BuilderButtonVariant variant;
   final BuilderGlyph? icon;
   final bool loading;
+  final String? loadingLabel;
   final bool previewPressed;
 
   @override
@@ -37,7 +39,7 @@ class BuilderButton extends StatelessWidget {
         ? Colors.white
         : base;
     return Semantics(
-      label: loading ? '$label, загрузка' : null,
+      label: loading ? loadingLabel ?? '$label, загрузка' : null,
       child: TextButton(
         onPressed: loading ? null : onPressed,
         style: ButtonStyle(
