@@ -5,13 +5,15 @@ import 'package:go_router/go_router.dart';
 import '../../features/session/session_repository.dart';
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/presentation/auth_page.dart';
+import '../../features/onboarding/application/onboarding_controller.dart';
+import '../../features/onboarding/presentation/onboarding_pages.dart';
 import '../localization/app_localizations.dart';
 import '../presentation/foundation_pages.dart';
 import '../providers.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   // Replace navigation stacks when account ownership changes.
-  ref.watch(
+  final ownerId = ref.watch(
     sessionProvider.select((state) {
       final session = state.asData?.value;
       return session is AuthenticatedSession ? session.ownerId : null;
@@ -39,9 +41,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             : '/sign-in';
       }
       final account = value as AuthenticatedSession;
-      if (!account.onboardingComplete) {
-        return path == '/onboarding' ? null : '/onboarding';
+      final onboarding = ref.read(
+        onboardingControllerProvider(account.ownerId),
+      );
+      final complete = account.onboardingComplete || onboarding.completed;
+      if (!complete) {
+        if (path == '/onboarding/assistant' &&
+            !onboarding.draft.preferencesValid) {
+          return '/onboarding/preferences';
+        }
+        return const [
+              '/onboarding',
+              '/onboarding/preferences',
+              '/onboarding/assistant',
+            ].contains(path)
+            ? null
+            : '/onboarding';
       }
+      if (path.startsWith('/onboarding/')) return '/assistant';
       if (const [
         '/startup',
         '/sign-in',
@@ -95,7 +112,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => const OnboardingPage(),
+        builder: (context, state) => const OnboardingWelcomePage(),
+      ),
+      GoRoute(
+        path: '/onboarding/preferences',
+        builder: (context, state) =>
+            OnboardingPreferencesPage(ownerId: ownerId!),
+      ),
+      GoRoute(
+        path: '/onboarding/assistant',
+        builder: (context, state) => OnboardingAssistantPage(ownerId: ownerId!),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => BuilderShell(shell: shell),
@@ -138,6 +164,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
   ref.listen(sessionProvider, (previous, next) => router.refresh());
+  if (ownerId != null) {
+    ref.listen(
+      onboardingControllerProvider(ownerId).select((state) => state.completed),
+      (_, _) => router.refresh(),
+    );
+  }
   ref.onDispose(router.dispose);
   return router;
 });

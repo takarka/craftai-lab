@@ -32,3 +32,5 @@ class AppLocale extends Notifier<Locale?> {
 }
 
 final appLocaleProvider = NotifierProvider<AppLocale, Locale?>(AppLocale.new);
+
+final developmentPreviewProvider = Provider<bool>((ref) => false);

@@ -37,6 +37,26 @@ class BuilderApp extends ConsumerWidget {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: ref.watch(appRouterProvider),
+      builder: (context, child) => ref.watch(developmentPreviewProvider)
+          ? Column(
+              children: [
+                Material(
+                  color: BuilderColors.warningTint,
+                  child: SafeArea(
+                    bottom: false,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Text(
+                        AppLocalizations.of(context).onbPreviewBanner,
+                        style: BuilderType.small,
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(child: child!),
+              ],
+            )
+          : child!,
     );
   }
 }

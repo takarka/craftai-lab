@@ -403,6 +403,312 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Отправка запроса'**
   String get authSubmitting;
+
+  /// No description provided for @onbWelcomeTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Соберите своего ассистента'**
+  String get onbWelcomeTitle;
+
+  /// No description provided for @onbWelcomeBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пять уровней. На каждом ваш ассистент получает новое умение, а вы узнаёте, как он работает внутри.'**
+  String get onbWelcomeBody;
+
+  /// No description provided for @onbBenefitWork.
+  ///
+  /// In ru, this message translates to:
+  /// **'Учите ассистента своей работе'**
+  String get onbBenefitWork;
+
+  /// No description provided for @onbBenefitWorkBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Инструкции, память и документы вашего предмета.'**
+  String get onbBenefitWorkBody;
+
+  /// No description provided for @onbBenefitUnderstand.
+  ///
+  /// In ru, this message translates to:
+  /// **'Понимайте каждый шаг'**
+  String get onbBenefitUnderstand;
+
+  /// No description provided for @onbBenefitUnderstandBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Разбирайте, что отправлено модели и откуда взялся ответ.'**
+  String get onbBenefitUnderstandBody;
+
+  /// No description provided for @onbBenefitControl.
+  ///
+  /// In ru, this message translates to:
+  /// **'Контролируйте данные'**
+  String get onbBenefitControl;
+
+  /// No description provided for @onbBenefitControlBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы решаете, какие данные отправить и какие действия разрешить.'**
+  String get onbBenefitControlBody;
+
+  /// No description provided for @onbStart.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начать'**
+  String get onbStart;
+
+  /// No description provided for @onbNext.
+  ///
+  /// In ru, this message translates to:
+  /// **'Далее'**
+  String get onbNext;
+
+  /// No description provided for @onbPreferencesTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваш предмет и классы'**
+  String get onbPreferencesTitle;
+
+  /// No description provided for @onbSubject.
+  ///
+  /// In ru, this message translates to:
+  /// **'Предмет'**
+  String get onbSubject;
+
+  /// No description provided for @onbSearchSubject.
+  ///
+  /// In ru, this message translates to:
+  /// **'Найти предмет'**
+  String get onbSearchSubject;
+
+  /// No description provided for @onbNoSubjects.
+  ///
+  /// In ru, this message translates to:
+  /// **'По этому запросу предметов нет. Выберите «Другое» и укажите свой предмет.'**
+  String get onbNoSubjects;
+
+  /// No description provided for @onbOtherSubject.
+  ///
+  /// In ru, this message translates to:
+  /// **'Название вашего предмета'**
+  String get onbOtherSubject;
+
+  /// No description provided for @onbGrades.
+  ///
+  /// In ru, this message translates to:
+  /// **'Классы'**
+  String get onbGrades;
+
+  /// No description provided for @onbAssistantLanguage.
+  ///
+  /// In ru, this message translates to:
+  /// **'Язык ассистента'**
+  String get onbAssistantLanguage;
+
+  /// No description provided for @onbRussian.
+  ///
+  /// In ru, this message translates to:
+  /// **'Русский'**
+  String get onbRussian;
+
+  /// No description provided for @onbKazakh.
+  ///
+  /// In ru, this message translates to:
+  /// **'Казахский'**
+  String get onbKazakh;
+
+  /// No description provided for @onbBilingual.
+  ///
+  /// In ru, this message translates to:
+  /// **'Русский и казахский'**
+  String get onbBilingual;
+
+  /// No description provided for @onbChooseSubject.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите предмет'**
+  String get onbChooseSubject;
+
+  /// No description provided for @onbChooseGrades.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите хотя бы один класс'**
+  String get onbChooseGrades;
+
+  /// No description provided for @onbSummaryTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ваш выбор'**
+  String get onbSummaryTitle;
+
+  /// No description provided for @onbCanChange.
+  ///
+  /// In ru, this message translates to:
+  /// **'Эти настройки можно будет изменить позже.'**
+  String get onbCanChange;
+
+  /// No description provided for @onbMeetTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Встречайте вашего ассистента'**
+  String get onbMeetTitle;
+
+  /// No description provided for @onbMeetBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы начнёте с базового ассистента. Новые умения будут появляться по мере прохождения курса.'**
+  String get onbMeetBody;
+
+  /// No description provided for @onbName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Как назовёте ассистента?'**
+  String get onbName;
+
+  /// No description provided for @onbCreate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Создать ассистента'**
+  String get onbCreate;
+
+  /// No description provided for @onbCreating.
+  ///
+  /// In ru, this message translates to:
+  /// **'Создание ассистента'**
+  String get onbCreating;
+
+  /// No description provided for @onbStorageUnavailable.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранение ассистента пока недоступно. Настройки находятся только в текущем черновике.'**
+  String get onbStorageUnavailable;
+
+  /// No description provided for @onbLocalOnly.
+  ///
+  /// In ru, this message translates to:
+  /// **'Эти настройки не отправляются модели автоматически.'**
+  String get onbLocalOnly;
+
+  /// No description provided for @onbSaveError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось сохранить ассистента. Ваш черновик остался на экране. Попробуйте ещё раз.'**
+  String get onbSaveError;
+
+  /// No description provided for @onbInvalidDraft.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверьте предмет, классы и имя ассистента.'**
+  String get onbInvalidDraft;
+
+  /// No description provided for @onbSessionChanged.
+  ///
+  /// In ru, this message translates to:
+  /// **'Аккаунт изменился. Откройте настройку заново.'**
+  String get onbSessionChanged;
+
+  /// No description provided for @onbPreviewBanner.
+  ///
+  /// In ru, this message translates to:
+  /// **'DEV · Предпросмотр онбординга. Данные только в памяти, без API.'**
+  String get onbPreviewBanner;
+
+  /// No description provided for @onbHeroLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Базовый персонаж Craft Builder'**
+  String get onbHeroLabel;
+
+  /// No description provided for @onbDefaultName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ассистент: {subject}'**
+  String onbDefaultName(String subject);
+
+  /// No description provided for @onbStep.
+  ///
+  /// In ru, this message translates to:
+  /// **'Шаг {current} из {total}'**
+  String onbStep(int current, int total);
+
+  /// No description provided for @onbGradeLabel.
+  ///
+  /// In ru, this message translates to:
+  /// **'{grade} класс'**
+  String onbGradeLabel(int grade);
+
+  /// No description provided for @subjectMathematics.
+  ///
+  /// In ru, this message translates to:
+  /// **'Математика'**
+  String get subjectMathematics;
+
+  /// No description provided for @subjectRussian.
+  ///
+  /// In ru, this message translates to:
+  /// **'Русский язык'**
+  String get subjectRussian;
+
+  /// No description provided for @subjectKazakh.
+  ///
+  /// In ru, this message translates to:
+  /// **'Казахский язык'**
+  String get subjectKazakh;
+
+  /// No description provided for @subjectEnglish.
+  ///
+  /// In ru, this message translates to:
+  /// **'Английский язык'**
+  String get subjectEnglish;
+
+  /// No description provided for @subjectHistory.
+  ///
+  /// In ru, this message translates to:
+  /// **'История'**
+  String get subjectHistory;
+
+  /// No description provided for @subjectBiology.
+  ///
+  /// In ru, this message translates to:
+  /// **'Биология'**
+  String get subjectBiology;
+
+  /// No description provided for @subjectGeography.
+  ///
+  /// In ru, this message translates to:
+  /// **'География'**
+  String get subjectGeography;
+
+  /// No description provided for @subjectPhysics.
+  ///
+  /// In ru, this message translates to:
+  /// **'Физика'**
+  String get subjectPhysics;
+
+  /// No description provided for @subjectChemistry.
+  ///
+  /// In ru, this message translates to:
+  /// **'Химия'**
+  String get subjectChemistry;
+
+  /// No description provided for @subjectInformatics.
+  ///
+  /// In ru, this message translates to:
+  /// **'Информатика'**
+  String get subjectInformatics;
+
+  /// No description provided for @subjectPrimary.
+  ///
+  /// In ru, this message translates to:
+  /// **'Начальные классы'**
+  String get subjectPrimary;
+
+  /// No description provided for @subjectOther.
+  ///
+  /// In ru, this message translates to:
+  /// **'Другое'**
+  String get subjectOther;
 }
 
 class _AppLocalizationsDelegate
