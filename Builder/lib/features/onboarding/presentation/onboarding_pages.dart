@@ -77,10 +77,24 @@ class OnboardingFrame extends StatelessWidget {
                           backgroundColor: Colors.white,
                           selectedColor: BuilderColors.primaryTint,
                           secondarySelectedColor: BuilderColors.primaryTint,
-                          side: const BorderSide(color: BuilderColors.line),
+                          side: WidgetStateBorderSide.resolveWith((states) {
+                            return BorderSide(
+                              color: states.contains(WidgetState.selected)
+                                  ? BuilderColors.primary
+                                  : BuilderColors.line,
+                            );
+                          }),
                           shape: const StadiumBorder(),
-                          labelStyle: BuilderType.body,
-                          secondaryLabelStyle: BuilderType.body,
+                          labelStyle: BuilderType.body.copyWith(
+                            color: WidgetStateColor.resolveWith((states) {
+                              return states.contains(WidgetState.selected)
+                                  ? BuilderColors.primary
+                                  : BuilderColors.ink;
+                            }),
+                          ),
+                          secondaryLabelStyle: BuilderType.body.copyWith(
+                            color: BuilderColors.primary,
+                          ),
                           checkmarkColor: BuilderColors.primary,
                         ),
                       ),
@@ -322,6 +336,10 @@ class OnboardingAssistantPage extends ConsumerWidget {
                   }
                 }
                 await controller.create();
+                if (!context.mounted) return;
+                if (ref.read(onboardingControllerProvider(ownerId)).completed) {
+                  context.go('/assistant');
+                }
               }
             : null,
       ),

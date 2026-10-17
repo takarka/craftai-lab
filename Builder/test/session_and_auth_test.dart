@@ -216,6 +216,35 @@ void main() {
       }
     });
 
+    test(
+      'watchSession restores the saved account without an explicit restore call',
+      () async {
+        await tokenStorage.writeSession(
+          ownerId: 'remembered_teacher',
+          tokens: AuthTokens(
+            accessToken: 'saved_access',
+            refreshToken: 'saved_refresh',
+            expiresAtUtc: DateTime.now().toUtc().add(const Duration(hours: 1)),
+          ),
+        );
+
+        final events = StreamIterator(sessionRepo.watchSession());
+        expect(await events.moveNext(), isTrue);
+        expect(events.current, isA<AuthenticatedSession>());
+        expect(
+          (events.current as AuthenticatedSession).ownerId,
+          'remembered_teacher',
+        );
+        expect(workspaceService.activeOwnerId, 'remembered_teacher');
+
+        await sessionRepo.signOut();
+        expect(await events.moveNext(), isTrue);
+        expect(events.current, isA<SignedOut>());
+        await events.cancel();
+        expect(await sessionRepo.watchSession().first, isA<SignedOut>());
+      },
+    );
+
     test('restoreSession emits SignedOut when no token stored', () async {
       final snapshot = await sessionRepo.restoreSession();
       expect(snapshot, isA<SignedOut>());

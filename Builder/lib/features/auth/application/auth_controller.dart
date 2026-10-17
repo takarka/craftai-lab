@@ -1,13 +1,28 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/providers.dart';
 import '../../../core/errors/app_failure.dart';
+import '../../session/session_providers.dart';
 import '../domain/auth_gateway.dart';
+import '../infrastructure/craft_ai_auth_gateway.dart';
 
 enum AuthFormKind { signIn, register, recovery, resetPassword }
 
-final authGatewayProvider = Provider<AuthGateway>(
-  (ref) => const NotConnectedAuthGateway(),
-);
+final authGatewayProvider = Provider<AuthGateway>((ref) {
+  final config = ref.watch(appConfigProvider);
+  final sessionRepo = ref.watch(sessionRepositoryProvider);
+  final tokenStorage = ref.watch(secureTokenStorageProvider);
+
+  if (config?.apiBaseUri != null) {
+    return CraftAiAuthGateway(
+      baseUri: config!.apiBaseUri!,
+      sessionRepository: sessionRepo,
+      tokenStorage: tokenStorage,
+    );
+  }
+
+  return const NotConnectedAuthGateway();
+});
 
 class AuthSubmissionState {
   const AuthSubmissionState({

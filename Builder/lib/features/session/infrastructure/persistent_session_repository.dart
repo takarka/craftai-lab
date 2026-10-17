@@ -13,11 +13,7 @@ final class PersistentSessionRepository implements SessionRepository {
     required this.workspaceStorageService,
     this.tokenRefresher,
   }) {
-    _controller = StreamController<SessionSnapshot>.broadcast(
-      onListen: () {
-        _controller.add(_currentSnapshot);
-      },
-    );
+    _controller = StreamController<SessionSnapshot>.broadcast();
   }
 
   final SecureTokenStorage tokenStorage;
@@ -32,7 +28,18 @@ final class PersistentSessionRepository implements SessionRepository {
   SessionSnapshot get currentSnapshot => _currentSnapshot;
 
   @override
-  Stream<SessionSnapshot> watchSession() => _controller.stream;
+  Stream<SessionSnapshot> watchSession() =>
+      Stream<SessionSnapshot>.multi((sink) {
+        final subscription = _controller.stream.listen(
+          sink.add,
+          onError: sink.addError,
+          onDone: sink.close,
+        );
+        sink.onCancel = subscription.cancel;
+        // Restore before emitting a signed-out state so startup can resume the
+        // saved account without briefly showing the login form.
+        unawaited(restoreSession().then<void>((_) {}, onError: sink.addError));
+      });
 
   /// Restores session from secure storage upon application startup.
   Future<SessionSnapshot> restoreSession() async {
@@ -152,6 +159,17 @@ final class PersistentSessionRepository implements SessionRepository {
       whereArgs: [ownerId],
     );
     return configs.isNotEmpty;
+  }
+
+  /// Updates active session snapshot to reflect that onboarding has completed.
+  void markOnboardingComplete(String ownerId) {
+    if (_currentSnapshot is AuthenticatedSession &&
+        (_currentSnapshot as AuthenticatedSession).ownerId == ownerId) {
+      _emit(AuthenticatedSession(
+        ownerId: ownerId,
+        onboardingComplete: true,
+      ));
+    }
   }
 
   void _emit(SessionSnapshot snapshot) {

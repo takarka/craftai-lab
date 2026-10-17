@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/storage/storage_providers.dart';
+import '../../session/infrastructure/persistent_session_repository.dart';
 import '../../session/session_repository.dart';
 import '../domain/assistant_setup.dart';
 import '../domain/initial_workspace_repository.dart';
@@ -150,6 +151,10 @@ class OnboardingController extends Notifier<OnboardingState> {
           failure: OnboardingFailure.saveFailed,
         );
         return;
+      }
+      final sessionRepo = ref.read(sessionRepositoryProvider);
+      if (sessionRepo is PersistentSessionRepository) {
+        sessionRepo.markOnboardingComplete(ownerId);
       }
       state = OnboardingState(draft: workspace.setup, completed: true);
     } on WorkspaceUnavailable {

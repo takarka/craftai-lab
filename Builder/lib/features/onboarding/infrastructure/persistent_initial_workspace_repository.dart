@@ -101,18 +101,27 @@ final class PersistentInitialWorkspaceRepository implements InitialWorkspaceRepo
       final normalized = setup.normalized();
       final nowUtc = DateTime.now().toUtc().toIso8601String();
 
-      await txn.insert(
-        StorageSchemaV1.tableWorkspaces,
-        {
-          'owner_id': ownerId,
-          'installation_id': installationId,
-          'schema_version': StorageSchemaV1.version,
-          'workspace_epoch': 1,
-          'created_at_utc': nowUtc,
-          'updated_at_utc': nowUtc,
-        },
-        conflictAlgorithm: ConflictAlgorithm.abort,
-      );
+      if (existingRows.isEmpty) {
+        await txn.insert(
+          StorageSchemaV1.tableWorkspaces,
+          {
+            'owner_id': ownerId,
+            'installation_id': installationId,
+            'schema_version': StorageSchemaV1.version,
+            'workspace_epoch': 1,
+            'created_at_utc': nowUtc,
+            'updated_at_utc': nowUtc,
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      } else {
+        await txn.update(
+          StorageSchemaV1.tableWorkspaces,
+          {'updated_at_utc': nowUtc},
+          where: 'owner_id = ?',
+          whereArgs: [ownerId],
+        );
+      }
 
       await txn.insert(
         StorageSchemaV1.tableTeacherPreferences,
@@ -127,7 +136,7 @@ final class PersistentInitialWorkspaceRepository implements InitialWorkspaceRepo
           'storage_retention_days': null,
           'updated_at_utc': nowUtc,
         },
-        conflictAlgorithm: ConflictAlgorithm.abort,
+        conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
       await txn.insert(
@@ -141,7 +150,7 @@ final class PersistentInitialWorkspaceRepository implements InitialWorkspaceRepo
           'state_revision': 1,
           'updated_at_utc': nowUtc,
         },
-        conflictAlgorithm: ConflictAlgorithm.abort,
+        conflictAlgorithm: ConflictAlgorithm.replace,
       );
 
       // 4. Final check before commit: permit must still be valid

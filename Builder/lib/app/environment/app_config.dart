@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 enum AppEnvironment { development, staging, production }
 
 /// Public operational settings only. Never accepts provider credentials.
@@ -35,10 +37,22 @@ class AppConfig {
     return AppConfig(environment: selected, apiBaseUri: uri);
   }
 
-  factory AppConfig.fromEnvironment() => AppConfig.fromValues(
-    environment: const String.fromEnvironment('APP_ENV', defaultValue: 'prod'),
-    apiBaseUrl: const String.fromEnvironment('CRAFTAI_API_BASE_URL'),
-  );
+  factory AppConfig.fromEnvironment() {
+    const envPassed = String.fromEnvironment('APP_ENV');
+    const apiPassed = String.fromEnvironment('CRAFTAI_API_BASE_URL');
+
+    final selectedEnv = envPassed.isNotEmpty
+        ? envPassed
+        : (kDebugMode ? 'dev' : 'prod');
+    final selectedApi = apiPassed.isNotEmpty
+        ? apiPassed
+        : (kDebugMode ? 'https://localhost:5001' : '');
+
+    return AppConfig.fromValues(
+      environment: selectedEnv,
+      apiBaseUrl: selectedApi,
+    );
+  }
 
   final AppEnvironment environment;
   final Uri? apiBaseUri;
