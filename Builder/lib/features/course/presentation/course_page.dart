@@ -8,6 +8,7 @@ import '../../assistant/presentation/reset_confirmation_dialog.dart';
 import '../course_providers.dart';
 import '../domain/course_catalog.dart';
 import '../domain/course_models.dart';
+import 'course_strings.dart';
 
 class CoursePage extends ConsumerStatefulWidget {
   const CoursePage({super.key, required this.ownerId});
@@ -20,9 +21,10 @@ class CoursePage extends ConsumerStatefulWidget {
 
 class _CoursePageState extends ConsumerState<CoursePage> {
   void _handleOpenLevel(BuildContext context, CourseLevel level, LevelStatus status, LevelProgress? progress) {
+    final cs = CourseStrings.of(context);
     if (status == LevelStatus.comingSoon) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Этот уровень будет доступен в следующем обновлении')),
+        SnackBar(content: Text(cs.t('Этот уровень будет доступен в следующем обновлении', 'Бұл деңгей келесі жаңартуда қолжетімді болады'))),
       );
       return;
     }
@@ -38,6 +40,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   }
 
   void _showLockedLevelPreview(BuildContext context, CourseLevel level) {
+    final cs = CourseStrings.of(context);
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -46,7 +49,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
           children: [
             const BuilderIcon(BuilderGlyph.lock, size: 20, color: BuilderColors.inkSecondary),
             const SizedBox(width: 8),
-            Expanded(child: Text('Уровень ${level.id} · Превью теории', style: BuilderType.title)),
+            Expanded(child: Text('${cs.levelPrefix(level.id)} · ${cs.t('Превью теории', 'Теорияға шолу')}', style: BuilderType.title)),
           ],
         ),
         content: SingleChildScrollView(
@@ -61,7 +64,10 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'Откроется после прохождения Уровня ${level.id - 1}. Ниже доступна теория для ознакомления:',
+                  cs.t(
+                    'Откроется после прохождения Уровня ${level.id - 1}. Ниже доступна теория для ознакомления:',
+                    '${level.id - 1}-деңгейді аяқтағаннан кейін ашылады. Төменде танысу үшін теория қолжетімді:',
+                  ),
                   style: BuilderType.small.copyWith(color: BuilderColors.primary),
                 ),
               ),
@@ -76,7 +82,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
         ),
         actions: [
           BuilderButton(
-            label: 'Понятно',
+            label: cs.t('Понятно', 'Түсінікті'),
             onPressed: () => Navigator.of(ctx).pop(),
           ),
         ],
@@ -87,6 +93,9 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   @override
   Widget build(BuildContext context) {
     final s = AppLocalizations.of(context);
+    final cs = CourseStrings.of(context);
+    final locale = Localizations.localeOf(context).languageCode;
+    final levels = CourseCatalog.getLevels(locale: locale);
     final overallAsync = ref.watch(overallCourseProgressProvider(widget.ownerId));
     final progressListAsync = ref.watch(courseProgressListProvider(widget.ownerId));
 
@@ -109,7 +118,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                   children: [
                     const BuilderIcon(BuilderGlyph.reset, size: 18, color: BuilderColors.warning),
                     const SizedBox(width: 8),
-                    const Text('Сбросить прогресс курса', style: TextStyle(color: BuilderColors.warning)),
+                    Text(cs.resetCourseProgress, style: const TextStyle(color: BuilderColors.warning)),
                   ],
                 ),
               ),
@@ -145,7 +154,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
               const SizedBox(height: 20),
 
               // 2. Section Title
-              Text('Учебный путь', style: BuilderType.h3),
+              Text(cs.t('Учебный путь', 'Оқу жолы'), style: BuilderType.h3),
               const SizedBox(height: 12),
 
               // 3. 9 Levels List (F10-02, F10-V01)
@@ -154,10 +163,10 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                   padding: EdgeInsets.all(32),
                   child: CircularProgressIndicator(),
                 )),
-                error: (err, _) => Center(child: Text('Ошибка загрузки курса: $err')),
+                error: (err, _) => Center(child: Text('${cs.t('Ошибка загрузки курса', 'Курсты жүктеу қатесі')}: $err')),
                 data: (progressList) {
                   return Column(
-                    children: CourseCatalog.levels.map((lvl) {
+                    children: levels.map((lvl) {
                       final p = progressList.firstWhere(
                         (item) => item.levelId == lvl.id,
                         orElse: () => LevelProgress(
@@ -281,6 +290,7 @@ class _CourseProgressHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = CourseStrings.of(context);
     return BuilderCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -293,12 +303,12 @@ class _CourseProgressHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isAllCompleted ? 'Курс успешно завершён!' : 'Прогресс курса',
+                      isAllCompleted ? cs.t('Курс успешно завершён!', 'Курс сәтті аяқталды!') : cs.t('Прогресс курса', 'Курс прогресі'),
                       style: BuilderType.title,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$completedCount из $totalCount уровней пройдено',
+                      cs.levelsCompleted(completedCount, totalCount),
                       style: BuilderType.body.copyWith(color: BuilderColors.inkSecondary),
                     ),
                   ],
@@ -339,15 +349,15 @@ class _CourseProgressHeader extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Текущий шаг', style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary)),
+                      Text(cs.t('Текущий шаг', 'Ағымдағы қадам'), style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary)),
                       const SizedBox(height: 2),
-                      Text('Уровень $activeLevelId · ${activeStep.title}', style: BuilderType.title),
+                      Text('${cs.levelPrefix(activeLevelId!)} · ${activeStep.localizedTitle(cs.kk)}', style: BuilderType.title),
                     ],
                   ),
                 ),
                 BuilderButton(
                   key: const Key('course.resumeBtn'),
-                  label: 'Продолжить',
+                  label: cs.t('Продолжить', 'Жалғастыру'),
                   onPressed: onResume,
                 ),
               ],
@@ -375,6 +385,7 @@ class _LevelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = CourseStrings.of(context);
     Color cardBorderColor = Colors.transparent;
     if (status == LevelStatus.inProgress) {
       cardBorderColor = BuilderColors.primary;
@@ -409,7 +420,7 @@ class _LevelCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        'Уровень ${level.id}',
+                        cs.levelPrefix(level.id),
                         style: BuilderType.small.copyWith(
                           color: _statusTextColor(status),
                           fontWeight: FontWeight.w700,
@@ -425,7 +436,7 @@ class _LevelCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '~${level.estimatedMinutes} мин',
+                      cs.minutesSuffix(level.estimatedMinutes),
                       style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
                     ),
                   ],
@@ -444,7 +455,7 @@ class _LevelCard extends StatelessWidget {
                       const BuilderIcon(BuilderGlyph.bolt, size: 14, color: BuilderColors.primary),
                       const SizedBox(width: 4),
                       Text(
-                        'Награда: ${level.targetSkillName}',
+                        '${cs.t('Награда: ', 'Сыйлық: ')}${level.targetSkillName}',
                         style: BuilderType.small.copyWith(
                           color: BuilderColors.primary,
                           fontWeight: FontWeight.w600,
@@ -497,6 +508,7 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = CourseStrings.of(context);
     switch (status) {
       case LevelStatus.completed:
         return Container(
@@ -511,7 +523,7 @@ class _StatusBadge extends StatelessWidget {
               const BuilderIcon(BuilderGlyph.check, size: 14, color: BuilderColors.primary),
               const SizedBox(width: 4),
               Text(
-                'Пройден',
+                cs.completed,
                 style: BuilderType.small.copyWith(color: BuilderColors.primary, fontWeight: FontWeight.w600),
               ),
             ],
@@ -525,7 +537,7 @@ class _StatusBadge extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            'Шаг $step из 5',
+            cs.t('Шаг $step из 5', '5 қадамның $step-қадамы'),
             style: BuilderType.small.copyWith(color: BuilderColors.warning, fontWeight: FontWeight.w600),
           ),
         );
@@ -537,7 +549,7 @@ class _StatusBadge extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            'Доступен',
+            cs.available,
             style: BuilderType.small.copyWith(color: BuilderColors.ink, fontWeight: FontWeight.w600),
           ),
         );
@@ -554,7 +566,7 @@ class _StatusBadge extends StatelessWidget {
               const BuilderIcon(BuilderGlyph.lock, size: 14, color: BuilderColors.inkSecondary),
               const SizedBox(width: 4),
               Text(
-                'Закрыт',
+                cs.locked,
                 style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
               ),
             ],
@@ -568,7 +580,7 @@ class _StatusBadge extends StatelessWidget {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            'После MVP · скоро',
+            cs.t('После MVP · скоро', 'MVP-ден кейін · жуықта'),
             style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
           ),
         );

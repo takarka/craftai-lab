@@ -12,6 +12,19 @@ enum LessonStep {
   final int stepNumber;
   final String title;
 
+  String localizedTitle(bool isKk) {
+    if (isKk) {
+      return switch (this) {
+        LessonStep.idea => 'Идея',
+        LessonStep.practice => 'Тәжірибе',
+        LessonStep.underTheHood => 'Ішкі құрылымы',
+        LessonStep.quiz => 'Тексеру',
+        LessonStep.summary => 'Қорытынды',
+      };
+    }
+    return title;
+  }
+
   static LessonStep fromNumber(int num) {
     return LessonStep.values.firstWhere(
       (s) => s.stepNumber == num,

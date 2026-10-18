@@ -14,6 +14,7 @@ import '../../tools/presentation/tools_providers.dart';
 import '../course_providers.dart';
 import '../domain/course_catalog.dart';
 import '../domain/course_models.dart';
+import 'course_strings.dart';
 
 class LessonPlayerPage extends ConsumerStatefulWidget {
   const LessonPlayerPage({
@@ -116,9 +117,10 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   }
 
   Future<void> _submitQuiz(CourseLevel level) async {
+    final cs = CourseStrings.of(context);
     if (_selectedQuizAnswers.length < level.quizQuestions.length) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Пожалуйста, ответьте на все вопросы')),
+        SnackBar(content: Text(cs.answerAllQuestions)),
       );
       return;
     }
@@ -171,11 +173,13 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final level = CourseCatalog.getLevel(widget.levelId);
+    final cs = CourseStrings.of(context);
+    final locale = Localizations.localeOf(context).languageCode;
+    final level = CourseCatalog.getLevel(widget.levelId, locale: locale) ?? CourseCatalog.getLevel(widget.levelId);
     if (level == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const Center(child: Text('Уровень не найден')),
+        body: Center(child: Text(cs.t('Уровень не найден', 'Деңгей табылмады'))),
       );
     }
 
@@ -201,13 +205,14 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           onPressed: () => _handleClose(context),
         ),
         title: Text(
-          'Уровень ${level.id} · ${level.title}',
+          '${cs.levelPrefix(level.id)} · ${level.title}',
           style: BuilderType.title,
         ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: _StepIndicator(
             currentStep: _currentStep,
+            isKk: cs.kk,
             onStepTap: (step) {
               if (widget.readOnly || step.stepNumber <= _currentStep.stepNumber || _practiceEvidenceMet) {
                 _moveToStep(step);
@@ -222,35 +227,35 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
-                child: _buildStepContent(level),
+                child: _buildStepContent(level, cs),
               ),
             ),
-            _buildBottomBar(level),
+            _buildBottomBar(level, cs),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStepContent(CourseLevel level) {
+  Widget _buildStepContent(CourseLevel level, CourseStrings cs) {
     switch (_currentStep) {
       case LessonStep.idea:
-        return _buildStepIdea(level);
+        return _buildStepIdea(level, cs);
       case LessonStep.practice:
-        return _buildStepPractice(level);
+        return _buildStepPractice(level, cs);
       case LessonStep.underTheHood:
-        return _buildStepUnderTheHood(level);
+        return _buildStepUnderTheHood(level, cs);
       case LessonStep.quiz:
-        return _buildStepQuiz(level);
+        return _buildStepQuiz(level, cs);
       case LessonStep.summary:
-        return _buildStepSummary(level);
+        return _buildStepSummary(level, cs);
     }
   }
 
   // --------------------------------------------------------------------------
   // S22: Идея
   // --------------------------------------------------------------------------
-  Widget _buildStepIdea(CourseLevel level) {
+  Widget _buildStepIdea(CourseLevel level, CourseStrings cs) {
     return Column(
       key: const Key('lesson.step.1'),
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,7 +267,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            'Шаг 1 из 5 · Идея',
+            cs.stepIndicator(1, 5, LessonStep.idea),
             style: BuilderType.small.copyWith(color: BuilderColors.primary, fontWeight: FontWeight.w700),
           ),
         ),
@@ -291,7 +296,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                 children: [
                   const BuilderIcon(BuilderGlyph.info, size: 18, color: BuilderColors.primary),
                   const SizedBox(width: 8),
-                  Text('Пример из школьной практики', style: BuilderType.title),
+                  Text(cs.schoolExampleTitle, style: BuilderType.title),
                 ],
               ),
               const SizedBox(height: 8),
@@ -309,7 +314,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   // --------------------------------------------------------------------------
   // S23: Практика
   // --------------------------------------------------------------------------
-  Widget _buildStepPractice(CourseLevel level) {
+  Widget _buildStepPractice(CourseLevel level, CourseStrings cs) {
     return Column(
       key: const Key('lesson.step.2'),
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,12 +326,12 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            'Шаг 2 из 5 · Практика',
+            cs.stepIndicator(2, 5, LessonStep.practice),
             style: BuilderType.small.copyWith(color: BuilderColors.primary, fontWeight: FontWeight.w700),
           ),
         ),
         const SizedBox(height: 12),
-        Text('Практическое задание', style: BuilderType.h2),
+        Text(cs.practiceTitle, style: BuilderType.h2),
         const SizedBox(height: 8),
         Text(level.practiceTask, style: BuilderType.body),
         const SizedBox(height: 16),
@@ -341,17 +346,20 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                     const BuilderIcon(BuilderGlyph.tool, size: 20, color: BuilderColors.primary),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text('Конструктор инструкций (S40)', style: BuilderType.title),
+                      child: Text(cs.t('Конструктор инструкций (S40)', 'Нұсқаулықтар құрастырғышы (S40)'), style: BuilderType.title),
                     ),
                     if (_practiceEvidenceMet)
-                      const BuilderBadge('Выполнено', icon: BuilderGlyph.check)
+                      BuilderBadge(cs.practiceCompleted, icon: BuilderGlyph.check)
                     else
-                      const BuilderBadge('Требуется действие', neutral: true),
+                      BuilderBadge(cs.practiceRequired, neutral: true),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Откройте учебный экран S40: включите минимум 3 правила (роль, формат, ограничения), проверьте тестовый вопрос «До / после» и сохраните результат.',
+                  cs.t(
+                    'Откройте учебный экран S40: включите минимум 3 правила (роль, формат, ограничения), проверьте тестовый вопрос «До / после» и сохраните результат.',
+                    'S40 оқу экранын ашыңыз: кемінде 3 ережені қосыңыз (рөл, пішім, шектеулер), «Дейін / кейін» тесттік сұрағын тексеріп, нәтижені сақтаңыз.',
+                  ),
                   style: BuilderType.small,
                 ),
                 const SizedBox(height: 12),
@@ -359,7 +367,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   width: double.infinity,
                   child: BuilderButton(
                     key: const Key('practice.openInstructionsSkillBtn'),
-                    label: _practiceEvidenceMet ? 'Изменить инструкции' : 'Открыть экран инструкций',
+                    label: _practiceEvidenceMet ? cs.t('Изменить инструкции', 'Нұсқаулықтарды өзгерту') : cs.t('Открыть экран инструкций', 'Нұсқаулықтар экранын ашу'),
                     icon: BuilderGlyph.chevron,
                     onPressed: () async {
                       await Navigator.of(context).push(
@@ -404,17 +412,20 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                     const BuilderIcon(BuilderGlyph.doc, size: 20, color: BuilderColors.primary),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text('База знаний и RAG (S41)', style: BuilderType.title),
+                      child: Text(cs.t('База знаний и RAG (S41)', 'Білім қоры және RAG (S41)'), style: BuilderType.title),
                     ),
                     if (_practiceEvidenceMet)
-                      const BuilderBadge('Выполнено', icon: BuilderGlyph.check)
+                      BuilderBadge(cs.practiceCompleted, icon: BuilderGlyph.check)
                     else
-                      const BuilderBadge('Требуется действие', neutral: true),
+                      BuilderBadge(cs.practiceRequired, neutral: true),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Откройте экран S41: загрузите документ, проверьте вопрос по документу (найдутся фрагменты) и вопрос не из документа (ассистент откажется выдумывать ответ).',
+                  cs.t(
+                    'Откройте экран S41: загрузите документ, проверьте вопрос по документу (найдутся фрагменты) и вопрос не из документа (ассистент откажется выдумывать ответ).',
+                    'S41 экранын ашыңыз: құжатты жүктеңіз, құжат бойынша сұрақты (үзінділер табылады) және құжаттан тыс сұрақты (ассистент ойдан шығарудан бас тартады) тексеріңіз.',
+                  ),
                   style: BuilderType.small,
                 ),
                 const SizedBox(height: 12),
@@ -422,7 +433,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   width: double.infinity,
                   child: BuilderButton(
                     key: const Key('practice.openKnowledgeSkillBtn'),
-                    label: _practiceEvidenceMet ? 'Проверить знания снова' : 'Открыть экран базы знаний',
+                    label: _practiceEvidenceMet ? cs.t('Проверить знания снова', 'Білімді қайта тексеру') : cs.t('Открыть экран базы знаний', 'Білім қоры экранын ашу'),
                     icon: BuilderGlyph.chevron,
                     onPressed: () async {
                       await Navigator.of(context).push(
@@ -467,17 +478,20 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                     const BuilderIcon(BuilderGlyph.memory, size: 20, color: BuilderColors.primary),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text('Долгая память и факты о классе (S42)', style: BuilderType.title),
+                      child: Text(cs.t('Долгая память и факты о классе (S42)', 'Ұзақ жады және сынып фактілері (S42)'), style: BuilderType.title),
                     ),
                     if (_practiceEvidenceMet)
-                      const BuilderBadge('Выполнено', icon: BuilderGlyph.check)
+                      BuilderBadge(cs.practiceCompleted, icon: BuilderGlyph.check)
                     else
-                      const BuilderBadge('Требуется действие', neutral: true),
+                      BuilderBadge(cs.practiceRequired, neutral: true),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Откройте экран S42: сохраните неперсональные факты о классе (например: «В классе 24 ученика», «Урок 40 минут»), проверьте их использование и удалите факт.',
+                  cs.t(
+                    'Откройте экран S42: сохраните неперсональные факты о классе (например: «В классе 24 ученика», «Урок 40 минут»), проверьте их использование и удалите факт.',
+                    'S42 экранын ашыңыз: сынып туралы дербес емес фактілерді сақтаңыз (мысалы: «Сыныпта 24 оқушы бар», «Сабақ 40 минут»), олардың қолданылуын тексеріп, фактіні жойыңыз.',
+                  ),
                   style: BuilderType.small,
                 ),
                 const SizedBox(height: 12),
@@ -485,7 +499,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   width: double.infinity,
                   child: BuilderButton(
                     key: const Key('practice.openMemorySkillBtn'),
-                    label: _practiceEvidenceMet ? 'Проверить память снова' : 'Открыть экран долгой памяти',
+                    label: _practiceEvidenceMet ? cs.t('Проверить память снова', 'Жадыны қайта тексеру') : cs.t('Открыть экран долгой памяти', 'Ұзақ жады экранын ашу'),
                     icon: BuilderGlyph.chevron,
                     onPressed: () async {
                       await Navigator.of(context).push(
@@ -523,17 +537,20 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                     const BuilderIcon(BuilderGlyph.tool, size: 20, color: BuilderColors.primary),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text('Инструменты на устройстве (S43)', style: BuilderType.title),
+                      child: Text(cs.t('Инструменты на устройстве (S43)', 'Құрылғыдағы құралдар (S43)'), style: BuilderType.title),
                     ),
                     if (_practiceEvidenceMet)
-                      const BuilderBadge('Выполнено', icon: BuilderGlyph.check)
+                      BuilderBadge(cs.practiceCompleted, icon: BuilderGlyph.check)
                     else
-                      const BuilderBadge('Требуется действие', neutral: true),
+                      BuilderBadge(cs.practiceRequired, neutral: true),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Откройте экран S43: включите инструмент «Календарь уроков», проверьте разрешение и создайте тестовое событие расписания с обязательным подтверждением действия.',
+                  cs.t(
+                    'Откройте экран S43: включите инструмент «Календарь уроков», проверьте разрешение и создайте тестовое событие расписания с обязательным подтверждением действия.',
+                    'S43 экранын ашыңыз: «Сабақ кестесі күнтізбесі» құралын қосыңыз, рұқсатты тексеріп, әрекетті міндетті түрде растау арқылы кестенің тесттік оқиғасын жасаңыз.',
+                  ),
                   style: BuilderType.small,
                 ),
                 const SizedBox(height: 12),
@@ -541,7 +558,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   width: double.infinity,
                   child: BuilderButton(
                     key: const Key('practice.openToolsSkillBtn'),
-                    label: _practiceEvidenceMet ? 'Проверить инструменты снова' : 'Открыть экран инструментов',
+                    label: _practiceEvidenceMet ? cs.t('Проверить инструменты снова', 'Құралдарды қайта тексеру') : cs.t('Открыть экран инструментов', 'Құралдар экранын ашу'),
                     icon: BuilderGlyph.chevron,
                     onPressed: () async {
                       await Navigator.of(context).push(
@@ -580,12 +597,12 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                 children: [
                   const BuilderIcon(BuilderGlyph.bolt, size: 18, color: BuilderColors.primary),
                   const SizedBox(width: 8),
-                  Expanded(child: Text('Учебный черновик', style: BuilderType.title)),
+                  Expanded(child: Text(cs.practiceLearningDraft, style: BuilderType.title)),
                   const SizedBox(width: 8),
                   if (_practiceEvidenceMet)
-                    const BuilderBadge('Выполнено', icon: BuilderGlyph.check)
+                    BuilderBadge(cs.practiceCompleted, icon: BuilderGlyph.check)
                   else
-                    const BuilderBadge('Задание активно', neutral: true),
+                    BuilderBadge(cs.practiceActiveTask, neutral: true),
                 ],
               ),
               const SizedBox(height: 12),
@@ -593,9 +610,9 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                 key: const Key('practice.inputField'),
                 controller: _practiceInputController,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: 'Текст тестового запроса',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: cs.practiceQueryField,
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 12),
@@ -604,7 +621,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   Expanded(
                     child: BuilderButton(
                       key: const Key('practice.applyBtn'),
-                      label: _practiceApplied ? 'Обновить тест' : 'Выполнить действие',
+                      label: _practiceApplied ? cs.practiceUpdateBtn : cs.practiceApplyBtn,
                       onPressed: () {
                         setState(() {
                           _practiceApplied = true;
@@ -623,7 +640,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
         // Before / After Comparison
         if (_showComparison) ...[
           const SizedBox(height: 16),
-          Text('Сравнение до и после', style: BuilderType.title),
+          Text(cs.comparisonTitle, style: BuilderType.title),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(12),
@@ -634,11 +651,11 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('До настройки:', style: BuilderType.small.copyWith(fontWeight: FontWeight.w700)),
+                Text(cs.beforeSetting, style: BuilderType.small.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
-                Text('«Общий ответ без учёта правил и формата вашего предмета...»', style: BuilderType.small),
+                Text(cs.beforePlaceholder, style: BuilderType.small),
                 const Divider(height: 16),
-                Text('После настройки:', style: BuilderType.small.copyWith(fontWeight: FontWeight.w700, color: BuilderColors.primary)),
+                Text(cs.afterSetting, style: BuilderType.small.copyWith(fontWeight: FontWeight.w700, color: BuilderColors.primary)),
                 const SizedBox(height: 4),
                 Text(level.practiceExpectedAnswer, style: BuilderType.small.copyWith(color: BuilderColors.ink)),
               ],
@@ -652,7 +669,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   // --------------------------------------------------------------------------
   // S24: Под капотом
   // --------------------------------------------------------------------------
-  Widget _buildStepUnderTheHood(CourseLevel level) {
+  Widget _buildStepUnderTheHood(CourseLevel level, CourseStrings cs) {
     return Column(
       key: const Key('lesson.step.3'),
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -664,7 +681,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            'Шаг 3 из 5 · Под капотом',
+            cs.stepIndicator(3, 5, LessonStep.underTheHood),
             style: BuilderType.small.copyWith(color: BuilderColors.primary, fontWeight: FontWeight.w700),
           ),
         ),
@@ -674,7 +691,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
         Text(level.underTheHoodExplanation, style: BuilderType.body),
         const SizedBox(height: 20),
 
-        Text('Слои запроса (Рентген)', style: BuilderType.title),
+        Text(cs.xrayLayersTitle, style: BuilderType.title),
         const SizedBox(height: 12),
         ...level.underTheHoodLayers.map((layer) => Padding(
           padding: const EdgeInsets.only(bottom: 8),
@@ -713,7 +730,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   // --------------------------------------------------------------------------
   // S25: Проверка
   // --------------------------------------------------------------------------
-  Widget _buildStepQuiz(CourseLevel level) {
+  Widget _buildStepQuiz(CourseLevel level, CourseStrings cs) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -724,15 +741,15 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            'Шаг 4 из 5 · Проверка',
+            cs.stepIndicator(4, 5, LessonStep.quiz),
             style: BuilderType.small.copyWith(color: BuilderColors.primary, fontWeight: FontWeight.w700),
           ),
         ),
         const SizedBox(height: 12),
-        Text('Проверьте своё понимание', style: BuilderType.h2),
+        Text(cs.quizTitle, style: BuilderType.h2),
         const SizedBox(height: 6),
         Text(
-          'Ответьте на вопросы по теме уровня. Для зачёта требуется не менее 66% правильных ответов.',
+          cs.quizSubtitle,
           style: BuilderType.body.copyWith(color: BuilderColors.inkSecondary),
         ),
         const SizedBox(height: 16),
@@ -801,7 +818,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
-                        'Объяснение: ${q.explanation}',
+                        '${cs.explanationPrefix}${q.explanation}',
                         style: BuilderType.small.copyWith(color: BuilderColors.ink),
                       ),
                     ),
@@ -831,7 +848,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      _quizPassed ? 'Зачёт сдан!' : 'Порог зачёта не пройден',
+                      _quizPassed ? cs.quizPassedTitle : cs.quizFailedTitle,
                       style: BuilderType.title.copyWith(
                         color: _quizPassed ? BuilderColors.primary : BuilderColors.warning,
                       ),
@@ -841,8 +858,8 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                 const SizedBox(height: 6),
                 Text(
                   _quizPassed
-                      ? 'Вы ответили верно на ${(_quizScore * 100).toInt()}% вопросов. Переходите к итогу уровня!'
-                      : 'Правильных ответов: ${(_quizScore * 100).toInt()}%. Попробуйте ещё раз, чтобы закрепить материал.',
+                      ? cs.quizPassedScore((_quizScore * 100).toInt())
+                      : cs.quizFailedScore((_quizScore * 100).toInt()),
                   style: BuilderType.body,
                 ),
               ],
@@ -857,7 +874,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   // --------------------------------------------------------------------------
   // S26: Итог уровня
   // --------------------------------------------------------------------------
-  Widget _buildStepSummary(CourseLevel level) {
+  Widget _buildStepSummary(CourseLevel level, CourseStrings cs) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -868,7 +885,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
-            'Шаг 5 из 5 · Итог уровня',
+            cs.stepIndicator(5, 5, LessonStep.summary),
             style: BuilderType.small.copyWith(color: BuilderColors.primary, fontWeight: FontWeight.w700),
           ),
         ),
@@ -878,10 +895,10 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             children: [
               const BuilderCharacter(size: 80, compact: false),
               const SizedBox(height: 16),
-              Text('Уровень ${level.id} пройден!', style: BuilderType.h2),
+              Text(cs.levelCompletedTitle(level.id), style: BuilderType.h2),
               const SizedBox(height: 8),
               Text(
-                'Поздравляем! Ваш ассистент освоил новое умение.',
+                cs.levelCompletedSubtitle,
                 style: BuilderType.body.copyWith(color: BuilderColors.inkSecondary),
                 textAlign: TextAlign.center,
               ),
@@ -894,7 +911,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Что изменилось:', style: BuilderType.title),
+              Text(cs.whatChangedTitle, style: BuilderType.title),
               const SizedBox(height: 8),
               if (level.targetSkillName != null) ...[
                 Row(
@@ -902,7 +919,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                     const BuilderIcon(BuilderGlyph.check, size: 16, color: BuilderColors.primary),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text('Разблокирован модуль: ${level.targetSkillName}', style: BuilderType.body),
+                      child: Text(cs.unlockedSkill(level.targetSkillName!), style: BuilderType.body),
                     ),
                   ],
                 ),
@@ -913,7 +930,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   const BuilderIcon(BuilderGlyph.check, size: 16, color: BuilderColors.primary),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text('Конфигурация зафиксирована в новой версии', style: BuilderType.body),
+                    child: Text(cs.configSaved, style: BuilderType.body),
                   ),
                 ],
               ),
@@ -923,7 +940,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   const BuilderIcon(BuilderGlyph.check, size: 16, color: BuilderColors.primary),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text('История версий и чатов сохранена без потерь', style: BuilderType.body),
+                    child: Text(cs.historySaved, style: BuilderType.body),
                   ),
                 ],
               ),
@@ -937,7 +954,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   // --------------------------------------------------------------------------
   // Bottom Navigation Bar
   // --------------------------------------------------------------------------
-  Widget _buildBottomBar(CourseLevel level) {
+  Widget _buildBottomBar(CourseLevel level, CourseStrings cs) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -949,7 +966,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           if (_currentStep != LessonStep.idea) ...[
             BuilderButton(
               key: const Key('lesson.backBtn'),
-              label: 'Назад',
+              label: cs.previousStep,
               variant: BuilderButtonVariant.secondary,
               onPressed: () {
                 final prevIndex = _currentStep.stepNumber - 1;
@@ -961,26 +978,26 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             const SizedBox(width: 12),
           ],
           Expanded(
-            child: _buildPrimaryAction(level),
+            child: _buildPrimaryAction(level, cs),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPrimaryAction(CourseLevel level) {
+  Widget _buildPrimaryAction(CourseLevel level, CourseStrings cs) {
     switch (_currentStep) {
       case LessonStep.idea:
         return BuilderButton(
           key: const Key('lesson.ideaProceedBtn'),
-          label: 'Попробовать',
+          label: cs.tryIdeaBtn,
           onPressed: () => _moveToStep(LessonStep.practice),
         );
 
       case LessonStep.practice:
         return BuilderButton(
           key: const Key('lesson.practiceProceedBtn'),
-          label: 'Далее: Под капотом',
+          label: cs.nextUnderTheHoodBtn,
           onPressed: _practiceEvidenceMet || widget.readOnly
               ? () => _moveToStep(LessonStep.underTheHood)
               : null,
@@ -989,7 +1006,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
       case LessonStep.underTheHood:
         return BuilderButton(
           key: const Key('lesson.underTheHoodProceedBtn'),
-          label: 'Перейти к проверке',
+          label: cs.proceedToQuizBtn,
           onPressed: () => _moveToStep(LessonStep.quiz),
         );
 
@@ -997,20 +1014,20 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
         if (!_quizSubmitted) {
           return BuilderButton(
             key: const Key('lesson.quizSubmitBtn'),
-            label: 'Проверить ответы',
+            label: cs.submitQuiz,
             onPressed: () => _submitQuiz(level),
           );
         }
         if (_quizPassed) {
           return BuilderButton(
             key: const Key('lesson.quizProceedBtn'),
-            label: 'К итогу уровня',
+            label: cs.proceedToSummaryBtn,
             onPressed: () => _moveToStep(LessonStep.summary),
           );
         }
         return BuilderButton(
           key: const Key('lesson.quizRetryBtn'),
-          label: 'Попробовать снова',
+          label: cs.retryQuiz,
           variant: BuilderButtonVariant.secondary,
           onPressed: () {
             setState(() {
@@ -1023,7 +1040,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
       case LessonStep.summary:
         return BuilderButton(
           key: const Key('lesson.summaryFinishBtn'),
-          label: level.id < 5 ? 'Следующий уровень' : 'Завершить курс',
+          label: level.id < 5 ? cs.nextLevelBtn : cs.finishCourseBtn,
           onPressed: () => _completeLevelAndAdvance(context),
         );
     }
@@ -1031,9 +1048,14 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
 }
 
 class _StepIndicator extends StatelessWidget {
-  const _StepIndicator({required this.currentStep, required this.onStepTap});
+  const _StepIndicator({
+    required this.currentStep,
+    required this.isKk,
+    required this.onStepTap,
+  });
 
   final LessonStep currentStep;
+  final bool isKk;
   final ValueChanged<LessonStep> onStepTap;
 
   @override
@@ -1063,13 +1085,16 @@ class _StepIndicator extends StatelessWidget {
     final color = isCurrent || isPassed
         ? BuilderColors.primary
         : BuilderColors.inkSecondary;
+    final title = step.localizedTitle(isKk);
 
     return Semantics(
-      label: 'Шаг ${step.stepNumber} из ${LessonStep.values.length}: ${step.title}',
+      label: isKk
+          ? '${LessonStep.values.length} қадамның ${step.stepNumber}-қадамы: $title'
+          : 'Шаг ${step.stepNumber} из ${LessonStep.values.length}: $title',
       selected: isCurrent,
       button: true,
       child: Tooltip(
-        message: step.title,
+        message: title,
         child: Material(
           color: isCurrent ? BuilderColors.primaryTint : Colors.transparent,
           borderRadius: BorderRadius.circular(BuilderRadii.control),
@@ -1099,7 +1124,7 @@ class _StepIndicator extends StatelessWidget {
                       const SizedBox(width: BuilderSpace.xs),
                       Flexible(
                         child: Text(
-                          step.title,
+                          title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: BuilderType.small.copyWith(
@@ -1119,3 +1144,4 @@ class _StepIndicator extends StatelessWidget {
     );
   }
 }
+

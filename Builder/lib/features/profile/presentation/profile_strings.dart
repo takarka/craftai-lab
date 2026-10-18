@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 class ProfileStrings {
+  const ProfileStrings.withLocale({bool isKk = false}) : kk = isKk;
   ProfileStrings.of(BuildContext context)
     : kk = Localizations.localeOf(context).languageCode == 'kk';
   final bool kk;
