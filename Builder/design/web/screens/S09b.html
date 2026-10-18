@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<title>S09b Ассистент — пока нет чатов</title>
+
+<style>
+html.solo{background:#E9EDF5}
+html.solo body{display:flex;justify-content:center;padding:24px 16px;min-height:100vh;box-sizing:border-box}
+html.framed body{margin:0}
+</style>
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap">
+<style>
+body{margin:0}
+.scr{width:390px;height:844px;box-sizing:border-box;display:flex;flex-direction:column;background:#F3F5FA;color:#0B1B33;font-family:'Onest',sans-serif;font-size:15px;line-height:1.4;overflow:hidden}
+.scr *{box-sizing:border-box}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:14px;background:#E3ECFB;color:#0047BA;font-size:12px;font-weight:600}
+.chip.o{background:#FFE8D6;color:#A23B00}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:56px;font-size:12px;font-weight:600;color:#4A5872;text-decoration:none}
+.tab.on{color:#0047BA}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 18px;border-radius:12px;font-family:inherit;font-size:15px;font-weight:600;border:0;cursor:pointer}
+.btn.p{background:#0047BA;color:#fff}
+.btn.s{background:#fff;color:#0047BA;border:1.5px solid #0047BA}
+</style>
+
+<div class="scr">
+<div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:28px 24px 0">
+<div style="width:128px;height:128px;border-radius:64px;background:#E3ECFB;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 200 200" width="96" height="96" aria-hidden="true" style="flex:none">
+<line x1="100" y1="56" x2="100" y2="36" stroke="#0B1B33" stroke-width="7" stroke-linecap="round"/><circle cx="100" cy="28" r="12" fill="#E8772E"/>
+<rect x="30" y="56" width="140" height="120" rx="40" fill="#0047BA"/><rect x="50" y="78" width="100" height="66" rx="26" fill="#E3ECFB"/>
+<circle cx="80" cy="108" r="8" fill="#0B1B33"/><circle cx="120" cy="108" r="8" fill="#0B1B33"/></svg></div>
+<div style="font-size:22px;font-weight:700;line-height:1.2;margin-top:10px">Помощник по математике</div>
+<div style="font-size:13px;color:#4A5872">7–8 классы · уровень 4</div>
+<a href="S11.html" style="margin-top:6px;min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;border-radius:12px;color:#0047BA;font-size:14px;font-weight:600;text-decoration:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></svg>Настройки ассистента</a>
+</div>
+<div style="flex:1;overflow:hidden;padding:18px 16px 0;display:flex;flex-direction:column;gap:12px">
+<div style="font-size:12px;font-weight:700;color:#4A5872;letter-spacing:.06em;text-transform:uppercase">Последние чаты</div><div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:20px 20px;border:1.5px dashed #C4CFE3;border-radius:18px;background:rgba(255,255,255,.6)">
+<span style="width:44px;height:44px;border-radius:14px;background:#E3ECFB;color:#0047BA;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg></span>
+<b style="font-size:16px">Чатов пока нет</b>
+<span style="font-size:14px;color:#4A5872">Начните разговор: попросите составить проверочную или план урока. Здесь появятся три последних чата.</span></div>
+<a class="btn p" href="Main.html" style="min-height:52px;text-decoration:none;font-size:16px;gap:8px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Новый чат</a>
+</div>
+<div style="display:flex;background:#fff;border-top:1px solid #E3ECFB;padding-bottom:12px">
+    <a class="tab on" href="S09.html">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="6" width="16" height="13" rx="5"/><circle cx="9.5" cy="12" r="1"/><circle cx="14.5" cy="12" r="1"/><path d="M12 6V3"/></svg>
+      Ассистент
+    </a>
+    <a class="tab" href="S20.html">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/></svg>
+      Курс
+    </a>
+    <a class="tab" href="S50.html">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+      Профиль
+    </a>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  var framed = window.top !== window;
+  document.documentElement.className += framed ? ' framed' : ' solo';
+  document.addEventListener('click', function(e){
+    var a = e.target.closest && e.target.closest('a[href]');
+    if(!a || !framed) return;
+    var m = a.getAttribute('href').match(/(?:^|\/)([A-Za-z0-9]+)\.html$/);
+    if(!m) return;
+    e.preventDefault();
+    window.top.postMessage({ craftGo: m[1] }, '*');
+  });
+})();
+</script>
+</body>
+</html>
