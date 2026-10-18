@@ -13,11 +13,7 @@ class ToolsPage extends ConsumerStatefulWidget {
   final String ownerId;
   final bool isLearnMode;
 
-  const ToolsPage({
-    super.key,
-    required this.ownerId,
-    this.isLearnMode = false,
-  });
+  const ToolsPage({super.key, required this.ownerId, this.isLearnMode = false});
 
   @override
   ConsumerState<ToolsPage> createState() => _ToolsPageState();
@@ -28,11 +24,9 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
     final tool = item.definition;
     final isDenied = item.osPermission == OsPermissionStatus.denied;
 
-    D07OsPermissionDialog.show(
-      context,
-      tool: tool,
-      isDenied: isDenied,
-    ).then((proceed) {
+    D07OsPermissionDialog.show(context, tool: tool, isDenied: isDenied).then((
+      proceed,
+    ) {
       if (proceed == true) {
         // Simulated OS grant
         ref
@@ -45,7 +39,9 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(toolsControllerProvider(widget.ownerId));
-    final controller = ref.read(toolsControllerProvider(widget.ownerId).notifier);
+    final controller = ref.read(
+      toolsControllerProvider(widget.ownerId).notifier,
+    );
 
     return Scaffold(
       backgroundColor: BuilderColors.background,
@@ -54,8 +50,12 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Text(
-          widget.isLearnMode ? 'Уровень 5: Инструменты' : 'Инструменты ассистента',
-          style: BuilderTypography.titleMedium.copyWith(color: BuilderColors.ink),
+          widget.isLearnMode
+              ? 'Уровень 5: Инструменты'
+              : 'Инструменты ассистента',
+          style: BuilderTypography.titleMedium.copyWith(
+            color: BuilderColors.ink,
+          ),
         ),
         actions: [
           IconButton(
@@ -86,7 +86,9 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                         const SizedBox(width: BuilderSpace.xs),
                         Text(
                           'Ожидают подтверждения (${state.pendingActions.length})',
-                          style: BuilderTypography.titleSmall.copyWith(color: BuilderColors.ink),
+                          style: BuilderTypography.titleSmall.copyWith(
+                            color: BuilderColors.ink,
+                          ),
                         ),
                       ],
                     ),
@@ -155,7 +157,11 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                   _buildGroupSection(
                     title: '1 · Календарь и расписание',
                     category: ToolCategory.calendar,
-                    items: state.toolItems.where((i) => i.definition.category == ToolCategory.calendar).toList(),
+                    items: state.toolItems
+                        .where(
+                          (i) => i.definition.category == ToolCategory.calendar,
+                        )
+                        .toList(),
                     controller: controller,
                   ),
                   const SizedBox(height: BuilderSpace.md),
@@ -163,7 +169,11 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                   _buildGroupSection(
                     title: '2 · Личные заметки и черновики',
                     category: ToolCategory.notes,
-                    items: state.toolItems.where((i) => i.definition.category == ToolCategory.notes).toList(),
+                    items: state.toolItems
+                        .where(
+                          (i) => i.definition.category == ToolCategory.notes,
+                        )
+                        .toList(),
                     controller: controller,
                   ),
                   const SizedBox(height: BuilderSpace.md),
@@ -171,7 +181,14 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                   _buildGroupSection(
                     title: '3 · Связь и поиск',
                     category: ToolCategory.communication,
-                    items: state.toolItems.where((i) => i.definition.category == ToolCategory.communication || i.definition.category == ToolCategory.search).toList(),
+                    items: state.toolItems
+                        .where(
+                          (i) =>
+                              i.definition.category ==
+                                  ToolCategory.communication ||
+                              i.definition.category == ToolCategory.search,
+                        )
+                        .toList(),
                     controller: controller,
                     disclosure: Container(
                       key: const Key('tools.webSearchDisclosure'),
@@ -180,21 +197,30 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                       decoration: BoxDecoration(
                         color: BuilderColors.warning.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(BuilderRadii.tile),
-                        border: Border.all(color: BuilderColors.warning.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: BuilderColors.warning.withValues(alpha: 0.3),
+                        ),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Padding(
                             padding: EdgeInsets.only(top: 2),
-                            child: BuilderIcon(BuilderGlyph.cloud, size: 16, color: BuilderColors.warning),
+                            child: BuilderIcon(
+                              BuilderGlyph.cloud,
+                              size: 16,
+                              color: BuilderColors.warning,
+                            ),
                           ),
                           const SizedBox(width: BuilderSpace.xs),
                           Expanded(
                             child: Text(
                               'Поиск в интернете передаёт поисковый запрос внешнему серверу CraftAI Search. '
                               'По умолчанию отключён. Не отправляйте персональные данные учеников в поисковых запросах.',
-                              style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.ink, height: 1.3),
+                              style: BuilderTypography.bodySmall.copyWith(
+                                color: BuilderColors.ink,
+                                height: 1.3,
+                              ),
                             ),
                           ),
                         ],
@@ -230,7 +256,9 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                               const SizedBox(height: 2),
                               Text(
                                 'Каталог уроков CraftAI, Google Drive и сторонние сервисы',
-                                style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.inkSecondary),
+                                style: BuilderTypography.bodySmall.copyWith(
+                                  color: BuilderColors.inkSecondary,
+                                ),
                               ),
                             ],
                           ),
@@ -239,10 +267,13 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                           key: const Key('tools.openMcpBtn'),
                           onPressed: () => Navigator.of(context).push(
                             MaterialPageRoute<void>(
-                              builder: (ctx) => McpPage(ownerId: widget.ownerId),
+                              builder: (ctx) =>
+                                  McpPage(ownerId: widget.ownerId),
                             ),
                           ),
-                          style: TextButton.styleFrom(minimumSize: const Size(44, 44)),
+                          style: TextButton.styleFrom(
+                            minimumSize: const Size(44, 44),
+                          ),
                           child: const Text('Открыть'),
                         ),
                       ],
@@ -272,20 +303,31 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                         const SizedBox(height: 4),
                         Text(
                           'Проверьте появление карточки подтверждения действия перед записью в календарь.',
-                          style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.inkSecondary),
+                          style: BuilderTypography.bodySmall.copyWith(
+                            color: BuilderColors.inkSecondary,
+                          ),
                         ),
                         const SizedBox(height: BuilderSpace.sm),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             key: const Key('tools.createTestEventBtn'),
-                            icon: const BuilderIcon(BuilderGlyph.calendar, size: 18),
-                            label: const Text('Создать тестовое событие расписания'),
+                            icon: const BuilderIcon(
+                              BuilderGlyph.calendar,
+                              size: 18,
+                            ),
+                            label: const Text(
+                              'Создать тестовое событие расписания',
+                            ),
                             style: ElevatedButton.styleFrom(
                               minimumSize: const Size(double.infinity, 44),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
                             ),
-                            onPressed: () => controller.createEducationalTestAction(),
+                            onPressed: () =>
+                                controller.createEducationalTestAction(),
                           ),
                         ),
                       ],
@@ -334,7 +376,9 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
         color: BuilderColors.surface,
         borderRadius: BorderRadius.circular(BuilderRadii.tile),
         border: Border.all(
-          color: item.isEnabled ? BuilderColors.line : BuilderColors.line.withValues(alpha: 0.5),
+          color: item.isEnabled
+              ? BuilderColors.line
+              : BuilderColors.line.withValues(alpha: 0.5),
         ),
       ),
       child: Column(
@@ -351,7 +395,9 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                       def.displayName,
                       style: BuilderTypography.bodyMedium.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: item.isEnabled ? BuilderColors.ink : BuilderColors.inkSecondary,
+                        color: item.isEnabled
+                            ? BuilderColors.ink
+                            : BuilderColors.inkSecondary,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -392,7 +438,9 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                   def.requiresConfirmation ? 'Требует подтверждения' : 'Чтение',
                   style: BuilderTypography.bodySmall.copyWith(
                     fontSize: 11,
-                    color: def.requiresConfirmation ? BuilderColors.primary : BuilderColors.inkSecondary,
+                    color: def.requiresConfirmation
+                        ? BuilderColors.primary
+                        : BuilderColors.inkSecondary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -400,26 +448,30 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
               const SizedBox(width: BuilderSpace.xs),
 
               // OS Permission Chip (if tool requires OS permission)
-              if (def.defaultOsPermission != OsPermissionStatus.notRequired) ...[
+              if (def.defaultOsPermission !=
+                  OsPermissionStatus.notRequired) ...[
                 InkWell(
                   key: Key('tool.osPermBtn.${def.name}'),
                   onTap: () => _openOsPermissionDialog(item),
                   borderRadius: BorderRadius.circular(4),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: item.osPermission == OsPermissionStatus.granted
                           ? Colors.green.shade50
                           : (item.osPermission == OsPermissionStatus.denied
-                              ? Colors.red.shade50
-                              : BuilderColors.background),
+                                ? Colors.red.shade50
+                                : BuilderColors.background),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
                         color: item.osPermission == OsPermissionStatus.granted
                             ? Colors.green.shade200
                             : (item.osPermission == OsPermissionStatus.denied
-                                ? Colors.red.shade200
-                                : BuilderColors.line),
+                                  ? Colors.red.shade200
+                                  : BuilderColors.line),
                       ),
                     ),
                     child: Text(
@@ -429,8 +481,8 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                         color: item.osPermission == OsPermissionStatus.granted
                             ? Colors.green.shade800
                             : (item.osPermission == OsPermissionStatus.denied
-                                ? Colors.red.shade800
-                                : BuilderColors.inkSecondary),
+                                  ? Colors.red.shade800
+                                  : BuilderColors.inkSecondary),
                       ),
                     ),
                   ),

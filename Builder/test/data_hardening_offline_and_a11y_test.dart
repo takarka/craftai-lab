@@ -49,7 +49,7 @@ import 'package:builder/features/trace/trace_providers.dart';
 
 class FailingOfflineChatStreamClient extends ChatStreamClient {
   FailingOfflineChatStreamClient()
-      : super(tokenStorage: InMemorySecureTokenStorage());
+    : super(tokenStorage: InMemorySecureTokenStorage());
 
   @override
   Stream<StreamEvent> streamCompletion({
@@ -70,7 +70,10 @@ class FailingOfflineChatStreamClient extends ChatStreamClient {
 
 class AlwaysAcknowledgedPolicyRepository implements PolicyRepository {
   @override
-  Future<bool> isPolicyAcknowledged({required String ownerId, required String policyId}) async => true;
+  Future<bool> isPolicyAcknowledged({
+    required String ownerId,
+    required String policyId,
+  }) async => true;
 
   @override
   Future<PolicyAcknowledgment?> getAcknowledgment({
@@ -136,10 +139,7 @@ void main() {
       assistantRepository: assistantRepo,
     );
     chatRepo = PersistentChatRepository(database: db);
-    traceRepo = PersistentTraceRepository(
-      db: db.db,
-      ownerId: testOwner,
-    );
+    traceRepo = PersistentTraceRepository(db: db.db, ownerId: testOwner);
     knowledgeRepo = PersistentKnowledgeRepository(
       database: db,
       baseStorageDir: tempDir.path,
@@ -157,7 +157,12 @@ void main() {
       'owner_id': testOwner,
       'name': 'Қыран',
       'selected_category': 'standard',
-      'enabled_skills_json': jsonEncode(['instructions', 'knowledge', 'memory', 'tools']),
+      'enabled_skills_json': jsonEncode([
+        'instructions',
+        'knowledge',
+        'memory',
+        'tools',
+      ]),
       'system_rules_json': jsonEncode(['Отвечать понятно']),
       'state_revision': 1,
       'updated_at_utc': nowUtc,
@@ -189,7 +194,9 @@ void main() {
         knowledgeRepositoryProvider.overrideWithValue(knowledgeRepo),
         memoryRepositoryProvider.overrideWithValue(memoryRepo),
         toolsRepositoryProvider.overrideWithValue(toolsRepo),
-        policyRepositoryProvider.overrideWithValue(AlwaysAcknowledgedPolicyRepository()),
+        policyRepositoryProvider.overrideWithValue(
+          AlwaysAcknowledgedPolicyRepository(),
+        ),
         if (mockStreamClient != null)
           chatStreamClientProvider.overrideWithValue(mockStreamClient),
       ],
@@ -208,26 +215,29 @@ void main() {
   }
 
   group('F18: Data Hardening, Offline & Resilience', () {
-    test('F18-05: Offline matrix: course levels, glossary and memory are 100% available offline', () {
-      // 1. All levels load synchronously without internet
-      final levelsRu = CourseCatalog.getLevels(locale: 'ru');
-      final levelsKk = CourseCatalog.getLevels(locale: 'kk');
-      expect(levelsRu.length, 9);
-      expect(levelsKk.length, 9);
+    test(
+      'F18-05: Offline matrix: course levels, glossary and memory are 100% available offline',
+      () {
+        // 1. All levels load synchronously without internet
+        final levelsRu = CourseCatalog.getLevels(locale: 'ru');
+        final levelsKk = CourseCatalog.getLevels(locale: 'kk');
+        expect(levelsRu.length, 9);
+        expect(levelsKk.length, 9);
 
-      for (int i = 1; i <= 5; i++) {
-        expect(CourseCatalog.getLevel(i, locale: 'ru'), isNotNull);
-        expect(CourseCatalog.getLevel(i, locale: 'kk'), isNotNull);
-      }
+        for (int i = 1; i <= 5; i++) {
+          expect(CourseCatalog.getLevel(i, locale: 'ru'), isNotNull);
+          expect(CourseCatalog.getLevel(i, locale: 'kk'), isNotNull);
+        }
 
-      // 2. Glossary terms load offline
-      final terms = GlossaryPage.terms;
-      expect(terms.length, greaterThanOrEqualTo(10));
-      for (final t in terms) {
-        expect(t.localizedTerm(false), isNotEmpty);
-        expect(t.localizedTerm(true), isNotEmpty);
-      }
-    });
+        // 2. Glossary terms load offline
+        final terms = GlossaryPage.terms;
+        expect(terms.length, greaterThanOrEqualTo(10));
+        for (final t in terms) {
+          expect(t.localizedTerm(false), isNotEmpty);
+          expect(t.localizedTerm(true), isNotEmpty);
+        }
+      },
+    );
 
     test('F18-05: Chat graceful offline fallback on SocketException', () async {
       final container = ProviderContainer(
@@ -240,8 +250,12 @@ void main() {
           knowledgeRepositoryProvider.overrideWithValue(knowledgeRepo),
           memoryRepositoryProvider.overrideWithValue(memoryRepo),
           toolsRepositoryProvider.overrideWithValue(toolsRepo),
-          policyRepositoryProvider.overrideWithValue(AlwaysAcknowledgedPolicyRepository()),
-          chatStreamClientProvider.overrideWithValue(FailingOfflineChatStreamClient()),
+          policyRepositoryProvider.overrideWithValue(
+            AlwaysAcknowledgedPolicyRepository(),
+          ),
+          chatStreamClientProvider.overrideWithValue(
+            FailingOfflineChatStreamClient(),
+          ),
         ],
       );
       addTearDown(container.dispose);
@@ -270,129 +284,153 @@ void main() {
       expect(trace!.status, TraceStatus.error);
     });
 
-    test('F18-03: Owner isolation & Sign out closes active workspace', () async {
-      expect(workspaceService.hasActiveWorkspace, isTrue);
-      await sessionRepo.signOut();
-      final snapshot = sessionRepo.currentSnapshot;
-      expect(snapshot, isA<SignedOut>());
-      expect(workspaceService.hasActiveWorkspace, isFalse);
-    });
+    test(
+      'F18-03: Owner isolation & Sign out closes active workspace',
+      () async {
+        expect(workspaceService.hasActiveWorkspace, isTrue);
+        await sessionRepo.signOut();
+        final snapshot = sessionRepo.currentSnapshot;
+        expect(snapshot, isA<SignedOut>());
+        expect(workspaceService.hasActiveWorkspace, isFalse);
+      },
+    );
 
-    test('F18-04: Physical document deletion deletes file and cascades DB rows', () async {
-      final txtContent = 'Бағдарламалау сабағының конспектісі';
-      final txtBytes = Uint8List.fromList(utf8.encode(txtContent));
+    test(
+      'F18-04: Physical document deletion deletes file and cascades DB rows',
+      () async {
+        final txtContent = 'Бағдарламалау сабағының конспектісі';
+        final txtBytes = Uint8List.fromList(utf8.encode(txtContent));
 
-      final doc = await knowledgeRepo.importDocument(
-        ownerId: testOwner,
-        fileName: 'lesson_notes.txt',
-        bytes: txtBytes,
-        format: DocumentFormat.txt,
-      );
+        final doc = await knowledgeRepo.importDocument(
+          ownerId: testOwner,
+          fileName: 'lesson_notes.txt',
+          bytes: txtBytes,
+          format: DocumentFormat.txt,
+        );
 
-      expect(doc.id, isNotEmpty);
-      expect(doc.chunksCount, greaterThan(0));
+        expect(doc.id, isNotEmpty);
+        expect(doc.chunksCount, greaterThan(0));
 
-      // Verify physical file was written to disk
-      final revRows = await db.db.query(
-        StorageSchemaV1.tableDocumentRevisions,
-        where: 'document_id = ?',
-        whereArgs: [doc.id],
-      );
-      expect(revRows.isNotEmpty, isTrue);
-      final blobPath = revRows.first['blob_path'] as String;
-      expect(File(blobPath).existsSync(), isTrue);
+        // Verify physical file was written to disk
+        final revRows = await db.db.query(
+          StorageSchemaV1.tableDocumentRevisions,
+          where: 'document_id = ?',
+          whereArgs: [doc.id],
+        );
+        expect(revRows.isNotEmpty, isTrue);
+        final blobPath = revRows.first['blob_path'] as String;
+        expect(File(blobPath).existsSync(), isTrue);
 
-      // Delete document
-      await knowledgeRepo.deleteDocument(ownerId: testOwner, docId: doc.id);
+        // Delete document
+        await knowledgeRepo.deleteDocument(ownerId: testOwner, docId: doc.id);
 
-      // Verify physical file is gone
-      expect(File(blobPath).existsSync(), isFalse);
+        // Verify physical file is gone
+        expect(File(blobPath).existsSync(), isFalse);
 
-      // Verify DB records cascaded
-      final docInDb = await db.db.query(
-        StorageSchemaV1.tableKnowledgeDocuments,
-        where: 'id = ?',
-        whereArgs: [doc.id],
-      );
-      expect(docInDb, isEmpty);
+        // Verify DB records cascaded
+        final docInDb = await db.db.query(
+          StorageSchemaV1.tableKnowledgeDocuments,
+          where: 'id = ?',
+          whereArgs: [doc.id],
+        );
+        expect(docInDb, isEmpty);
 
-      final chunksInDb = await db.db.query(
-        StorageSchemaV1.tableKnowledgeChunks,
-        where: 'owner_id = ?',
-        whereArgs: [testOwner],
-      );
-      expect(chunksInDb, isEmpty);
-    });
+        final chunksInDb = await db.db.query(
+          StorageSchemaV1.tableKnowledgeChunks,
+          where: 'owner_id = ?',
+          whereArgs: [testOwner],
+        );
+        expect(chunksInDb, isEmpty);
+      },
+    );
 
-    test('F18-04: Traces remain valid and readable after document deletion', () async {
-      final now = DateTime.utc(2026, 10, 18, 10, 0, 0);
-      final trace = RequestTrace(
-        requestId: 'req_hardening_trace_1',
-        ownerId: testOwner,
-        conversationId: 'conv_1',
-        modelCategory: 'standard',
-        assistantVersion: 1,
-        layers: [
-          const TraceLayer(
-            type: TraceLayerType.retrieval,
-            title: 'База знаний',
-            contentSnippet: 'План факультатива (curriculum_schedule_grade7.txt, удалён позже)',
-            tokenCount: 140,
-            location: LocationTag.onDevice,
+    test(
+      'F18-04: Traces remain valid and readable after document deletion',
+      () async {
+        final now = DateTime.utc(2026, 10, 18, 10, 0, 0);
+        final trace = RequestTrace(
+          requestId: 'req_hardening_trace_1',
+          ownerId: testOwner,
+          conversationId: 'conv_1',
+          modelCategory: 'standard',
+          assistantVersion: 1,
+          layers: [
+            const TraceLayer(
+              type: TraceLayerType.retrieval,
+              title: 'База знаний',
+              contentSnippet:
+                  'План факультатива (curriculum_schedule_grade7.txt, удалён позже)',
+              tokenCount: 140,
+              location: LocationTag.onDevice,
+            ),
+          ],
+          steps: const [
+            TraceStep(
+              stepIndex: 1,
+              title: 'Поиск по базе знаний',
+              description: 'Локальный поиск фрагментов',
+              location: LocationTag.onDevice,
+            ),
+          ],
+          usage: const TraceUsage(
+            promptTokens: 140,
+            completionTokens: 40,
+            totalTokens: 180,
+            durationMs: 420,
+            isServerReported: false,
+            costTier: 1,
           ),
-        ],
-        steps: const [
-          TraceStep(
-            stepIndex: 1,
-            title: 'Поиск по базе знаний',
-            description: 'Локальный поиск фрагментов',
-            location: LocationTag.onDevice,
-          ),
-        ],
-        usage: const TraceUsage(
-          promptTokens: 140,
-          completionTokens: 40,
-          totalTokens: 180,
-          durationMs: 420,
-          isServerReported: false,
-          costTier: 1,
-        ),
-        status: TraceStatus.completed,
-        createdAtUtc: now,
-        isExample: false,
-      );
+          status: TraceStatus.completed,
+          createdAtUtc: now,
+          isExample: false,
+        );
 
-      await traceRepo.saveTrace(trace);
+        await traceRepo.saveTrace(trace);
 
-      final loadedTrace = await traceRepo.getTrace('req_hardening_trace_1');
-      expect(loadedTrace, isNotNull);
-      expect(loadedTrace!.requestId, 'req_hardening_trace_1');
-      expect(loadedTrace.layers.first.title, 'База знаний');
-      expect(loadedTrace.layers.first.contentSnippet, contains('План факультатива'));
-    });
+        final loadedTrace = await traceRepo.getTrace('req_hardening_trace_1');
+        expect(loadedTrace, isNotNull);
+        expect(loadedTrace!.requestId, 'req_hardening_trace_1');
+        expect(loadedTrace.layers.first.title, 'База знаний');
+        expect(
+          loadedTrace.layers.first.contentSnippet,
+          contains('План факультатива'),
+        );
+      },
+    );
 
-    testWidgets('F18-10: D05 reset dialog explicitly scopes to assistant workspace only', (tester) async {
-      await tester.pumpWidget(
-        buildTestApp(
-          child: Builder(
-            builder: (context) => ElevatedButton(
-              onPressed: () => showResetConfirmationDialog(context, ownerId: testOwner),
-              child: const Text('Open Reset Dialog'),
+    testWidgets(
+      'F18-10: D05 reset dialog explicitly scopes to assistant workspace only',
+      (tester) async {
+        await tester.pumpWidget(
+          buildTestApp(
+            child: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () =>
+                    showResetConfirmationDialog(context, ownerId: testOwner),
+                child: const Text('Open Reset Dialog'),
+              ),
             ),
           ),
-        ),
-      );
-      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 200)));
-      await tester.pumpAndSettle();
+        );
+        await tester.runAsync(
+          () => Future.delayed(const Duration(milliseconds: 200)),
+        );
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Open Reset Dialog'));
-      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 200)));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('Open Reset Dialog'));
+        await tester.runAsync(
+          () => Future.delayed(const Duration(milliseconds: 200)),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('reset.confirmationWordField')), findsOneWidget);
-      expect(find.byKey(const Key('reset.confirmBtn')), findsOneWidget);
-      expect(find.byKey(const Key('reset.cancelBtn')), findsOneWidget);
-    });
+        expect(
+          find.byKey(const Key('reset.confirmationWordField')),
+          findsOneWidget,
+        );
+        expect(find.byKey(const Key('reset.confirmBtn')), findsOneWidget);
+        expect(find.byKey(const Key('reset.cancelBtn')), findsOneWidget);
+      },
+    );
   });
 
   group('F18: Responsive Layouts & Accessibility (a11y)', () {
@@ -403,104 +441,143 @@ void main() {
     ];
 
     for (final res in screenResolutions) {
-      testWidgets('AssistantPage fits ${res.width}x${res.height} at 130% font scale without overflow', (tester) async {
-        tester.view.physicalSize = Size(res.width * 2, res.height * 2);
-        tester.view.devicePixelRatio = 2.0;
-        addTearDown(() => tester.view.resetPhysicalSize());
+      testWidgets(
+        'AssistantPage fits ${res.width}x${res.height} at 130% font scale without overflow',
+        (tester) async {
+          tester.view.physicalSize = Size(res.width * 2, res.height * 2);
+          tester.view.devicePixelRatio = 2.0;
+          addTearDown(() => tester.view.resetPhysicalSize());
 
-        final inMemoryChat = InMemoryChatRepository();
-        await inMemoryChat.createConversation(ownerId: testOwner);
+          final inMemoryChat = InMemoryChatRepository();
+          await inMemoryChat.createConversation(ownerId: testOwner);
 
-        await tester.pumpWidget(
-          MediaQuery(
-            data: MediaQueryData(
-              size: res,
-              textScaler: const TextScaler.linear(1.3), // 130% font scale (F18-07)
+          await tester.pumpWidget(
+            MediaQuery(
+              data: MediaQueryData(
+                size: res,
+                textScaler: const TextScaler.linear(
+                  1.3,
+                ), // 130% font scale (F18-07)
+              ),
+              child: buildTestApp(
+                customChatRepo: inMemoryChat,
+                child: const AssistantPage(ownerId: testOwner),
+              ),
             ),
-            child: buildTestApp(
-              customChatRepo: inMemoryChat,
-              child: const AssistantPage(ownerId: testOwner),
+          );
+          await tester.runAsync(
+            () => Future.delayed(const Duration(milliseconds: 300)),
+          );
+          await tester.pumpAndSettle();
+
+          expect(tester.takeException(), isNull);
+          expect(find.byType(AssistantPage), findsOneWidget);
+        },
+      );
+
+      testWidgets(
+        'CoursePage fits ${res.width}x${res.height} at 130% font scale in Kazakh',
+        (tester) async {
+          tester.view.physicalSize = Size(res.width * 2, res.height * 2);
+          tester.view.devicePixelRatio = 2.0;
+          addTearDown(() => tester.view.resetPhysicalSize());
+
+          await tester.pumpWidget(
+            MediaQuery(
+              data: MediaQueryData(
+                size: res,
+                textScaler: const TextScaler.linear(1.3),
+              ),
+              child: buildTestApp(
+                locale: const Locale('kk'),
+                child: const CoursePage(ownerId: testOwner),
+              ),
             ),
-          ),
-        );
-        await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 300)));
-        await tester.pumpAndSettle();
+          );
+          await tester.runAsync(
+            () => Future.delayed(const Duration(milliseconds: 300)),
+          );
+          await tester.pumpAndSettle();
 
-        expect(tester.takeException(), isNull);
-        expect(find.byType(AssistantPage), findsOneWidget);
-      });
+          expect(tester.takeException(), isNull);
+          expect(find.text('Оқу жолы'), findsOneWidget);
+        },
+      );
 
-      testWidgets('CoursePage fits ${res.width}x${res.height} at 130% font scale in Kazakh', (tester) async {
-        tester.view.physicalSize = Size(res.width * 2, res.height * 2);
-        tester.view.devicePixelRatio = 2.0;
-        addTearDown(() => tester.view.resetPhysicalSize());
+      testWidgets(
+        'LessonPlayerPage Level 1 fits ${res.width}x${res.height} at 130% font scale in Russian',
+        (tester) async {
+          tester.view.physicalSize = Size(res.width * 2, res.height * 2);
+          tester.view.devicePixelRatio = 2.0;
+          addTearDown(() => tester.view.resetPhysicalSize());
 
-        await tester.pumpWidget(
-          MediaQuery(
-            data: MediaQueryData(
-              size: res,
-              textScaler: const TextScaler.linear(1.3),
+          await tester.pumpWidget(
+            MediaQuery(
+              data: MediaQueryData(
+                size: res,
+                textScaler: const TextScaler.linear(1.3),
+              ),
+              child: buildTestApp(
+                locale: const Locale('ru'),
+                child: const LessonPlayerPage(
+                  ownerId: testOwner,
+                  levelId: 1,
+                  readOnly: true,
+                ),
+              ),
             ),
-            child: buildTestApp(
-              locale: const Locale('kk'),
-              child: const CoursePage(ownerId: testOwner),
-            ),
-          ),
-        );
-        await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 300)));
-        await tester.pumpAndSettle();
+          );
+          await tester.runAsync(
+            () => Future.delayed(const Duration(milliseconds: 300)),
+          );
+          await tester.pumpAndSettle();
 
-        expect(tester.takeException(), isNull);
-        expect(find.text('Оқу жолы'), findsOneWidget);
-      });
-
-      testWidgets('LessonPlayerPage Level 1 fits ${res.width}x${res.height} at 130% font scale in Russian', (tester) async {
-        tester.view.physicalSize = Size(res.width * 2, res.height * 2);
-        tester.view.devicePixelRatio = 2.0;
-        addTearDown(() => tester.view.resetPhysicalSize());
-
-        await tester.pumpWidget(
-          MediaQuery(
-            data: MediaQueryData(
-              size: res,
-              textScaler: const TextScaler.linear(1.3),
-            ),
-            child: buildTestApp(
-              locale: const Locale('ru'),
-              child: const LessonPlayerPage(ownerId: testOwner, levelId: 1, readOnly: true),
-            ),
-          ),
-        );
-        await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 300)));
-        await tester.pumpAndSettle();
-
-        expect(tester.takeException(), isNull);
-        expect(find.byKey(const Key('lesson.step.1')), findsOneWidget);
-        expect(find.byKey(const Key('lesson.ideaProceedBtn')), findsOneWidget);
-      });
+          expect(tester.takeException(), isNull);
+          expect(find.byKey(const Key('lesson.step.1')), findsOneWidget);
+          expect(
+            find.byKey(const Key('lesson.ideaProceedBtn')),
+            findsOneWidget,
+          );
+        },
+      );
     }
 
-    testWidgets('F18-08 & F18-V01: Touch target sizes for primary buttons are at least 44x44', (tester) async {
-      tester.view.physicalSize = const Size(780, 1688);
-      tester.view.devicePixelRatio = 2.0;
-      addTearDown(() => tester.view.resetPhysicalSize());
+    testWidgets(
+      'F18-08 & F18-V01: Touch target sizes for primary buttons are at least 44x44',
+      (tester) async {
+        tester.view.physicalSize = const Size(780, 1688);
+        tester.view.devicePixelRatio = 2.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
 
-      await tester.pumpWidget(
-        buildTestApp(child: const LessonPlayerPage(ownerId: testOwner, levelId: 1, readOnly: true)),
-      );
-      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 300)));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          buildTestApp(
+            child: const LessonPlayerPage(
+              ownerId: testOwner,
+              levelId: 1,
+              readOnly: true,
+            ),
+          ),
+        );
+        await tester.runAsync(
+          () => Future.delayed(const Duration(milliseconds: 300)),
+        );
+        await tester.pumpAndSettle();
 
-      final proceedBtnFinder = find.byKey(const Key('lesson.ideaProceedBtn'));
-      expect(proceedBtnFinder, findsOneWidget);
-      final size = tester.getSize(proceedBtnFinder);
-      expect(size.height, greaterThanOrEqualTo(44.0), reason: 'Buttons must have minimum 44px tap target');
+        final proceedBtnFinder = find.byKey(const Key('lesson.ideaProceedBtn'));
+        expect(proceedBtnFinder, findsOneWidget);
+        final size = tester.getSize(proceedBtnFinder);
+        expect(
+          size.height,
+          greaterThanOrEqualTo(44.0),
+          reason: 'Buttons must have minimum 44px tap target',
+        );
 
-      final closeBtnFinder = find.byKey(const Key('lesson.closeBtn'));
-      expect(closeBtnFinder, findsOneWidget);
-      final closeSize = tester.getSize(closeBtnFinder);
-      expect(closeSize.width, greaterThanOrEqualTo(44.0));
-      expect(closeSize.height, greaterThanOrEqualTo(44.0));
-    });
+        final closeBtnFinder = find.byKey(const Key('lesson.closeBtn'));
+        expect(closeBtnFinder, findsOneWidget);
+        final closeSize = tester.getSize(closeBtnFinder);
+        expect(closeSize.width, greaterThanOrEqualTo(44.0));
+        expect(closeSize.height, greaterThanOrEqualTo(44.0));
+      },
+    );
   });
 }

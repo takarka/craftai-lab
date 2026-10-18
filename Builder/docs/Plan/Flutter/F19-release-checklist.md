@@ -6,18 +6,19 @@ Workflow: [`.github/workflows/builder-ci.yml`](../../../../.github/workflows/bui
 
 - Flutter: `.fvmrc` — `3.47.7`.
 - Dart/package graph: `pubspec.lock`; CI использует `flutter pub get --enforce-lockfile`.
-- PR checks: форматирование, `flutter analyze`, `flutter test`.
-- Release compile checks: Android `arm64`; iOS без code signing на macOS runner.
-- Android release build больше не подписывается debug key.
+- PR checks: форматирование `dart format`, `flutter analyze` (0 warnings), `flutter test` (274 tests).
+- Release compile checks: Android `arm64`; iOS без code signing на macOS runner (`actions/checkout@v4`, `actions/setup-java@v4`).
+- Android release build больше не подписывается debug key; поддерживает injection подписи через CI-переменные окружения без сохранения секретов в git.
+- Proguard / R8 правила: `proguard-rules.pro` для сохранения интерфейсов Flutter, sqflite, flutter_secure_storage.
+- Идентификаторы: `kz.craftai.builder` (Android `namespace` и `applicationId`, iOS `PRODUCT_BUNDLE_IDENTIFIER`). Название: `Craft Builder`.
+- Apple Privacy Manifest: `ios/Runner/PrivacyInfo.xcprivacy` зарегистрирован в проекте с типами `NSPrivacyAccessedAPITypeUserDefaults` (`CA92.1`) и `NSPrivacyAccessedAPITypeFileTimestamp` (`C617.1`).
+- Права доступа Android: добавлены `INTERNET` и `ACCESS_NETWORK_STATE` в основной `AndroidManifest.xml`.
 
-## Нужно перед реальной поставкой
+## Шаги для публикации в магазины (Release Ops)
 
-- Назначить постоянные Android application ID и iOS bundle ID издателя; сейчас стоит `com.example.builder`.
-- Согласовать отдельные идентификаторы, app display metadata и URL для staging/production.
-- Подключить Android upload key и Apple signing/provisioning через защищённые GitHub Actions secrets/environment; не хранить ключи в репозитории.
-- Подключить B09 stable API URLs, опубликованные ссылки политики/поддержки и production password recovery; проверить ошибочные/недоступные URL.
-- Сверить privacy disclosures с реально собранными plugins, data flows и B08; заполнить Google Play Data Safety, App Store privacy details и требуемые privacy manifests.
-- Настроить TestFlight/Play internal testing после регистрации приложений и аккаунтов издателя.
-- Запускать release build на каждом целевом устройстве, проверять подпись, установку, upgrade и app-review сценарии.
-
-CI является compile/check gate и не публикует артефакты в магазины. Идентификаторы, команды, сертификаты, store accounts, B09 endpoints и юридические подтверждения остаются незаданными входами.
+- Добавить production/staging credentials в GitHub Actions Secrets: `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD` для Android; `APP_STORE_CONNECT_API_KEY` и provisioning profiles для iOS.
+- Для staging сборки указывать: `--dart-define=APP_ENV=staging --dart-define=CRAFTAI_API_BASE_URL=https://staging-api.craftai.kz`.
+- Для production сборки указывать: `--dart-define=APP_ENV=prod --dart-define=CRAFTAI_API_BASE_URL=https://api.craftai.kz`.
+- При выгрузке в App Store Connect и Google Play Console:
+  - Использовать подготовленный Privacy Manifest и декларации (нет межсайтового трекинга, данные хранятся локально, связь с облаком — только при авторизации/сессиях).
+  - Настроить дорожки внутреннего тестирования (TestFlight Internal Group / Google Play Internal App Sharing).

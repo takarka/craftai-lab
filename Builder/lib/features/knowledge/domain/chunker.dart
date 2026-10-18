@@ -108,7 +108,8 @@ class SentenceWindowChunker {
 
       while (windowEnd < sentences.length) {
         final sentence = sentences[windowEnd];
-        if (currentLength + sentence.length > targetChunkSize && currentChunkSentences.isNotEmpty) {
+        if (currentLength + sentence.length > targetChunkSize &&
+            currentChunkSentences.isNotEmpty) {
           break;
         }
         currentChunkSentences.add(sentence);
@@ -139,7 +140,8 @@ class SentenceWindowChunker {
               'strategy': strategyVersion,
               'length': chunkBody.length,
               'char_start': baseOffset + sentenceOffsetInSection,
-              'char_end': baseOffset + sentenceOffsetInSection + chunkBody.length,
+              'char_end':
+                  baseOffset + sentenceOffsetInSection + chunkBody.length,
             },
           ),
         );
@@ -187,7 +189,11 @@ class SentenceWindowChunker {
         final nextChar = !isLast ? text[i + 1] : '';
 
         // If next is whitespace or end of string, finish sentence
-        if (isLast || nextChar == ' ' || nextChar == '\n' || nextChar == '\t' || nextChar == '\r') {
+        if (isLast ||
+            nextChar == ' ' ||
+            nextChar == '\n' ||
+            nextChar == '\t' ||
+            nextChar == '\r') {
           final s = buffer.toString().trim();
           if (s.isNotEmpty) {
             list.add(s);

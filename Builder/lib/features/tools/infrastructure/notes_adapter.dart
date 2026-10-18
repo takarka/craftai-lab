@@ -37,8 +37,12 @@ class NoteItem {
       ownerId: map['owner_id'] as String,
       title: map['title'] as String,
       content: map['content'] as String,
-      createdAtUtc: DateTime.tryParse(map['created_at_utc'] as String? ?? '')?.toUtc() ?? DateTime.now().toUtc(),
-      updatedAtUtc: DateTime.tryParse(map['updated_at_utc'] as String? ?? '')?.toUtc() ?? DateTime.now().toUtc(),
+      createdAtUtc:
+          DateTime.tryParse(map['created_at_utc'] as String? ?? '')?.toUtc() ??
+          DateTime.now().toUtc(),
+      updatedAtUtc:
+          DateTime.tryParse(map['updated_at_utc'] as String? ?? '')?.toUtc() ??
+          DateTime.now().toUtc(),
     );
   }
 }
@@ -51,12 +55,14 @@ class NotesAdapter {
   static const int maxNoteSizeBytes = 100 * 1024; // 100 KB limit per note
 
   NotesAdapter({String? baseStorageDir, Directory? rootDirectory})
-      : baseStorageDir = baseStorageDir ?? rootDirectory?.path;
+    : baseStorageDir = baseStorageDir ?? rootDirectory?.path;
 
   Directory? _getNotesDir(String ownerId) {
     if (baseStorageDir == null) return null;
     final sanitizedOwner = ownerId.replaceAll(RegExp(r'[^a-zA-Z0-9_\-]'), '_');
-    return Directory(p.join(baseStorageDir!, 'workspaces', sanitizedOwner, 'notes'));
+    return Directory(
+      p.join(baseStorageDir!, 'workspaces', sanitizedOwner, 'notes'),
+    );
   }
 
   Future<NoteItem?> getNote({
@@ -100,7 +106,8 @@ class NotesAdapter {
     }
 
     final now = DateTime.now().toUtc();
-    final noteId = 'note_${now.millisecondsSinceEpoch}_${trimmedTitle.hashCode.abs() % 1000}';
+    final noteId =
+        'note_${now.millisecondsSinceEpoch}_${trimmedTitle.hashCode.abs() % 1000}';
 
     final note = NoteItem(
       id: noteId,
@@ -132,7 +139,9 @@ class NotesAdapter {
 
     final dir = _getNotesDir(ownerId);
     if (dir != null && dir.existsSync()) {
-      final files = dir.listSync().whereType<File>().where((f) => f.path.endsWith('.json'));
+      final files = dir.listSync().whereType<File>().where(
+        (f) => f.path.endsWith('.json'),
+      );
       for (final file in files) {
         try {
           final content = file.readAsStringSync();
@@ -148,7 +157,8 @@ class NotesAdapter {
     if (query != null && query.trim().isNotEmpty) {
       final q = query.toLowerCase().trim();
       return notes.where((n) {
-        return n.title.toLowerCase().contains(q) || n.content.toLowerCase().contains(q);
+        return n.title.toLowerCase().contains(q) ||
+            n.content.toLowerCase().contains(q);
       }).toList();
     }
 

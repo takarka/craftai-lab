@@ -23,10 +23,12 @@ class _ResetConfirmationDialog extends ConsumerStatefulWidget {
   final String ownerId;
 
   @override
-  ConsumerState<_ResetConfirmationDialog> createState() => _ResetConfirmationDialogState();
+  ConsumerState<_ResetConfirmationDialog> createState() =>
+      _ResetConfirmationDialogState();
 }
 
-class _ResetConfirmationDialogState extends ConsumerState<_ResetConfirmationDialog> {
+class _ResetConfirmationDialogState
+    extends ConsumerState<_ResetConfirmationDialog> {
   final _textController = TextEditingController();
   bool _isResetting = false;
 
@@ -44,7 +46,9 @@ class _ResetConfirmationDialogState extends ConsumerState<_ResetConfirmationDial
     });
 
     try {
-      await ref.read(assistantControllerProvider(widget.ownerId)).resetWorkspace();
+      await ref
+          .read(assistantControllerProvider(widget.ownerId))
+          .resetWorkspace();
       if (mounted) {
         Navigator.of(context).pop();
         context.go('/onboarding/assistant');
@@ -54,9 +58,9 @@ class _ResetConfirmationDialogState extends ConsumerState<_ResetConfirmationDial
         setState(() {
           _isResetting = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка при сбросе: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Ошибка при сбросе: $e')));
       }
     }
   }
@@ -71,7 +75,11 @@ class _ResetConfirmationDialogState extends ConsumerState<_ResetConfirmationDial
     return AlertDialog(
       title: Row(
         children: [
-          const BuilderIcon(BuilderGlyph.trash, color: BuilderColors.warning, size: 28),
+          const BuilderIcon(
+            BuilderGlyph.trash,
+            color: BuilderColors.warning,
+            size: 28,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -90,7 +98,9 @@ class _ResetConfirmationDialogState extends ConsumerState<_ResetConfirmationDial
             children: [
               Text(
                 s.resetDialogSubtitle,
-                style: BuilderType.body.copyWith(color: BuilderColors.inkSecondary),
+                style: BuilderType.body.copyWith(
+                  color: BuilderColors.inkSecondary,
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -129,7 +139,9 @@ class _ResetConfirmationDialogState extends ConsumerState<_ResetConfirmationDial
                 textCapitalization: TextCapitalization.characters,
                 decoration: InputDecoration(
                   hintText: confirmWord,
-                  errorText: typedWord.isNotEmpty && !isWordMatched ? 'Введите «$confirmWord»' : null,
+                  errorText: typedWord.isNotEmpty && !isWordMatched
+                      ? 'Введите «$confirmWord»'
+                      : null,
                 ),
                 onChanged: (_) => setState(() {}),
               ),
@@ -171,7 +183,9 @@ class _ResetConfirmationDialogState extends ConsumerState<_ResetConfirmationDial
             child: Text(
               text,
               style: BuilderType.small.copyWith(
-                color: isDeleted ? BuilderColors.ink : BuilderColors.inkSecondary,
+                color: isDeleted
+                    ? BuilderColors.ink
+                    : BuilderColors.inkSecondary,
               ),
             ),
           ),

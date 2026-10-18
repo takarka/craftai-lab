@@ -16,22 +16,13 @@ abstract class MemoryRepository {
   });
 
   /// Updates the text of an existing fact.
-  Future<MemoryFact> updateFact({
-    required String id,
-    required String factText,
-  });
+  Future<MemoryFact> updateFact({required String id, required String factText});
 
   /// Toggles whether a fact is enabled for context injection.
-  Future<void> toggleFact({
-    required String id,
-    required bool isEnabled,
-  });
+  Future<void> toggleFact({required String id, required bool isEnabled});
 
   /// Physically deletes a fact from storage (ADR-02).
-  Future<void> deleteFact({
-    required String id,
-    required String ownerId,
-  });
+  Future<void> deleteFact({required String id, required String ownerId});
 
   /// Returns candidate/suggested facts proposed by the assistant for teacher review (F13-03).
   Future<List<MemoryCandidateFact>> getSuggestedFacts({

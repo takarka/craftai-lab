@@ -16,12 +16,12 @@ class AuthTokens {
   bool get isExpired => DateTime.now().toUtc().isAfter(expiresAtUtc);
 
   Map<String, dynamic> toJson() => {
-        'access_token': accessToken,
-        'refresh_token': refreshToken,
-        'refresh_expires_at_utc': refreshExpiresAtUtc.toIso8601String(),
-        'token_type': tokenType,
-        'expires_at_utc': expiresAtUtc.toIso8601String(),
-      };
+    'access_token': accessToken,
+    'refresh_token': refreshToken,
+    'refresh_expires_at_utc': refreshExpiresAtUtc.toIso8601String(),
+    'token_type': tokenType,
+    'expires_at_utc': expiresAtUtc.toIso8601String(),
+  };
 
   factory AuthTokens.fromJson(Map<String, dynamic> json) {
     final access = json['access_token'] as String?;

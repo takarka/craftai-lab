@@ -45,7 +45,9 @@ class D07OsPermissionDialog extends StatelessWidget {
     return Container(
       decoration: const BoxDecoration(
         color: BuilderColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(BuilderRadii.sheet)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(BuilderRadii.sheet),
+        ),
       ),
       padding: const EdgeInsets.all(BuilderSpace.lg),
       child: SafeArea(
@@ -76,8 +78,12 @@ class D07OsPermissionDialog extends StatelessWidget {
                 const SizedBox(width: BuilderSpace.xs),
                 Expanded(
                   child: Text(
-                    isDenied ? 'Разрешение отключено в системе' : 'Системный доступ: ${tool.displayName}',
-                    style: BuilderTypography.titleMedium.copyWith(color: BuilderColors.ink),
+                    isDenied
+                        ? 'Разрешение отключено в системе'
+                        : 'Системный доступ: ${tool.displayName}',
+                    style: BuilderTypography.titleMedium.copyWith(
+                      color: BuilderColors.ink,
+                    ),
                   ),
                 ),
               ],
@@ -87,11 +93,11 @@ class D07OsPermissionDialog extends StatelessWidget {
             Text(
               isDenied
                   ? 'Ранее доступ для инструмента «${tool.displayName}» был запрещён в настройках вашего телефона. '
-                    'Чтобы ассистент мог обращаться к календарю или системным функциям, включите разрешение в настройках приложения.'
+                        'Чтобы ассистент мог обращаться к календарю или системным функциям, включите разрешение в настройках приложения.'
                   : 'Для работы инструмента «${tool.displayName}» ассистенту требуется доступ к системным службам телефона.\n\n'
-                    '• Ассистент не читает SMS-сообщения, историю звонков и личную переписку.\n'
-                    '• Любые изменения (создание уроков, звонки) требуют вашего подтверждения в чате.\n'
-                    '• Вы можете отозвать разрешение в любой момент в настройках телефона.',
+                        '• Ассистент не читает SMS-сообщения, историю звонков и личную переписку.\n'
+                        '• Любые изменения (создание уроков, звонки) требуют вашего подтверждения в чате.\n'
+                        '• Вы можете отозвать разрешение в любой момент в настройках телефона.',
               style: BuilderTypography.bodyMedium.copyWith(
                 color: BuilderColors.inkSecondary,
                 height: 1.4,
@@ -112,12 +118,12 @@ class D07OsPermissionDialog extends StatelessWidget {
               TextButton(
                 key: const Key('d07.cancelBtn'),
                 onPressed: () => Navigator.pop(context, false),
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(44, 44),
-                ),
+                style: TextButton.styleFrom(minimumSize: const Size(44, 44)),
                 child: Text(
                   'Отмена',
-                  style: BuilderTypography.labelMedium.copyWith(color: BuilderColors.inkSecondary),
+                  style: BuilderTypography.labelMedium.copyWith(
+                    color: BuilderColors.inkSecondary,
+                  ),
                 ),
               ),
             ] else ...[
@@ -131,12 +137,12 @@ class D07OsPermissionDialog extends StatelessWidget {
               TextButton(
                 key: const Key('d07.cancelBtn'),
                 onPressed: () => Navigator.pop(context, false),
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(44, 44),
-                ),
+                style: TextButton.styleFrom(minimumSize: const Size(44, 44)),
                 child: Text(
                   'Не сейчас',
-                  style: BuilderTypography.labelMedium.copyWith(color: BuilderColors.inkSecondary),
+                  style: BuilderTypography.labelMedium.copyWith(
+                    color: BuilderColors.inkSecondary,
+                  ),
                 ),
               ),
             ],

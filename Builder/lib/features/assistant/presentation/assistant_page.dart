@@ -71,7 +71,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Для обращения к облачной модели требуется согласие D02.'),
+            content: Text(
+              'Для обращения к облачной модели требуется согласие D02.',
+            ),
           ),
         );
         return;
@@ -81,20 +83,28 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     if (presetText == null) {
       _textController.clear();
     }
-    await ref.read(chatSessionProvider(widget.ownerId).notifier).sendMessage(text);
+    await ref
+        .read(chatSessionProvider(widget.ownerId).notifier)
+        .sendMessage(text);
   }
 
   @override
   Widget build(BuildContext context) {
     final s = AppLocalizations.of(context);
     final chatState = ref.watch(chatSessionProvider(widget.ownerId));
-    final selectedCategory = ref.watch(selectedCategoryProvider(widget.ownerId));
+    final selectedCategory = ref.watch(
+      selectedCategoryProvider(widget.ownerId),
+    );
     final isEphemeral = chatState.activeConversation?.isEphemeral ?? false;
 
     ref.listen(chatSessionProvider(widget.ownerId), (prev, next) {
       if (prev?.messages.length != next.messages.length ||
-          (next.messages.isNotEmpty && prev?.messages.lastOrNull?.content != next.messages.lastOrNull?.content)) {
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottomIfNeeded());
+          (next.messages.isNotEmpty &&
+              prev?.messages.lastOrNull?.content !=
+                  next.messages.lastOrNull?.content)) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _scrollToBottomIfNeeded(),
+        );
       }
     });
 
@@ -121,7 +131,11 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const BuilderIcon(BuilderGlyph.robot, size: 12, color: BuilderColors.primary),
+                  const BuilderIcon(
+                    BuilderGlyph.robot,
+                    size: 12,
+                    color: BuilderColors.primary,
+                  ),
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
@@ -144,7 +158,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             key: const Key('assistant.historyBtn'),
             icon: const Icon(Icons.history),
             tooltip: 'История разговоров',
-            onPressed: () => ConversationHistorySheet.show(context, ownerId: widget.ownerId),
+            onPressed: () =>
+                ConversationHistorySheet.show(context, ownerId: widget.ownerId),
           ),
           IconButton(
             key: const Key('assistant.settingsBtn'),
@@ -161,10 +176,17 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             if (isEphemeral)
               Container(
                 color: BuilderColors.warningTint,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
-                    const Icon(Icons.visibility_off_outlined, size: 16, color: BuilderColors.warning),
+                    const Icon(
+                      Icons.visibility_off_outlined,
+                      size: 16,
+                      color: BuilderColors.warning,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -183,13 +205,16 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               child: chatState.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : chatState.messages.isEmpty
-                      ? _buildEmptyState()
-                      : _buildMessageList(chatState),
+                  ? _buildEmptyState()
+                  : _buildMessageList(chatState),
             ),
             if (chatState.isSlowResponse)
               Container(
                 color: BuilderColors.primaryTint,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
                 child: Row(
                   children: [
                     const SizedBox(
@@ -201,7 +226,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                     Expanded(
                       child: Text(
                         'Ответ формируется дольше 10 секунд... Сервер продолжает генерацию.',
-                        style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
+                        style: BuilderType.small.copyWith(
+                          color: BuilderColors.inkSecondary,
+                        ),
                       ),
                     ),
                   ],
@@ -223,7 +250,11 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const BuilderIcon(BuilderGlyph.robot, size: 48, color: BuilderColors.primary),
+              const BuilderIcon(
+                BuilderGlyph.robot,
+                size: 48,
+                color: BuilderColors.primary,
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Чем помочь на уроке или в подготовке?',
@@ -234,28 +265,33 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               Text(
                 'Выберите один из стартовых вопросов или напишите свой собственный запрос ниже:',
                 textAlign: TextAlign.center,
-                style: BuilderType.body.copyWith(color: BuilderColors.inkSecondary),
+                style: BuilderType.body.copyWith(
+                  color: BuilderColors.inkSecondary,
+                ),
               ),
               const SizedBox(height: 24),
               _buildPromptCard(
                 keyStr: 'chat.promptOhm',
                 title: 'Объясни закон Ома простыми словами',
                 subtitle: 'Физика • Наглядная аналогия с потоком воды',
-                prompt: 'Объясни закон Ома простыми словами для школьников 8 класса с наглядной аналогией.',
+                prompt:
+                    'Объясни закон Ома простыми словами для школьников 8 класса с наглядной аналогией.',
               ),
               const SizedBox(height: 12),
               _buildPromptCard(
                 keyStr: 'chat.promptLesson',
                 title: 'Составь план урока на 45 минут',
                 subtitle: 'Методика • Цели, этапы и критерии оценки',
-                prompt: 'Составь подробный план урока на 45 минут по теме: «Строение клетки».',
+                prompt:
+                    'Составь подробный план урока на 45 минут по теме: «Строение клетки».',
               ),
               const SizedBox(height: 12),
               _buildPromptCard(
                 keyStr: 'chat.promptMath',
                 title: 'Реши задачу с пошаговой проверкой',
                 subtitle: 'Математика • Алгоритм решения и самопроверка',
-                prompt: 'Реши квадратное уравнение 2x² - 5x + 2 = 0 с пошаговыми комментариями.',
+                prompt:
+                    'Реши квадратное уравнение 2x² - 5x + 2 = 0 с пошаговыми комментариями.',
               ),
             ],
           ),
@@ -285,9 +321,17 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: BuilderType.label.copyWith(color: BuilderColors.primary)),
+            Text(
+              title,
+              style: BuilderType.label.copyWith(color: BuilderColors.primary),
+            ),
             const SizedBox(height: 4),
-            Text(subtitle, style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary)),
+            Text(
+              subtitle,
+              style: BuilderType.small.copyWith(
+                color: BuilderColors.inkSecondary,
+              ),
+            ),
           ],
         ),
       ),
@@ -307,7 +351,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: BuilderColors.background,
                   borderRadius: BorderRadius.circular(16),
@@ -359,7 +406,11 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               children: [
                 Row(
                   children: [
-                    const BuilderIcon(BuilderGlyph.robot, size: 16, color: BuilderColors.primary),
+                    const BuilderIcon(
+                      BuilderGlyph.robot,
+                      size: 16,
+                      color: BuilderColors.primary,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'Ассистент',
@@ -387,7 +438,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                       ),
                     if (message.status == MessageStatus.interrupted)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: BuilderColors.warningTint,
                           borderRadius: BorderRadius.circular(6),
@@ -428,12 +482,19 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.error_outline, size: 16, color: BuilderColors.warning),
+                            const Icon(
+                              Icons.error_outline,
+                              size: 16,
+                              color: BuilderColors.warning,
+                            ),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
-                                message.errorMessage ?? 'Не удалось получить ответ от сервера.',
-                                style: BuilderType.small.copyWith(color: BuilderColors.warning),
+                                message.errorMessage ??
+                                    'Не удалось получить ответ от сервера.',
+                                style: BuilderType.small.copyWith(
+                                  color: BuilderColors.warning,
+                                ),
                               ),
                             ),
                           ],
@@ -447,14 +508,23 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                               key: const Key('chat.retryBtn'),
                               label: 'Повторить запрос',
                               variant: BuilderButtonVariant.secondary,
-                              onPressed: () => ref.read(chatSessionProvider(widget.ownerId).notifier).retryLast(),
+                              onPressed: () => ref
+                                  .read(
+                                    chatSessionProvider(
+                                      widget.ownerId,
+                                    ).notifier,
+                                  )
+                                  .retryLast(),
                             ),
                             if (message.requestId != null) ...[
                               BuilderButton(
                                 key: Key('chat.errorTraceBtn_${message.id}'),
                                 label: 'Под капотом',
                                 variant: BuilderButtonVariant.text,
-                                onPressed: () => TraceSheet.show(context, requestId: message.requestId!),
+                                onPressed: () => TraceSheet.show(
+                                  context,
+                                  requestId: message.requestId!,
+                                ),
                               ),
                             ],
                           ],
@@ -463,7 +533,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                     ),
                   ),
                 ],
-                if (message.status == MessageStatus.completed || message.status == MessageStatus.interrupted) ...[
+                if (message.status == MessageStatus.completed ||
+                    message.status == MessageStatus.interrupted) ...[
                   const SizedBox(height: 12),
                   const Divider(height: 1),
                   const SizedBox(height: 6),
@@ -478,15 +549,23 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                           tooltip: 'Копировать ответ',
                           onPressed: () async {
                             try {
-                              await Clipboard.setData(ClipboardData(text: message.content));
+                              await Clipboard.setData(
+                                ClipboardData(text: message.content),
+                              );
                               if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Ответ скопирован')),
+                                const SnackBar(
+                                  content: Text('Ответ скопирован'),
+                                ),
                               );
                             } catch (_) {
                               if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Не удалось скопировать ответ. Попробуйте ещё раз.')),
+                                const SnackBar(
+                                  content: Text(
+                                    'Не удалось скопировать ответ. Попробуйте ещё раз.',
+                                  ),
+                                ),
                               );
                             }
                           },
@@ -496,7 +575,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                           key: Key('chat.traceBtn_${message.id}'),
                           icon: const Icon(Icons.tune, size: 16),
                           tooltip: 'Под капотом',
-                          onPressed: () => TraceSheet.show(context, requestId: message.requestId!),
+                          onPressed: () => TraceSheet.show(
+                            context,
+                            requestId: message.requestId!,
+                          ),
                         ),
                     ],
                   ),
@@ -531,7 +613,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(20)),
                 ),
-                contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
               ),
               onSubmitted: (_) => _handleSend(),
             ),
@@ -541,15 +626,21 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             IconButton.filled(
               key: const Key('chat.stopBtn'),
               icon: const Icon(Icons.stop),
-              style: IconButton.styleFrom(backgroundColor: BuilderColors.warning),
+              style: IconButton.styleFrom(
+                backgroundColor: BuilderColors.warning,
+              ),
               tooltip: 'Остановить генерацию',
-              onPressed: () => ref.read(chatSessionProvider(widget.ownerId).notifier).stopGeneration(),
+              onPressed: () => ref
+                  .read(chatSessionProvider(widget.ownerId).notifier)
+                  .stopGeneration(),
             )
           else
             IconButton.filled(
               key: const Key('chat.sendBtn'),
               icon: const Icon(Icons.arrow_upward),
-              style: IconButton.styleFrom(backgroundColor: BuilderColors.primary),
+              style: IconButton.styleFrom(
+                backgroundColor: BuilderColors.primary,
+              ),
               tooltip: 'Отправить',
               onPressed: () => _handleSend(),
             ),
@@ -559,7 +650,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   }
 
   Widget _buildResumeCourseBanner(BuildContext context) {
-    final overallAsync = ref.watch(overallCourseProgressProvider(widget.ownerId));
+    final overallAsync = ref.watch(
+      overallCourseProgressProvider(widget.ownerId),
+    );
     return overallAsync.maybeWhen(
       data: (overall) {
         if (overall.isAllCompleted || overall.activeLevelId == null) {
@@ -575,16 +668,23 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
           decoration: BoxDecoration(
             color: BuilderColors.primaryTint,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: BuilderColors.primary.withValues(alpha: 0.3)),
+            border: Border.all(
+              color: BuilderColors.primary.withValues(alpha: 0.3),
+            ),
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
-            onTap: () => context.push('/course/lesson/${overall.activeLevelId}'),
+            onTap: () =>
+                context.push('/course/lesson/${overall.activeLevelId}'),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               child: Row(
                 children: [
-                  const Icon(Icons.play_circle_outline, color: BuilderColors.primary, size: 24),
+                  const Icon(
+                    Icons.play_circle_outline,
+                    color: BuilderColors.primary,
+                    size: 24,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -602,9 +702,14 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
-                                color: BuilderColors.primary.withValues(alpha: 0.15),
+                                color: BuilderColors.primary.withValues(
+                                  alpha: 0.15,
+                                ),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -631,7 +736,11 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                       ],
                     ),
                   ),
-                  const Icon(Icons.arrow_forward_ios, size: 14, color: BuilderColors.primary),
+                  const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: BuilderColors.primary,
+                  ),
                 ],
               ),
             ),

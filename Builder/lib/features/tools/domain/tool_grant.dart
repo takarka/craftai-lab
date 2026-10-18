@@ -52,7 +52,9 @@ class ToolGrant {
       isEnabled: (map['is_enabled'] as int? ?? 0) == 1,
       permissionScope: map['permission_scope'] as String? ?? 'standard',
       revision: map['revision'] as int? ?? 1,
-      updatedAtUtc: DateTime.tryParse(map['updated_at_utc'] as String? ?? '')?.toUtc() ?? DateTime.now().toUtc(),
+      updatedAtUtc:
+          DateTime.tryParse(map['updated_at_utc'] as String? ?? '')?.toUtc() ??
+          DateTime.now().toUtc(),
     );
   }
 }

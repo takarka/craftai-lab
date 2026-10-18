@@ -12,23 +12,40 @@ sealed class CraftAiException implements Exception {
   final String? requestId;
 
   @override
-  String toString() => '$runtimeType: $message${statusCode != null ? ' (Status: $statusCode)' : ''}${requestId != null ? ' [Request-ID: $requestId]' : ''}';
+  String toString() =>
+      '$runtimeType: $message${statusCode != null ? ' (Status: $statusCode)' : ''}${requestId != null ? ' [Request-ID: $requestId]' : ''}';
 }
 
 final class CraftAiAuthException extends CraftAiException {
-  const CraftAiAuthException(super.message, {super.statusCode, super.requestId});
+  const CraftAiAuthException(
+    super.message, {
+    super.statusCode,
+    super.requestId,
+  });
 }
 
 final class CraftAiForbiddenException extends CraftAiException {
-  const CraftAiForbiddenException(super.message, {super.statusCode, super.requestId});
+  const CraftAiForbiddenException(
+    super.message, {
+    super.statusCode,
+    super.requestId,
+  });
 }
 
 final class CraftAiServerException extends CraftAiException {
-  const CraftAiServerException(super.message, {super.statusCode, super.requestId});
+  const CraftAiServerException(
+    super.message, {
+    super.statusCode,
+    super.requestId,
+  });
 }
 
 final class CraftAiNetworkException extends CraftAiException {
-  const CraftAiNetworkException(super.message, {super.statusCode, super.requestId});
+  const CraftAiNetworkException(
+    super.message, {
+    super.statusCode,
+    super.requestId,
+  });
 }
 
 class CraftAiClient {
@@ -67,9 +84,15 @@ class CraftAiClient {
     };
 
     try {
-      var tokens = tokenStorage == null ? null : await tokenStorage!.readTokens();
-      if (tokens != null) requestHeaders['Authorization'] = 'Bearer ${tokens.accessToken}';
-      var response = await _httpClient.get(url, headers: requestHeaders).timeout(timeout);
+      var tokens = tokenStorage == null
+          ? null
+          : await tokenStorage!.readTokens();
+      if (tokens != null) {
+        requestHeaders['Authorization'] = 'Bearer ${tokens.accessToken}';
+      }
+      var response = await _httpClient
+          .get(url, headers: requestHeaders)
+          .timeout(timeout);
 
       // A request is retried once after the shared refresh operation. This is
       // required even when a server invalidates a token before its expiry.
@@ -77,7 +100,9 @@ class CraftAiClient {
         tokens = await tokenStorage!.refreshTokens();
         if (tokens != null) {
           requestHeaders['Authorization'] = 'Bearer ${tokens.accessToken}';
-          response = await _httpClient.get(url, headers: requestHeaders).timeout(timeout);
+          response = await _httpClient
+              .get(url, headers: requestHeaders)
+              .timeout(timeout);
         }
       }
 
@@ -136,10 +161,7 @@ class CraftAiClient {
     } on CraftAiException {
       rethrow;
     } catch (e) {
-      throw CraftAiNetworkException(
-        'Network error: $e',
-        requestId: requestId,
-      );
+      throw CraftAiNetworkException('Network error: $e', requestId: requestId);
     }
   }
 

@@ -40,7 +40,9 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
     final text = _factInputController.text.trim();
     if (text.isEmpty) return;
 
-    final controller = ref.read(memoryControllerProvider(widget.ownerId).notifier);
+    final controller = ref.read(
+      memoryControllerProvider(widget.ownerId).notifier,
+    );
     await controller.addFact(text);
     _factInputController.clear();
     setState(() => _isAdding = false);
@@ -58,17 +60,23 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
           ),
           title: Text(
             'Редактировать факт',
-            style: BuilderTypography.titleMedium.copyWith(color: BuilderColors.ink),
+            style: BuilderTypography.titleMedium.copyWith(
+              color: BuilderColors.ink,
+            ),
           ),
           content: TextField(
             controller: editController,
             maxLines: 3,
             maxLength: 300,
             autofocus: true,
-            style: BuilderTypography.bodyMedium.copyWith(color: BuilderColors.ink),
+            style: BuilderTypography.bodyMedium.copyWith(
+              color: BuilderColors.ink,
+            ),
             decoration: InputDecoration(
               hintText: 'Введите скорректированный факт...',
-              hintStyle: BuilderTypography.bodyMedium.copyWith(color: BuilderColors.inkSecondary),
+              hintStyle: BuilderTypography.bodyMedium.copyWith(
+                color: BuilderColors.inkSecondary,
+              ),
               filled: true,
               fillColor: BuilderColors.background,
               border: OutlineInputBorder(
@@ -77,19 +85,22 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(BuilderRadii.tile),
-                borderSide: const BorderSide(color: BuilderColors.primary, width: 1.5),
+                borderSide: const BorderSide(
+                  color: BuilderColors.primary,
+                  width: 1.5,
+                ),
               ),
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              style: TextButton.styleFrom(
-                minimumSize: const Size(44, 44),
-              ),
+              style: TextButton.styleFrom(minimumSize: const Size(44, 44)),
               child: Text(
                 'Отмена',
-                style: BuilderTypography.labelMedium.copyWith(color: BuilderColors.inkSecondary),
+                style: BuilderTypography.labelMedium.copyWith(
+                  color: BuilderColors.inkSecondary,
+                ),
               ),
             ),
             BuilderButton(
@@ -121,21 +132,25 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
           ),
           title: Text(
             'Удалить факт?',
-            style: BuilderTypography.titleMedium.copyWith(color: BuilderColors.ink),
+            style: BuilderTypography.titleMedium.copyWith(
+              color: BuilderColors.ink,
+            ),
           ),
           content: Text(
             'Факт «${fact.factText}» будет полностью и безвозвратно удалён с устройства (ADR-02). В последующих запросах модель больше не будет его использовать.',
-            style: BuilderTypography.bodyMedium.copyWith(color: BuilderColors.inkSecondary),
+            style: BuilderTypography.bodyMedium.copyWith(
+              color: BuilderColors.inkSecondary,
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              style: TextButton.styleFrom(
-                minimumSize: const Size(44, 44),
-              ),
+              style: TextButton.styleFrom(minimumSize: const Size(44, 44)),
               child: Text(
                 'Отмена',
-                style: BuilderTypography.labelMedium.copyWith(color: BuilderColors.inkSecondary),
+                style: BuilderTypography.labelMedium.copyWith(
+                  color: BuilderColors.inkSecondary,
+                ),
               ),
             ),
             TextButton(
@@ -160,7 +175,9 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(memoryControllerProvider(widget.ownerId));
-    final controller = ref.read(memoryControllerProvider(widget.ownerId).notifier);
+    final controller = ref.read(
+      memoryControllerProvider(widget.ownerId).notifier,
+    );
 
     return Scaffold(
       backgroundColor: BuilderColors.background,
@@ -169,8 +186,12 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
         elevation: 0,
         scrolledUnderElevation: 0,
         title: Text(
-          widget.isLearnMode ? 'Уровень 4: Долгая память' : 'Долгая память и факты',
-          style: BuilderTypography.titleMedium.copyWith(color: BuilderColors.ink),
+          widget.isLearnMode
+              ? 'Уровень 4: Долгая память'
+              : 'Долгая память и факты',
+          style: BuilderTypography.titleMedium.copyWith(
+            color: BuilderColors.ink,
+          ),
         ),
         actions: [
           IconButton(
@@ -294,7 +315,9 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
                       ),
                       child: Text(
                         state.errorMessage!,
-                        style: BuilderTypography.bodySmall.copyWith(color: Colors.red.shade800),
+                        style: BuilderTypography.bodySmall.copyWith(
+                          color: Colors.red.shade800,
+                        ),
                       ),
                     ),
                     const SizedBox(height: BuilderSpace.sm),
@@ -312,14 +335,18 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
                         const SizedBox(width: BuilderSpace.xs),
                         Text(
                           'Предложено моделью (${state.candidateFacts.length})',
-                          style: BuilderTypography.titleSmall.copyWith(color: BuilderColors.ink),
+                          style: BuilderTypography.titleSmall.copyWith(
+                            color: BuilderColors.ink,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: BuilderSpace.xs),
                     Text(
                       'Модель предлагает запомнить эти факты из ваших разговоров. Они НЕ сохраняются в память без вашего одобрения.',
-                      style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.inkSecondary),
+                      style: BuilderTypography.bodySmall.copyWith(
+                        color: BuilderColors.inkSecondary,
+                      ),
                     ),
                     const SizedBox(height: BuilderSpace.xs),
                     ...state.candidateFacts.map((candidate) {
@@ -334,7 +361,9 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
                     children: [
                       Text(
                         'Сохранённые факты (${state.facts.length})',
-                        style: BuilderTypography.titleSmall.copyWith(color: BuilderColors.ink),
+                        style: BuilderTypography.titleSmall.copyWith(
+                          color: BuilderColors.ink,
+                        ),
                       ),
                       if (!_isAdding)
                         BuilderButton(
@@ -354,7 +383,10 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
                       decoration: BoxDecoration(
                         color: BuilderColors.surface,
                         borderRadius: BorderRadius.circular(BuilderRadii.card),
-                        border: Border.all(color: BuilderColors.primary, width: 1.5),
+                        border: Border.all(
+                          color: BuilderColors.primary,
+                          width: 1.5,
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -365,10 +397,15 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
                             maxLines: 2,
                             maxLength: 250,
                             autofocus: true,
-                            style: BuilderTypography.bodyMedium.copyWith(color: BuilderColors.ink),
+                            style: BuilderTypography.bodyMedium.copyWith(
+                              color: BuilderColors.ink,
+                            ),
                             decoration: InputDecoration(
-                              hintText: 'Например: В классе 24 ученика, урок длится 40 минут...',
-                              hintStyle: BuilderTypography.bodyMedium.copyWith(color: BuilderColors.inkSecondary),
+                              hintText:
+                                  'Например: В классе 24 ученика, урок длится 40 минут...',
+                              hintStyle: BuilderTypography.bodyMedium.copyWith(
+                                color: BuilderColors.inkSecondary,
+                              ),
                               border: InputBorder.none,
                             ),
                           ),
@@ -386,7 +423,9 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
                                 ),
                                 child: Text(
                                   'Отмена',
-                                  style: BuilderTypography.labelMedium.copyWith(color: BuilderColors.inkSecondary),
+                                  style: BuilderTypography.labelMedium.copyWith(
+                                    color: BuilderColors.inkSecondary,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: BuilderSpace.xs),
@@ -432,7 +471,9 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
                           Text(
                             'Добавьте факты о вашем классе или загрузите учебные примеры для проверки практики 4 уровня.',
                             textAlign: TextAlign.center,
-                            style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.inkSecondary),
+                            style: BuilderTypography.bodySmall.copyWith(
+                              color: BuilderColors.inkSecondary,
+                            ),
                           ),
                           const SizedBox(height: BuilderSpace.md),
                           BuilderButton(
@@ -440,7 +481,8 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
                             label: 'Загрузить 3 учебных факта',
                             variant: BuilderButtonVariant.primary,
                             loading: state.isSaving,
-                            onPressed: () => controller.loadEducationalPresets(),
+                            onPressed: () =>
+                                controller.loadEducationalPresets(),
                           ),
                         ],
                       ),
@@ -460,7 +502,9 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
                       child: TextButton.icon(
                         key: const Key('memory.reloadPresetsBtn'),
                         icon: const BuilderIcon(BuilderGlyph.reset, size: 16),
-                        label: const Text('Загрузить 3 учебных факта для практики 4 уровня'),
+                        label: const Text(
+                          'Загрузить 3 учебных факта для практики 4 уровня',
+                        ),
                         style: TextButton.styleFrom(
                           minimumSize: const Size(44, 44),
                           foregroundColor: BuilderColors.primary,
@@ -475,7 +519,10 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
     );
   }
 
-  Widget _buildCandidateCard(MemoryCandidateFact candidate, MemoryNotifier controller) {
+  Widget _buildCandidateCard(
+    MemoryCandidateFact candidate,
+    MemoryNotifier controller,
+  ) {
     return Container(
       key: Key('memory.candidate.${candidate.id}'),
       margin: const EdgeInsets.only(bottom: BuilderSpace.xs),
@@ -515,7 +562,9 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
                 onPressed: () => controller.dismissSuggested(candidate.id),
                 style: TextButton.styleFrom(
                   minimumSize: const Size(44, 44),
-                  padding: const EdgeInsets.symmetric(horizontal: BuilderSpace.sm),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: BuilderSpace.sm,
+                  ),
                   foregroundColor: BuilderColors.inkSecondary,
                 ),
                 child: const Text('Отклонить'),
@@ -543,7 +592,9 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
         color: BuilderColors.surface,
         borderRadius: BorderRadius.circular(BuilderRadii.tile),
         border: Border.all(
-          color: fact.isEnabled ? BuilderColors.line : BuilderColors.line.withValues(alpha: 0.5),
+          color: fact.isEnabled
+              ? BuilderColors.line
+              : BuilderColors.line.withValues(alpha: 0.5),
         ),
       ),
       child: Column(
@@ -559,15 +610,22 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
                     Text(
                       fact.factText,
                       style: BuilderTypography.bodyMedium.copyWith(
-                        color: fact.isEnabled ? BuilderColors.ink : BuilderColors.inkSecondary,
-                        decoration: fact.isEnabled ? null : TextDecoration.lineThrough,
+                        color: fact.isEnabled
+                            ? BuilderColors.ink
+                            : BuilderColors.inkSecondary,
+                        decoration: fact.isEnabled
+                            ? null
+                            : TextDecoration.lineThrough,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: fact.source == MemoryFactSource.suggested
                                 ? BuilderColors.primaryTint
@@ -594,7 +652,9 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
                           fact.isEnabled ? 'Активен для модели' : 'Выключен',
                           style: BuilderTypography.bodySmall.copyWith(
                             fontSize: 11,
-                            color: fact.isEnabled ? Colors.green.shade700 : BuilderColors.inkSecondary,
+                            color: fact.isEnabled
+                                ? Colors.green.shade700
+                                : BuilderColors.inkSecondary,
                           ),
                         ),
                       ],
@@ -620,14 +680,22 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
             children: [
               IconButton(
                 key: Key('memory.edit.${fact.id}'),
-                icon: const BuilderIcon(BuilderGlyph.settings, size: 18, color: BuilderColors.inkSecondary),
+                icon: const BuilderIcon(
+                  BuilderGlyph.settings,
+                  size: 18,
+                  color: BuilderColors.inkSecondary,
+                ),
                 tooltip: 'Редактировать',
                 constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                 onPressed: () => _showEditFactDialog(fact),
               ),
               IconButton(
                 key: Key('memory.delete.${fact.id}'),
-                icon: const BuilderIcon(BuilderGlyph.trash, size: 18, color: BuilderColors.inkSecondary),
+                icon: const BuilderIcon(
+                  BuilderGlyph.trash,
+                  size: 18,
+                  color: BuilderColors.inkSecondary,
+                ),
                 tooltip: 'Удалить факт',
                 constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                 onPressed: () => _showDeleteConfirmationDialog(fact),

@@ -10,7 +10,10 @@ abstract class KnowledgeRepository {
 
   /// Returns all chunks belonging to [ownerId]. If [enabledOnly] is true,
   /// chunks from disabled documents are excluded.
-  Future<List<KnowledgeChunk>> getChunksForOwner(String ownerId, {bool enabledOnly = true});
+  Future<List<KnowledgeChunk>> getChunksForOwner(
+    String ownerId, {
+    bool enabledOnly = true,
+  });
 
   /// Imports, hashes, parses, chunks, and indexes a new document file.
   /// Throws [DocumentProcessingException] on validation or extraction failure.
@@ -29,10 +32,7 @@ abstract class KnowledgeRepository {
   });
 
   /// Physically deletes document, its files from private disk, revisions, and chunks.
-  Future<void> deleteDocument({
-    required String ownerId,
-    required String docId,
-  });
+  Future<void> deleteDocument({required String ownerId, required String docId});
 
   /// Performs hybrid semantic + lexical search across enabled documents for [ownerId].
   Future<KnowledgeSearchResult> searchKnowledge({

@@ -2,11 +2,7 @@ import 'dart:io';
 import 'package:sqflite/sqflite.dart';
 import '../schema/storage_schema_v1.dart';
 
-enum StagingStatus {
-  pending,
-  committed,
-  aborted,
-}
+enum StagingStatus { pending, committed, aborted }
 
 /// Coordinates file writes with database records using two-phase staging commit.
 final class FileStagingJournal {
@@ -21,18 +17,14 @@ final class FileStagingJournal {
     required String targetPath,
   }) async {
     final nowUtc = DateTime.now().toUtc().toIso8601String();
-    await db.insert(
-      StorageSchemaV1.tableFileStagingJournal,
-      {
-        'id': id,
-        'owner_id': ownerId,
-        'staging_path': stagingPath,
-        'target_path': targetPath,
-        'status': StagingStatus.pending.name,
-        'created_at_utc': nowUtc,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert(StorageSchemaV1.tableFileStagingJournal, {
+      'id': id,
+      'owner_id': ownerId,
+      'staging_path': stagingPath,
+      'target_path': targetPath,
+      'status': StagingStatus.pending.name,
+      'created_at_utc': nowUtc,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Atomically moves the staged file to target destination and marks journal committed.
@@ -44,7 +36,9 @@ final class FileStagingJournal {
   }) async {
     final stagingFile = File(stagingPath);
     if (!await stagingFile.exists()) {
-      throw FileSystemException('Staged file does not exist at path: $stagingPath');
+      throw FileSystemException(
+        'Staged file does not exist at path: $stagingPath',
+      );
     }
 
     final targetDir = Directory(File(targetPath).parent.path);

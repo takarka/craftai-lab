@@ -32,8 +32,11 @@ class _RollbackConfirmationContent extends StatelessWidget {
     final s = AppLocalizations.of(context);
     final snapshot = targetVersion.snapshot;
 
-    final nameDiffers = currentConfig != null && currentConfig!.name != snapshot.name;
-    final catDiffers = currentConfig != null && currentConfig!.selectedCategory != snapshot.selectedCategory;
+    final nameDiffers =
+        currentConfig != null && currentConfig!.name != snapshot.name;
+    final catDiffers =
+        currentConfig != null &&
+        currentConfig!.selectedCategory != snapshot.selectedCategory;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -94,12 +97,18 @@ class _RollbackConfirmationContent extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const BuilderIcon(BuilderGlyph.check, size: 18, color: BuilderColors.primary),
+              const BuilderIcon(
+                BuilderGlyph.check,
+                size: 18,
+                color: BuilderColors.primary,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   s.rollbackKeepHistory,
-                  style: BuilderType.small.copyWith(color: BuilderColors.primary),
+                  style: BuilderType.small.copyWith(
+                    color: BuilderColors.primary,
+                  ),
                 ),
               ),
             ],

@@ -18,10 +18,7 @@ import 'knowledge_providers.dart';
 class D03PersonalDataDialog extends ConsumerStatefulWidget {
   final String ownerId;
 
-  const D03PersonalDataDialog({
-    super.key,
-    required this.ownerId,
-  });
+  const D03PersonalDataDialog({super.key, required this.ownerId});
 
   static Future<KnowledgeDocument?> show(BuildContext context, String ownerId) {
     return showModalBottomSheet<KnowledgeDocument>(
@@ -33,7 +30,8 @@ class D03PersonalDataDialog extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<D03PersonalDataDialog> createState() => _D03PersonalDataDialogState();
+  ConsumerState<D03PersonalDataDialog> createState() =>
+      _D03PersonalDataDialogState();
 }
 
 class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
@@ -50,7 +48,8 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
       format: DocumentFormat.docx,
       title: 'Расписание уроков 7 «Б» класса',
       subtitle: 'DOCX · 12 КБ · Учебный план на четверть',
-      content: 'Расписание уроков 7 «Б» класса на вторую четверть.\n'
+      content:
+          'Расписание уроков 7 «Б» класса на вторую четверть.\n'
           'Понедельник: 1. Алгебра (кабинет 24), 2. Физика (кабинет 18), 3. Биология (кабинет 12), 4. История.\n'
           'Вторник: 1. Русский язык, 2. Литература, 3. География, 4. Физкультура.\n'
           'Среда: 1. Геометрия, 2. Английский язык, 3. Информатика (кабинет 30), 4. Обществознание.\n'
@@ -62,7 +61,8 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
       format: DocumentFormat.pdf,
       title: 'Учебная программа по биологии (7 класс)',
       subtitle: 'PDF · 45 КБ · Тематическое планирование',
-      content: 'Рабочая программа по биологии для 7 класса.\n'
+      content:
+          'Рабочая программа по биологии для 7 класса.\n'
           'Тема 1: Строение растительной и животной клетки. Органоиды, клеточная мембрана и хлоропласты.\n'
           'Лабораторная работа №3: Изучение микропрепарата кожицы лука под микроскопом. Требуется подготовить предметные стекла и раствор йода.\n'
           'Контрольная работа по теме «Клетка и ткани» запланирована на 25 ноября.',
@@ -72,7 +72,8 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
       format: DocumentFormat.txt,
       title: 'Памятка по технике безопасности в кабинете',
       subtitle: 'TXT · 4 КБ · Инструкция по дежурству',
-      content: 'Памятка дежурного преподавателя.\n'
+      content:
+          'Памятка дежурного преподавателя.\n'
           '1. Проветривание кабинета проводится на каждой перемене не менее 10 минут в отсутствие учеников.\n'
           '2. В кабинетах химии и физики реактивы и приборы хранятся исключительно в закрытом лаборантском шкафу.\n'
           '3. В случае задымления или аварийной ситуации немедленно нажать тревожную кнопку у выхода и организовать эвакуацию по схеме Б.',
@@ -86,7 +87,9 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
     return Container(
       decoration: const BoxDecoration(
         color: BuilderColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(BuilderRadii.sheet)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(BuilderRadii.sheet),
+        ),
       ),
       padding: EdgeInsets.only(
         left: BuilderSpace.md,
@@ -115,16 +118,25 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
             // Header
             Row(
               children: [
-                const BuilderIcon(BuilderGlyph.doc, size: 24, color: BuilderColors.primary),
+                const BuilderIcon(
+                  BuilderGlyph.doc,
+                  size: 24,
+                  color: BuilderColors.primary,
+                ),
                 const SizedBox(width: BuilderSpace.xs),
                 Expanded(
                   child: Text(
                     'Добавление документа',
-                    style: BuilderTypography.titleMedium.copyWith(color: BuilderColors.ink),
+                    style: BuilderTypography.titleMedium.copyWith(
+                      color: BuilderColors.ink,
+                    ),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: BuilderColors.inkSecondary),
+                  icon: const Icon(
+                    Icons.close,
+                    color: BuilderColors.inkSecondary,
+                  ),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
@@ -137,14 +149,20 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
               decoration: BoxDecoration(
                 color: BuilderColors.warningTint,
                 borderRadius: BorderRadius.circular(BuilderRadii.tile),
-                border: Border.all(color: BuilderColors.warning.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: BuilderColors.warning.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Padding(
                     padding: EdgeInsets.only(top: 2),
-                    child: BuilderIcon(BuilderGlyph.info, size: 20, color: BuilderColors.warning),
+                    child: BuilderIcon(
+                      BuilderGlyph.info,
+                      size: 20,
+                      color: BuilderColors.warning,
+                    ),
                   ),
                   const SizedBox(width: BuilderSpace.xs),
                   Expanded(
@@ -177,7 +195,9 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
             // Supported formats info
             Text(
               'Поддерживаются: PDF, DOCX, TXT (до 10 МБ).',
-              style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.inkSecondary),
+              style: BuilderTypography.bodySmall.copyWith(
+                color: BuilderColors.inkSecondary,
+              ),
             ),
             Text(
               'Таблицы Excel (.xlsx) не поддерживаются.',
@@ -198,14 +218,18 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
                 ),
                 child: Text(
                   _validationError!,
-                  style: BuilderTypography.bodySmall.copyWith(color: Colors.red.shade800),
+                  style: BuilderTypography.bodySmall.copyWith(
+                    color: Colors.red.shade800,
+                  ),
                 ),
               ),
             ],
 
             Text(
               'Выберите учебный документ:',
-              style: BuilderTypography.labelMedium.copyWith(color: BuilderColors.inkSecondary),
+              style: BuilderTypography.labelMedium.copyWith(
+                color: BuilderColors.inkSecondary,
+              ),
             ),
             const SizedBox(height: BuilderSpace.xs),
 
@@ -229,10 +253,14 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
                   child: Container(
                     padding: const EdgeInsets.all(BuilderSpace.sm),
                     decoration: BoxDecoration(
-                      color: isSelected ? BuilderColors.primaryTint : BuilderColors.surface,
+                      color: isSelected
+                          ? BuilderColors.primaryTint
+                          : BuilderColors.surface,
                       borderRadius: BorderRadius.circular(BuilderRadii.tile),
                       border: Border.all(
-                        color: isSelected ? BuilderColors.primary : BuilderColors.line,
+                        color: isSelected
+                            ? BuilderColors.primary
+                            : BuilderColors.line,
                         width: isSelected ? 1.5 : 1.0,
                       ),
                     ),
@@ -262,7 +290,11 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
                           ),
                         ),
                         if (isSelected)
-                          const Icon(Icons.check_circle, color: BuilderColors.primary, size: 20),
+                          const Icon(
+                            Icons.check_circle,
+                            color: BuilderColors.primary,
+                            size: 20,
+                          ),
                       ],
                     ),
                   ),
@@ -274,7 +306,9 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
 
             // Submit Button
             BuilderButton(
-              label: state.isImporting ? 'Индексация документа...' : 'Импортировать в базу знаний',
+              label: state.isImporting
+                  ? 'Индексация документа...'
+                  : 'Импортировать в базу знаний',
               loading: state.isImporting,
               onPressed: (_selectedSampleKey == null && _customBytes == null)
                   ? null
@@ -288,7 +322,9 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
 
   Future<void> _handleImport() async {
     setState(() => _validationError = null);
-    final controller = ref.read(knowledgeControllerProvider(widget.ownerId).notifier);
+    final controller = ref.read(
+      knowledgeControllerProvider(widget.ownerId).notifier,
+    );
 
     String fileName;
     Uint8List bytes;
@@ -308,7 +344,9 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
       } else {
         bytes = Uint8List.fromList(utf8.encode(sample.content));
       }
-    } else if (_customBytes != null && _customFileName != null && _customFormat != null) {
+    } else if (_customBytes != null &&
+        _customFileName != null &&
+        _customFormat != null) {
       fileName = _customFileName!;
       bytes = _customBytes!;
       format = _customFormat!;
@@ -326,8 +364,12 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
     if (doc != null) {
       Navigator.pop(context, doc);
     } else {
-      final err = ref.read(knowledgeControllerProvider(widget.ownerId)).errorMessage;
-      setState(() => _validationError = err ?? 'Не удалось импортировать документ');
+      final err = ref
+          .read(knowledgeControllerProvider(widget.ownerId))
+          .errorMessage;
+      setState(
+        () => _validationError = err ?? 'Не удалось импортировать документ',
+      );
     }
   }
 
@@ -338,7 +380,8 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;');
 
-    final documentXml = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    final documentXml =
+        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:body>
     <w:p>
@@ -359,7 +402,8 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
   Uint8List _createMockPdfBytes(String text) {
     // Generate valid minimal PDF structure
     final cleanText = text.replaceAll('(', '[').replaceAll(')', ']');
-    final pdfContent = '%PDF-1.4\n'
+    final pdfContent =
+        '%PDF-1.4\n'
         '1 0 obj\n'
         '<< /Type /Catalog /Pages 2 0 R >>\n'
         'endobj\n'

@@ -6,14 +6,17 @@ import '../domain/assistant_setup.dart';
 import '../domain/initial_workspace_repository.dart';
 
 class PermitRevokedException implements Exception {
-  const PermitRevokedException([this.message = 'Workspace write permit was revoked before commit.']);
+  const PermitRevokedException([
+    this.message = 'Workspace write permit was revoked before commit.',
+  ]);
   final String message;
 
   @override
   String toString() => 'PermitRevokedException: $message';
 }
 
-final class PersistentInitialWorkspaceRepository implements InitialWorkspaceRepository {
+final class PersistentInitialWorkspaceRepository
+    implements InitialWorkspaceRepository {
   PersistentInitialWorkspaceRepository({
     required this.database,
     required this.installationId,
@@ -76,7 +79,9 @@ final class PersistentInitialWorkspaceRepository implements InitialWorkspaceRepo
             orElse: () => SchoolSubject.other,
           );
 
-          final gradesRaw = jsonDecode(pref['grades_json'] as String? ?? '[]') as List<dynamic>;
+          final gradesRaw =
+              jsonDecode(pref['grades_json'] as String? ?? '[]')
+                  as List<dynamic>;
           final grades = gradesRaw.map((e) => e as int).toSet();
 
           final langName = pref['assistant_language'] as String?;
@@ -102,18 +107,14 @@ final class PersistentInitialWorkspaceRepository implements InitialWorkspaceRepo
       final nowUtc = DateTime.now().toUtc().toIso8601String();
 
       if (existingRows.isEmpty) {
-        await txn.insert(
-          StorageSchemaV1.tableWorkspaces,
-          {
-            'owner_id': ownerId,
-            'installation_id': installationId,
-            'schema_version': StorageSchemaV1.version,
-            'workspace_epoch': 1,
-            'created_at_utc': nowUtc,
-            'updated_at_utc': nowUtc,
-          },
-          conflictAlgorithm: ConflictAlgorithm.ignore,
-        );
+        await txn.insert(StorageSchemaV1.tableWorkspaces, {
+          'owner_id': ownerId,
+          'installation_id': installationId,
+          'schema_version': StorageSchemaV1.version,
+          'workspace_epoch': 1,
+          'created_at_utc': nowUtc,
+          'updated_at_utc': nowUtc,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
       } else {
         await txn.update(
           StorageSchemaV1.tableWorkspaces,
@@ -123,35 +124,27 @@ final class PersistentInitialWorkspaceRepository implements InitialWorkspaceRepo
         );
       }
 
-      await txn.insert(
-        StorageSchemaV1.tableTeacherPreferences,
-        {
-          'owner_id': ownerId,
-          'subject': normalized.subject?.name ?? SchoolSubject.other.name,
-          'custom_subject': normalized.customSubject,
-          'grades_json': jsonEncode(normalized.grades.toList()..sort()),
-          'ui_language': 'ru',
-          'assistant_language': normalized.language.name,
-          'reminders_enabled': 0,
-          'storage_retention_days': null,
-          'updated_at_utc': nowUtc,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await txn.insert(StorageSchemaV1.tableTeacherPreferences, {
+        'owner_id': ownerId,
+        'subject': normalized.subject?.name ?? SchoolSubject.other.name,
+        'custom_subject': normalized.customSubject,
+        'grades_json': jsonEncode(normalized.grades.toList()..sort()),
+        'ui_language': 'ru',
+        'assistant_language': normalized.language.name,
+        'reminders_enabled': 0,
+        'storage_retention_days': null,
+        'updated_at_utc': nowUtc,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
 
-      await txn.insert(
-        StorageSchemaV1.tableAssistantConfigurations,
-        {
-          'owner_id': ownerId,
-          'name': normalized.name,
-          'selected_category': null,
-          'enabled_skills_json': '[]',
-          'system_rules_json': '[]',
-          'state_revision': 1,
-          'updated_at_utc': nowUtc,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await txn.insert(StorageSchemaV1.tableAssistantConfigurations, {
+        'owner_id': ownerId,
+        'name': normalized.name,
+        'selected_category': null,
+        'enabled_skills_json': '[]',
+        'system_rules_json': '[]',
+        'state_revision': 1,
+        'updated_at_utc': nowUtc,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       final initialSnapshot = {
         'name': normalized.name,
@@ -163,19 +156,15 @@ final class PersistentInitialWorkspaceRepository implements InitialWorkspaceRepo
         'document_ids': <String>[],
       };
 
-      await txn.insert(
-        StorageSchemaV1.tableAssistantVersions,
-        {
-          'owner_id': ownerId,
-          'version_number': 1,
-          'created_at_utc': nowUtc,
-          'reason': 'Создание ассистента',
-          'parent_id': null,
-          'schema_version': 1,
-          'snapshot_json': jsonEncode(initialSnapshot),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await txn.insert(StorageSchemaV1.tableAssistantVersions, {
+        'owner_id': ownerId,
+        'version_number': 1,
+        'created_at_utc': nowUtc,
+        'reason': 'Создание ассистента',
+        'parent_id': null,
+        'schema_version': 1,
+        'snapshot_json': jsonEncode(initialSnapshot),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       // 4. Final check before commit: permit must still be valid
       if (!permit.isCurrent) {

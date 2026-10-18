@@ -10,10 +10,7 @@ class PersistentTraceRepository implements TraceRepository {
   final String ownerId;
   final Map<String, RequestTrace> _ephemeralCache = {};
 
-  PersistentTraceRepository({
-    required this.db,
-    required this.ownerId,
-  });
+  PersistentTraceRepository({required this.db, required this.ownerId});
 
   factory PersistentTraceRepository.fromStorage({
     required StorageDatabase storageDatabase,
@@ -53,20 +50,18 @@ class PersistentTraceRepository implements TraceRepository {
     }
 
     final payload = jsonEncode(trace.toJson());
-    await db.insert(
-      StorageSchemaV1.tableRequestTraces,
-      {
-        'request_id': trace.requestId,
-        'owner_id': ownerId,
-        'context_layers_json': payload,
-        'sent_chunks_json': jsonEncode(trace.layers.map((l) => l.toJson()).toList()),
-        'usage_json': jsonEncode(trace.usage.toJson()),
-        'duration_ms': trace.usage.durationMs,
-        'error_code': trace.errorCode,
-        'created_at_utc': trace.createdAtUtc.toIso8601String(),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert(StorageSchemaV1.tableRequestTraces, {
+      'request_id': trace.requestId,
+      'owner_id': ownerId,
+      'context_layers_json': payload,
+      'sent_chunks_json': jsonEncode(
+        trace.layers.map((l) => l.toJson()).toList(),
+      ),
+      'usage_json': jsonEncode(trace.usage.toJson()),
+      'duration_ms': trace.usage.durationMs,
+      'error_code': trace.errorCode,
+      'created_at_utc': trace.createdAtUtc.toIso8601String(),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   @override
@@ -155,7 +150,9 @@ class PersistentTraceRepository implements TraceRepository {
         ),
         TraceStep(
           stepIndex: 2,
-          title: isKk ? 'Қосымша сұранысты жинады' : 'Приложение собрало запрос',
+          title: isKk
+              ? 'Қосымша сұранысты жинады'
+              : 'Приложение собрало запрос',
           description: isKk
               ? 'Сұрағыңызға нұсқаулық, жадтағы деректер және құжаттардан табылған үзінділер қосылды.'
               : 'К вашему вопросу добавлены инструкция, факты из памяти и найденные фрагменты документов.',
@@ -221,6 +218,8 @@ class InMemoryTraceRepository implements TraceRepository {
 
   @override
   Future<RequestTrace> getSampleTrace({String? languageCode}) async {
-    return PersistentTraceRepository.createSampleFixture(languageCode: languageCode);
+    return PersistentTraceRepository.createSampleFixture(
+      languageCode: languageCode,
+    );
   }
 }

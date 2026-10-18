@@ -1,4 +1,4 @@
-package com.example.builder
+package kz.craftai.builder
 
 import io.flutter.embedding.android.FlutterActivity
 

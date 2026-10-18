@@ -38,7 +38,10 @@ void main() {
       raw[raw.length - 1] ^= 0xFF; // tamper with last byte
       final tampered = base64Encode(raw);
 
-      expect(() => cipher.decrypt(tampered), throwsA(isA<CipherDecryptionException>()));
+      expect(
+        () => cipher.decrypt(tampered),
+        throwsA(isA<CipherDecryptionException>()),
+      );
     });
 
     test('fails when decrypting with a different key', () {
@@ -47,7 +50,10 @@ void main() {
       final wrongKey = List<int>.generate(32, (i) => (i + 1) * 3 % 256);
       final wrongCipher = StorageCipher(key: wrongKey);
 
-      expect(() => wrongCipher.decrypt(encrypted), throwsA(isA<CipherDecryptionException>()));
+      expect(
+        () => wrongCipher.decrypt(encrypted),
+        throwsA(isA<CipherDecryptionException>()),
+      );
     });
   });
 
@@ -79,26 +85,29 @@ void main() {
       );
       final tableNames = tables.map((r) => r['name'] as String).toSet();
 
-      expect(tableNames, containsAll([
-        StorageSchemaV1.tableWorkspaces,
-        StorageSchemaV1.tableTeacherPreferences,
-        StorageSchemaV1.tableAssistantConfigurations,
-        StorageSchemaV1.tableInstructionRules,
-        StorageSchemaV1.tableAssistantVersions,
-        StorageSchemaV1.tableConversations,
-        StorageSchemaV1.tableMessages,
-        StorageSchemaV1.tableRequestTraces,
-        StorageSchemaV1.tableKnowledgeDocuments,
-        StorageSchemaV1.tableDocumentRevisions,
-        StorageSchemaV1.tableKnowledgeChunks,
-        StorageSchemaV1.tableMemoryFacts,
-        StorageSchemaV1.tableToolGrants,
-        StorageSchemaV1.tablePendingActions,
-        StorageSchemaV1.tableToolInvocations,
-        StorageSchemaV1.tableCourseProgress,
-        StorageSchemaV1.tableQuizAttempts,
-        StorageSchemaV1.tableFileStagingJournal,
-      ]));
+      expect(
+        tableNames,
+        containsAll([
+          StorageSchemaV1.tableWorkspaces,
+          StorageSchemaV1.tableTeacherPreferences,
+          StorageSchemaV1.tableAssistantConfigurations,
+          StorageSchemaV1.tableInstructionRules,
+          StorageSchemaV1.tableAssistantVersions,
+          StorageSchemaV1.tableConversations,
+          StorageSchemaV1.tableMessages,
+          StorageSchemaV1.tableRequestTraces,
+          StorageSchemaV1.tableKnowledgeDocuments,
+          StorageSchemaV1.tableDocumentRevisions,
+          StorageSchemaV1.tableKnowledgeChunks,
+          StorageSchemaV1.tableMemoryFacts,
+          StorageSchemaV1.tableToolGrants,
+          StorageSchemaV1.tablePendingActions,
+          StorageSchemaV1.tableToolInvocations,
+          StorageSchemaV1.tableCourseProgress,
+          StorageSchemaV1.tableQuizAttempts,
+          StorageSchemaV1.tableFileStagingJournal,
+        ]),
+      );
     });
 
     test('enforces foreign key constraints', () async {
@@ -126,7 +135,10 @@ void main() {
         databaseFactory: databaseFactoryFfi,
       );
 
-      expect(() => corruptDb.open(), throwsA(isA<StorageCorruptionException>()));
+      expect(
+        () => corruptDb.open(),
+        throwsA(isA<StorageCorruptionException>()),
+      );
       // Verify file still exists so recovery/support can inspect it
       expect(await File(dbPath).exists(), isTrue);
     });
@@ -158,106 +170,146 @@ void main() {
       }
     });
 
-    test('creates initial workspace atomically when permit is current', () async {
-      var permitActive = true;
-      final permit = WorkspaceWritePermit(
-        ownerId: 'teacher_user_42',
-        canCommit: () => permitActive,
+    test(
+      'creates initial workspace atomically when permit is current',
+      () async {
+        var permitActive = true;
+        final permit = WorkspaceWritePermit(
+          ownerId: 'teacher_user_42',
+          canCommit: () => permitActive,
+        );
+
+        final setup = AssistantSetup(
+          subject: SchoolSubject.mathematics,
+          grades: {5, 6, 7},
+          language: AssistantLanguage.russian,
+          name: 'Алгебра-Бот',
+        );
+
+        final created = await repository.createIfAbsent(
+          permit: permit,
+          setup: setup,
+        );
+
+        expect(created.ownerId, equals('teacher_user_42'));
+        expect(created.setup.name, equals('Алгебра-Бот'));
+        expect(created.setup.subject, equals(SchoolSubject.mathematics));
+        expect(created.setup.grades, equals({5, 6, 7}));
+
+        // Verify records in DB
+        final wsRows = await storageDb.db.query(
+          StorageSchemaV1.tableWorkspaces,
+        );
+        expect(wsRows.length, equals(1));
+        expect(wsRows.first['owner_id'], equals('teacher_user_42'));
+        expect(wsRows.first['workspace_epoch'], equals(1));
+
+        final prefRows = await storageDb.db.query(
+          StorageSchemaV1.tableTeacherPreferences,
+        );
+        expect(prefRows.length, equals(1));
+        expect(prefRows.first['subject'], equals('mathematics'));
+
+        final confRows = await storageDb.db.query(
+          StorageSchemaV1.tableAssistantConfigurations,
+        );
+        expect(confRows.length, equals(1));
+        expect(confRows.first['name'], equals('Алгебра-Бот'));
+      },
+    );
+
+    test(
+      'aborts transaction if permit becomes invalid before commit',
+      () async {
+        var permitActive = false; // revoked permit
+        final permit = WorkspaceWritePermit(
+          ownerId: 'teacher_user_revoked',
+          canCommit: () => permitActive,
+        );
+
+        final setup = AssistantSetup(
+          subject: SchoolSubject.physics,
+          grades: {9},
+          name: 'Физ-Бот',
+        );
+
+        expect(
+          () => repository.createIfAbsent(permit: permit, setup: setup),
+          throwsA(isA<PermitRevokedException>()),
+        );
+
+        // Verify no records committed
+        final wsRows = await storageDb.db.query(
+          StorageSchemaV1.tableWorkspaces,
+        );
+        expect(wsRows, isEmpty);
+      },
+    );
+
+    test(
+      'is idempotent: subsequent calls for same owner return existing setup without duplicate',
+      () async {
+        final permit = WorkspaceWritePermit(
+          ownerId: 'teacher_user_repeat',
+          canCommit: () => true,
+        );
+
+        final setup1 = AssistantSetup(
+          subject: SchoolSubject.chemistry,
+          grades: {8},
+          name: 'Химия-1',
+        );
+        final firstResult = await repository.createIfAbsent(
+          permit: permit,
+          setup: setup1,
+        );
+        expect(firstResult.setup.name, equals('Химия-1'));
+
+        final setup2 = AssistantSetup(
+          subject: SchoolSubject.biology,
+          grades: {10},
+          name: 'Химия-Overwritten?',
+        );
+        final secondResult = await repository.createIfAbsent(
+          permit: permit,
+          setup: setup2,
+        );
+
+        // Should return original created setup, not overwritten
+        expect(secondResult.ownerId, equals('teacher_user_repeat'));
+        expect(secondResult.setup.name, equals('Химия-1'));
+        expect(secondResult.setup.subject, equals(SchoolSubject.chemistry));
+
+        final count = await storageDb.db.query(StorageSchemaV1.tableWorkspaces);
+        expect(count.length, equals(1));
+      },
+    );
+
+    test('isolates different owners cleanly', () async {
+      final permit1 = WorkspaceWritePermit(
+        ownerId: 'owner_A',
+        canCommit: () => true,
       );
-
-      final setup = AssistantSetup(
-        subject: SchoolSubject.mathematics,
-        grades: {5, 6, 7},
-        language: AssistantLanguage.russian,
-        name: 'Алгебра-Бот',
-      );
-
-      final created = await repository.createIfAbsent(permit: permit, setup: setup);
-
-      expect(created.ownerId, equals('teacher_user_42'));
-      expect(created.setup.name, equals('Алгебра-Бот'));
-      expect(created.setup.subject, equals(SchoolSubject.mathematics));
-      expect(created.setup.grades, equals({5, 6, 7}));
-
-      // Verify records in DB
-      final wsRows = await storageDb.db.query(StorageSchemaV1.tableWorkspaces);
-      expect(wsRows.length, equals(1));
-      expect(wsRows.first['owner_id'], equals('teacher_user_42'));
-      expect(wsRows.first['workspace_epoch'], equals(1));
-
-      final prefRows = await storageDb.db.query(StorageSchemaV1.tableTeacherPreferences);
-      expect(prefRows.length, equals(1));
-      expect(prefRows.first['subject'], equals('mathematics'));
-
-      final confRows = await storageDb.db.query(StorageSchemaV1.tableAssistantConfigurations);
-      expect(confRows.length, equals(1));
-      expect(confRows.first['name'], equals('Алгебра-Бот'));
-    });
-
-    test('aborts transaction if permit becomes invalid before commit', () async {
-      var permitActive = false; // revoked permit
-      final permit = WorkspaceWritePermit(
-        ownerId: 'teacher_user_revoked',
-        canCommit: () => permitActive,
-      );
-
-      final setup = AssistantSetup(
-        subject: SchoolSubject.physics,
-        grades: {9},
-        name: 'Физ-Бот',
-      );
-
-      expect(
-        () => repository.createIfAbsent(permit: permit, setup: setup),
-        throwsA(isA<PermitRevokedException>()),
-      );
-
-      // Verify no records committed
-      final wsRows = await storageDb.db.query(StorageSchemaV1.tableWorkspaces);
-      expect(wsRows, isEmpty);
-    });
-
-    test('is idempotent: subsequent calls for same owner return existing setup without duplicate', () async {
-      final permit = WorkspaceWritePermit(
-        ownerId: 'teacher_user_repeat',
+      final permit2 = WorkspaceWritePermit(
+        ownerId: 'owner_B',
         canCommit: () => true,
       );
 
-      final setup1 = AssistantSetup(
-        subject: SchoolSubject.chemistry,
-        grades: {8},
-        name: 'Химия-1',
-      );
-      final firstResult = await repository.createIfAbsent(permit: permit, setup: setup1);
-      expect(firstResult.setup.name, equals('Химия-1'));
-
-      final setup2 = AssistantSetup(
-        subject: SchoolSubject.biology,
-        grades: {10},
-        name: 'Химия-Overwritten?',
-      );
-      final secondResult = await repository.createIfAbsent(permit: permit, setup: setup2);
-
-      // Should return original created setup, not overwritten
-      expect(secondResult.ownerId, equals('teacher_user_repeat'));
-      expect(secondResult.setup.name, equals('Химия-1'));
-      expect(secondResult.setup.subject, equals(SchoolSubject.chemistry));
-
-      final count = await storageDb.db.query(StorageSchemaV1.tableWorkspaces);
-      expect(count.length, equals(1));
-    });
-
-    test('isolates different owners cleanly', () async {
-      final permit1 = WorkspaceWritePermit(ownerId: 'owner_A', canCommit: () => true);
-      final permit2 = WorkspaceWritePermit(ownerId: 'owner_B', canCommit: () => true);
-
       await repository.createIfAbsent(
         permit: permit1,
-        setup: AssistantSetup(subject: SchoolSubject.russian, grades: {1}, name: 'Бот А'),
+        setup: AssistantSetup(
+          subject: SchoolSubject.russian,
+          grades: {1},
+          name: 'Бот А',
+        ),
       );
       await repository.createIfAbsent(
         permit: permit2,
-        setup: AssistantSetup(subject: SchoolSubject.kazakh, grades: {11}, name: 'Бот Б'),
+        setup: AssistantSetup(
+          subject: SchoolSubject.kazakh,
+          grades: {11},
+          name: 'Бот Б',
+        ),
       );
 
       final wsRows = await storageDb.db.query(StorageSchemaV1.tableWorkspaces);
@@ -295,27 +347,33 @@ void main() {
       }
     });
 
-    test('switches owner, purges in-memory caches, and creates new epoch', () async {
-      final infoA = await service.openWorkspace(ownerId: 'owner_1');
-      expect(infoA.ownerId, equals('owner_1'));
-      expect(infoA.workspaceEpoch, equals(1));
+    test(
+      'switches owner, purges in-memory caches, and creates new epoch',
+      () async {
+        final infoA = await service.openWorkspace(ownerId: 'owner_1');
+        expect(infoA.ownerId, equals('owner_1'));
+        expect(infoA.workspaceEpoch, equals(1));
 
-      service.inMemoryCache['cached_token'] = 'token_for_owner_1';
-      expect(service.inMemoryCache['cached_token'], equals('token_for_owner_1'));
+        service.inMemoryCache['cached_token'] = 'token_for_owner_1';
+        expect(
+          service.inMemoryCache['cached_token'],
+          equals('token_for_owner_1'),
+        );
 
-      // Switch to owner_2
-      final infoB = await service.openWorkspace(ownerId: 'owner_2');
-      expect(infoB.ownerId, equals('owner_2'));
-      expect(infoB.workspaceEpoch, equals(1));
+        // Switch to owner_2
+        final infoB = await service.openWorkspace(ownerId: 'owner_2');
+        expect(infoB.ownerId, equals('owner_2'));
+        expect(infoB.workspaceEpoch, equals(1));
 
-      // Cache from owner_1 must be wiped
-      expect(service.inMemoryCache.containsKey('cached_token'), isFalse);
+        // Cache from owner_1 must be wiped
+        expect(service.inMemoryCache.containsKey('cached_token'), isFalse);
 
-      // Close workspace
-      await service.closeActiveWorkspace();
-      expect(service.hasActiveWorkspace, isFalse);
-      expect(() => service.inMemoryCache, throwsA(isA<StateError>()));
-    });
+        // Close workspace
+        await service.closeActiveWorkspace();
+        expect(service.hasActiveWorkspace, isFalse);
+        expect(() => service.inMemoryCache, throwsA(isA<StateError>()));
+      },
+    );
 
     test('bumping epoch invalidates previous epoch', () async {
       await service.openWorkspace(ownerId: 'owner_epoch');
@@ -339,7 +397,10 @@ void main() {
       await Directory(ownerDir).create(recursive: true);
       await File(p.join(ownerDir, 'test.txt')).writeAsString('sensitive data');
 
-      await service.purgeOwnerData(ownerId: 'to_delete', ownerFilesDir: ownerDir);
+      await service.purgeOwnerData(
+        ownerId: 'to_delete',
+        ownerFilesDir: ownerDir,
+      );
 
       final ws = await storageDb.db.query(
         StorageSchemaV1.tableWorkspaces,
@@ -406,29 +467,32 @@ void main() {
       expect(row.first['status'], equals(StagingStatus.committed.name));
     });
 
-    test('recovers interrupted staging by cleaning orphaned files on startup', () async {
-      final stagingPath = p.join(tempDir.path, 'abandoned.tmp');
-      final targetPath = p.join(tempDir.path, 'never_committed.txt');
-      await File(stagingPath).writeAsString('Interrupted write content');
+    test(
+      'recovers interrupted staging by cleaning orphaned files on startup',
+      () async {
+        final stagingPath = p.join(tempDir.path, 'abandoned.tmp');
+        final targetPath = p.join(tempDir.path, 'never_committed.txt');
+        await File(stagingPath).writeAsString('Interrupted write content');
 
-      await journal.recordStaging(
-        db: storageDb.db,
-        id: 'stage_interrupted',
-        ownerId: 'owner_crash',
-        stagingPath: stagingPath,
-        targetPath: targetPath,
-      );
+        await journal.recordStaging(
+          db: storageDb.db,
+          id: 'stage_interrupted',
+          ownerId: 'owner_crash',
+          stagingPath: stagingPath,
+          targetPath: targetPath,
+        );
 
-      final cleaned = await journal.recoverInterruptedStaging(storageDb.db);
-      expect(cleaned, equals(1));
-      expect(await File(stagingPath).exists(), isFalse);
+        final cleaned = await journal.recoverInterruptedStaging(storageDb.db);
+        expect(cleaned, equals(1));
+        expect(await File(stagingPath).exists(), isFalse);
 
-      final row = await storageDb.db.query(
-        StorageSchemaV1.tableFileStagingJournal,
-        where: 'id = ?',
-        whereArgs: ['stage_interrupted'],
-      );
-      expect(row.first['status'], equals(StagingStatus.aborted.name));
-    });
+        final row = await storageDb.db.query(
+          StorageSchemaV1.tableFileStagingJournal,
+          where: 'id = ?',
+          whereArgs: ['stage_interrupted'],
+        );
+        expect(row.first['status'], equals(StagingStatus.aborted.name));
+      },
+    );
   });
 }

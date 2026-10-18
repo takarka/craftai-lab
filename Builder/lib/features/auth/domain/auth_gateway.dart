@@ -34,7 +34,10 @@ abstract interface class AuthGateway {
     required String privacyRevision,
   });
   Future<void> requestPasswordReset({required String email});
-  Future<void> resetPassword({required String token, required String newPassword});
+  Future<void> resetPassword({
+    required String token,
+    required String newPassword,
+  });
   Future<void> changePassword({required String newPassword});
   Future<void> logout();
 }

@@ -160,10 +160,7 @@ class AssistantVersion {
   final bool isCurrent;
   final List<String> missingResources;
 
-  AssistantVersion copyWith({
-    bool? isCurrent,
-    List<String>? missingResources,
-  }) {
+  AssistantVersion copyWith({bool? isCurrent, List<String>? missingResources}) {
     return AssistantVersion(
       versionNumber: versionNumber,
       createdAtUtc: createdAtUtc,

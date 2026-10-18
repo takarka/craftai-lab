@@ -73,7 +73,9 @@ class ContextAssembler {
     int? reservedTokens,
   }) {
     final reserved = reservedTokens ?? defaultReservedTokens;
-    final budget = contextWindow > reserved ? (contextWindow - reserved) : (contextWindow ~/ 2);
+    final budget = contextWindow > reserved
+        ? (contextWindow - reserved)
+        : (contextWindow ~/ 2);
 
     final List<Map<String, String>> finalWireMessages = [];
 
@@ -83,10 +85,14 @@ class ContextAssembler {
       systemParts.add('Инструкция:\n$activeInstruction');
     }
     if (memoryFacts.isNotEmpty) {
-      systemParts.add('Факты памяти:\n${memoryFacts.map((f) => '- $f').join('\n')}');
+      systemParts.add(
+        'Факты памяти:\n${memoryFacts.map((f) => '- $f').join('\n')}',
+      );
     }
     if (knowledgeChunks.isNotEmpty) {
-      systemParts.add('Фрагменты знаний:\n${knowledgeChunks.map((c) => '[Источник]: $c').join('\n\n')}');
+      systemParts.add(
+        'Фрагменты знаний:\n${knowledgeChunks.map((c) => '[Источник]: $c').join('\n\n')}',
+      );
     }
 
     int currentEstimatedTokens = 0;
@@ -104,8 +110,14 @@ class ContextAssembler {
 
     // 3. Select relevant prior conversation history fitting the remaining budget (most recent first)
     final candidateHistory = conversationHistory
-        .where((m) => m.status == MessageStatus.completed || m.status == MessageStatus.interrupted)
-        .where((m) => m.role == MessageRole.user || m.role == MessageRole.assistant)
+        .where(
+          (m) =>
+              m.status == MessageStatus.completed ||
+              m.status == MessageStatus.interrupted,
+        )
+        .where(
+          (m) => m.role == MessageRole.user || m.role == MessageRole.assistant,
+        )
         .toList();
 
     final budgetedHistory = <Map<String, String>>[];

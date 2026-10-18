@@ -6,7 +6,10 @@ class ReportDialog extends StatefulWidget {
 
   const ReportDialog({super.key, required this.requestId});
 
-  static Future<Map<String, String>?> show(BuildContext context, {required String requestId}) {
+  static Future<Map<String, String>?> show(
+    BuildContext context, {
+    required String requestId,
+  }) {
     return showDialog<Map<String, String>>(
       context: context,
       builder: (context) => ReportDialog(requestId: requestId),
@@ -45,7 +48,9 @@ class _ReportDialogState extends State<ReportDialog> {
           children: [
             Text(
               'Идентификатор запроса: ${widget.requestId.substring(0, 8)}...',
-              style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
+              style: BuilderType.small.copyWith(
+                color: BuilderColors.inkSecondary,
+              ),
             ),
             const SizedBox(height: 16),
             const Text('Причина:', style: BuilderType.label),

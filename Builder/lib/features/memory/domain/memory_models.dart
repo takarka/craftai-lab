@@ -78,8 +78,12 @@ class MemoryFact {
       factText: map['fact_text'] as String,
       source: MemoryFactSource.fromId(map['source'] as String? ?? 'manual'),
       isEnabled: (map['is_enabled'] as int? ?? 1) == 1,
-      createdAtUtc: DateTime.tryParse(map['created_at_utc'] as String? ?? '')?.toUtc() ?? DateTime.now().toUtc(),
-      updatedAtUtc: DateTime.tryParse(map['updated_at_utc'] as String? ?? '')?.toUtc() ?? DateTime.now().toUtc(),
+      createdAtUtc:
+          DateTime.tryParse(map['created_at_utc'] as String? ?? '')?.toUtc() ??
+          DateTime.now().toUtc(),
+      updatedAtUtc:
+          DateTime.tryParse(map['updated_at_utc'] as String? ?? '')?.toUtc() ??
+          DateTime.now().toUtc(),
     );
   }
 }
@@ -119,7 +123,11 @@ class MemoryCandidateFact {
       ownerId: map['owner_id'] as String,
       factText: map['fact_text'] as String,
       rationale: map['rationale'] as String?,
-      suggestedAtUtc: DateTime.tryParse(map['suggested_at_utc'] as String? ?? '')?.toUtc() ?? DateTime.now().toUtc(),
+      suggestedAtUtc:
+          DateTime.tryParse(
+            map['suggested_at_utc'] as String? ?? '',
+          )?.toUtc() ??
+          DateTime.now().toUtc(),
     );
   }
 }
@@ -129,9 +137,7 @@ class MemorySelectionPolicy {
   /// Maximum token budget allocated to memory facts in system prompt.
   final int maxTokenBudget;
 
-  const MemorySelectionPolicy({
-    this.maxTokenBudget = 300,
-  });
+  const MemorySelectionPolicy({this.maxTokenBudget = 300});
 
   /// Selects enabled facts in a deterministic canonical order (by created date ascending),
   /// trimming facts when the token budget is reached.

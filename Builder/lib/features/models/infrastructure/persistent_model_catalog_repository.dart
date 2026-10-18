@@ -6,10 +6,7 @@ import '../domain/model_catalog_repository.dart';
 import 'craft_ai_client.dart';
 
 final class PersistentModelCatalogRepository implements ModelCatalogRepository {
-  PersistentModelCatalogRepository({
-    this.database,
-    this.client,
-  });
+  PersistentModelCatalogRepository({this.database, this.client});
 
   final StorageDatabase? database;
   final CraftAiClient? client;
@@ -78,13 +75,16 @@ final class PersistentModelCatalogRepository implements ModelCatalogRepository {
 
     final nowUtc = DateTime.now().toUtc().toIso8601String();
 
-    await database!.db.rawUpdate('''
+    await database!.db.rawUpdate(
+      '''
       UPDATE ${StorageSchemaV1.tableAssistantConfigurations}
       SET selected_category = ?,
           state_revision = state_revision + 1,
           updated_at_utc = ?
       WHERE owner_id = ?
-    ''', [category.id, nowUtc, ownerId]);
+    ''',
+      [category.id, nowUtc, ownerId],
+    );
   }
 }
 
@@ -92,8 +92,8 @@ final class InMemoryModelCatalogRepository implements ModelCatalogRepository {
   InMemoryModelCatalogRepository({
     ModelCatalog? initialCatalog,
     Map<String, ModelCategory>? selections,
-  })  : _catalog = initialCatalog ?? ModelCatalog.defaultCatalog(),
-        _selections = selections ?? <String, ModelCategory>{};
+  }) : _catalog = initialCatalog ?? ModelCatalog.defaultCatalog(),
+       _selections = selections ?? <String, ModelCategory>{};
 
   ModelCatalog _catalog;
   final Map<String, ModelCategory> _selections;

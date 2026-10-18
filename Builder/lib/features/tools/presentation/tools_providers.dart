@@ -35,7 +35,9 @@ class ToolItemState {
   });
 
   bool get isEnabled => grant.isEnabled;
-  bool get hasOsPermission => osPermission == OsPermissionStatus.granted || osPermission == OsPermissionStatus.notRequired;
+  bool get hasOsPermission =>
+      osPermission == OsPermissionStatus.granted ||
+      osPermission == OsPermissionStatus.notRequired;
 }
 
 /// UI State for Screen S43.
@@ -91,7 +93,8 @@ class ToolsNotifier extends Notifier<ToolsState> {
 
       final items = <ToolItemState>[];
       for (final def in ToolsRegistry.allTools) {
-        final grant = grantsMap[def.name] ??
+        final grant =
+            grantsMap[def.name] ??
             ToolGrant(
               ownerId: ownerId,
               toolName: def.name,
@@ -99,11 +102,9 @@ class ToolsNotifier extends Notifier<ToolsState> {
               updatedAtUtc: DateTime.now().toUtc(),
             );
         final osPerm = await _repo.getOsPermission(def.name);
-        items.add(ToolItemState(
-          definition: def,
-          grant: grant,
-          osPermission: osPerm,
-        ));
+        items.add(
+          ToolItemState(definition: def, grant: grant, osPermission: osPerm),
+        );
       }
 
       final pending = await _repo.getPendingActions(
@@ -148,7 +149,10 @@ class ToolsNotifier extends Notifier<ToolsState> {
     }
   }
 
-  Future<void> setOsPermission(String toolName, OsPermissionStatus status) async {
+  Future<void> setOsPermission(
+    String toolName,
+    OsPermissionStatus status,
+  ) async {
     try {
       await _repo.setOsPermission(toolName, status);
       state = state.copyWith(
@@ -216,5 +220,5 @@ class ToolsNotifier extends Notifier<ToolsState> {
 /// Family provider for ToolsNotifier by ownerId.
 final toolsControllerProvider =
     NotifierProvider.family<ToolsNotifier, ToolsState, String>(
-  (arg) => ToolsNotifier(arg),
-);
+      (arg) => ToolsNotifier(arg),
+    );

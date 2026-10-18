@@ -10,18 +10,25 @@ class StorageCorruptionException implements Exception {
   final Object? cause;
 
   @override
-  String toString() => 'StorageCorruptionException: $message${cause != null ? ' (Cause: $cause)' : ''}';
+  String toString() =>
+      'StorageCorruptionException: $message${cause != null ? ' (Cause: $cause)' : ''}';
 }
 
 class MigrationFailedException implements Exception {
-  const MigrationFailedException(this.fromVersion, this.toVersion, this.message, [this.cause]);
+  const MigrationFailedException(
+    this.fromVersion,
+    this.toVersion,
+    this.message, [
+    this.cause,
+  ]);
   final int fromVersion;
   final int toVersion;
   final String message;
   final Object? cause;
 
   @override
-  String toString() => 'MigrationFailedException ($fromVersion -> $toVersion): $message';
+  String toString() =>
+      'MigrationFailedException ($fromVersion -> $toVersion): $message';
 }
 
 class StorageQuotaExceededException implements Exception {
@@ -102,7 +109,11 @@ final class StorageDatabase {
     }
   }
 
-  Future<void> _runMigrations(Database db, int oldVersion, int newVersion) async {
+  Future<void> _runMigrations(
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
     // Before running migrations, create a backup copy if possible
     await _createMigrationBackup(oldVersion);
 

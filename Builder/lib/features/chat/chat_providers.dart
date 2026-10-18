@@ -66,7 +66,10 @@ class ConversationsNotifier extends Notifier<List<Conversation>> {
     state = list;
   }
 
-  Future<Conversation> createNew({RetentionPolicy retentionPolicy = RetentionPolicy.persistent, String? title}) async {
+  Future<Conversation> createNew({
+    RetentionPolicy retentionPolicy = RetentionPolicy.persistent,
+    String? title,
+  }) async {
     final repo = ref.read(chatRepositoryProvider);
     final conv = await repo.createConversation(
       ownerId: ownerId,
@@ -94,9 +97,10 @@ class ConversationsNotifier extends Notifier<List<Conversation>> {
   }
 }
 
-final conversationsProvider = NotifierProvider.family<ConversationsNotifier, List<Conversation>, String>(
-  ConversationsNotifier.new,
-);
+final conversationsProvider =
+    NotifierProvider.family<ConversationsNotifier, List<Conversation>, String>(
+      ConversationsNotifier.new,
+    );
 
 class ChatState {
   final Conversation? activeConversation;
@@ -180,7 +184,12 @@ class ChatSessionNotifier extends Notifier<ChatState> {
     _coalescingTimer?.cancel();
 
     if (!ref.mounted) return;
-    state = state.copyWith(isLoading: true, clearError: true, isGenerating: false, isSlowResponse: false);
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+      isGenerating: false,
+      isSlowResponse: false,
+    );
     final repo = ref.read(chatRepositoryProvider);
     final conv = await repo.getConversation(id: conversationId);
     final msgs = await repo.getMessages(conversationId: conversationId);
@@ -193,14 +202,18 @@ class ChatSessionNotifier extends Notifier<ChatState> {
     );
   }
 
-  Future<void> startNewConversation({RetentionPolicy retentionPolicy = RetentionPolicy.persistent}) async {
+  Future<void> startNewConversation({
+    RetentionPolicy retentionPolicy = RetentionPolicy.persistent,
+  }) async {
     _currentCancellationToken?.cancel();
     _slowTimer?.cancel();
     _coalescingTimer?.cancel();
 
     if (!ref.mounted) return;
     final convsNotifier = ref.read(conversationsProvider(ownerId).notifier);
-    final newConv = await convsNotifier.createNew(retentionPolicy: retentionPolicy);
+    final newConv = await convsNotifier.createNew(
+      retentionPolicy: retentionPolicy,
+    );
     if (!ref.mounted) return;
 
     state = ChatState(
@@ -250,7 +263,8 @@ class ChatSessionNotifier extends Notifier<ChatState> {
 
     final List<ChatMessage> initialNewMessages = [...state.messages];
 
-    if (lastAssistant.id.isNotEmpty && lastAssistant.category != selectedCategory.id) {
+    if (lastAssistant.id.isNotEmpty &&
+        lastAssistant.category != selectedCategory.id) {
       final dividerMsg = ChatMessage(
         id: 'sys_${DateTime.now().microsecondsSinceEpoch}',
         conversationId: conversation.id,
@@ -284,8 +298,11 @@ class ChatSessionNotifier extends Notifier<ChatState> {
     }
 
     // Update conversation title if first user message
-    if (initialNewMessages.where((m) => m.isUser).length == 1 && conversation.title == 'Новый разговор') {
-      final newTitle = trimmed.length > 32 ? '${trimmed.substring(0, 32)}...' : trimmed;
+    if (initialNewMessages.where((m) => m.isUser).length == 1 &&
+        conversation.title == 'Новый разговор') {
+      final newTitle = trimmed.length > 32
+          ? '${trimmed.substring(0, 32)}...'
+          : trimmed;
       await repo.updateConversationTitle(id: conversation.id, title: newTitle);
       ref.read(conversationsProvider(ownerId).notifier).refresh();
     }
@@ -295,12 +312,18 @@ class ChatSessionNotifier extends Notifier<ChatState> {
     final assembler = const ContextAssembler();
 
     // Check if instructions skill is enabled in assistant config (F11 acceptance criteria)
-    final assistantConfig = await ref.read(assistantConfigProvider(ownerId).future);
+    final assistantConfig = await ref.read(
+      assistantConfigProvider(ownerId).future,
+    );
     String? activeInstruction;
     if (assistantConfig != null &&
-        assistantConfig.enabledSkills.contains(AssistantSkillId.instructions.id) &&
+        assistantConfig.enabledSkills.contains(
+          AssistantSkillId.instructions.id,
+        ) &&
         assistantConfig.systemRules.isNotEmpty) {
-      final text = InstructionConfig.getActiveInstructionText(assistantConfig.systemRules);
+      final text = InstructionConfig.getActiveInstructionText(
+        assistantConfig.systemRules,
+      );
       if (text.trim().isNotEmpty) {
         activeInstruction = text.trim();
       }
@@ -328,7 +351,10 @@ class ChatSessionNotifier extends Notifier<ChatState> {
         assistantConfig.enabledSkills.contains(AssistantSkillId.memory.id)) {
       try {
         final memoryRepo = ref.read(memoryRepositoryProvider);
-        final facts = await memoryRepo.getFacts(ownerId: ownerId, enabledOnly: true);
+        final facts = await memoryRepo.getFacts(
+          ownerId: ownerId,
+          enabledOnly: true,
+        );
         const policy = MemorySelectionPolicy();
         final selected = policy.selectForContext(facts);
         memoryFacts.addAll(selected.map((f) => f.factText));
@@ -342,7 +368,10 @@ class ChatSessionNotifier extends Notifier<ChatState> {
       try {
         final toolsRepo = ref.read(toolsRepositoryProvider);
         final grants = await toolsRepo.getGrants(ownerId);
-        final enabledToolNames = grants.where((g) => g.isEnabled).map((g) => g.toolName).toSet();
+        final enabledToolNames = grants
+            .where((g) => g.isEnabled)
+            .map((g) => g.toolName)
+            .toSet();
         for (final tool in ToolsRegistry.allTools) {
           if (enabledToolNames.contains(tool.name)) {
             activeTools.add(tool.toWireSchema());
@@ -361,13 +390,16 @@ class ChatSessionNotifier extends Notifier<ChatState> {
       memoryFacts: memoryFacts,
       knowledgeChunks: knowledgeChunks,
       tools: activeTools,
-      conversationHistory: initialNewMessages.where((message) => message.id != userMsg.id).toList(),
+      conversationHistory: initialNewMessages
+          .where((message) => message.id != userMsg.id)
+          .toList(),
       userPrompt: trimmed,
     );
     await repo.saveContextManifest(manifest);
 
     // 3. Add Placeholder Assistant Message
-    final assistantMsgId = 'msg_${DateTime.now().millisecondsSinceEpoch}_assistant';
+    final assistantMsgId =
+        'msg_${DateTime.now().millisecondsSinceEpoch}_assistant';
     final assistantPlaceholder = ChatMessage(
       id: assistantMsgId,
       conversationId: conversation.id,
@@ -420,8 +452,6 @@ class ChatSessionNotifier extends Notifier<ChatState> {
         cancellationToken: _currentCancellationToken,
       );
 
-
-
       await for (final event in stream) {
         if (event is StartStreamEvent) {
           currentModelId = event.modelId;
@@ -460,13 +490,18 @@ class ChatSessionNotifier extends Notifier<ChatState> {
             isSlowResponse: false,
           );
 
-          final finalMsg = updatedMessages.firstWhere((m) => m.id == assistantMsgId);
+          final finalMsg = updatedMessages.firstWhere(
+            (m) => m.id == assistantMsgId,
+          );
           if (!conversation.isEphemeral) {
             await repo.saveMessage(finalMsg);
           }
 
           // Save Execution Trace
-          final durationMs = DateTime.now().toUtc().difference(startTime).inMilliseconds;
+          final durationMs = DateTime.now()
+              .toUtc()
+              .difference(startTime)
+              .inMilliseconds;
           final trace = RequestTrace.fromExecution(
             manifest: manifest,
             modelId: currentModelId,
@@ -478,7 +513,9 @@ class ChatSessionNotifier extends Notifier<ChatState> {
             modelCategory: selectedCategory.id,
             assistantVersion: 1,
             userPrompt: trimmed,
-            responseText: _bufferedText.isEmpty ? finalMsg.content : _bufferedText,
+            responseText: _bufferedText.isEmpty
+                ? finalMsg.content
+                : _bufferedText,
             durationMs: durationMs,
             status: event.isInterrupted
                 ? TraceStatus.interrupted
@@ -489,7 +526,9 @@ class ChatSessionNotifier extends Notifier<ChatState> {
             serverCompletionTokens: serverCompletionTokens,
             costTier: selectedCategory.priceRating,
           );
-          await ref.read(traceRepositoryProvider).saveTrace(trace, isEphemeral: conversation.isEphemeral);
+          await ref
+              .read(traceRepositoryProvider)
+              .saveTrace(trace, isEphemeral: conversation.isEphemeral);
           break;
         }
       }
@@ -501,7 +540,8 @@ class ChatSessionNotifier extends Notifier<ChatState> {
       if (!ref.mounted) return;
 
       final rawError = e.toString().replaceFirst('Exception: ', '');
-      final isOfflineOrNetwork = e is SocketException ||
+      final isOfflineOrNetwork =
+          e is SocketException ||
           rawError.contains('SocketException') ||
           rawError.contains('Failed host lookup') ||
           rawError.contains('Network is unreachable') ||
@@ -529,13 +569,18 @@ class ChatSessionNotifier extends Notifier<ChatState> {
         error: errorMsg,
       );
 
-      final failedMsg = updatedMessages.firstWhere((m) => m.id == assistantMsgId);
+      final failedMsg = updatedMessages.firstWhere(
+        (m) => m.id == assistantMsgId,
+      );
       if (!conversation.isEphemeral) {
         await repo.saveMessage(failedMsg);
       }
 
       // Save Execution Trace on catch
-      final durationMs = DateTime.now().toUtc().difference(startTime).inMilliseconds;
+      final durationMs = DateTime.now()
+          .toUtc()
+          .difference(startTime)
+          .inMilliseconds;
       final trace = RequestTrace.fromExecution(
         manifest: manifest,
         modelId: currentModelId,
@@ -556,7 +601,9 @@ class ChatSessionNotifier extends Notifier<ChatState> {
         createdAtUtc: startTime,
         costTier: selectedCategory.priceRating,
       );
-      await ref.read(traceRepositoryProvider).saveTrace(trace, isEphemeral: conversation.isEphemeral);
+      await ref
+          .read(traceRepositoryProvider)
+          .saveTrace(trace, isEphemeral: conversation.isEphemeral);
     } finally {
       _slowTimer?.cancel();
       _coalescingTimer?.cancel();
@@ -594,7 +641,9 @@ class ChatSessionNotifier extends Notifier<ChatState> {
     final userPrompt = msgs[lastUserIdx].content;
 
     // Remove failed assistant message if present
-    if (lastUserIdx < msgs.length - 1 && msgs.last.isAssistant && msgs.last.status == MessageStatus.error) {
+    if (lastUserIdx < msgs.length - 1 &&
+        msgs.last.isAssistant &&
+        msgs.last.status == MessageStatus.error) {
       final repo = ref.read(chatRepositoryProvider);
       await repo.deleteMessage(id: msgs.last.id);
       final trimmedList = List<ChatMessage>.from(msgs)..removeLast();
@@ -627,6 +676,7 @@ class ChatSessionNotifier extends Notifier<ChatState> {
   }
 }
 
-final chatSessionProvider = NotifierProvider.family<ChatSessionNotifier, ChatState, String>(
-  ChatSessionNotifier.new,
-);
+final chatSessionProvider =
+    NotifierProvider.family<ChatSessionNotifier, ChatState, String>(
+      ChatSessionNotifier.new,
+    );

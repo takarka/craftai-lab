@@ -12,7 +12,9 @@ import '../infrastructure/mcp_client.dart';
 final mcpClientProvider = Provider<McpClient>((ref) {
   final session = ref.watch(sessionProvider).asData?.value;
   return McpClient(
-    sessionTokenProvider: () => session is AuthenticatedSession ? 'craftai_auth_token_${session.ownerId}' : 'mock_dev_token',
+    sessionTokenProvider: () => session is AuthenticatedSession
+        ? 'craftai_auth_token_${session.ownerId}'
+        : 'mock_dev_token',
   );
 });
 
@@ -61,9 +63,13 @@ class McpState {
       activeTools: activeTools ?? this.activeTools,
       searchResults: searchResults ?? this.searchResults,
       searchQuery: searchQuery ?? this.searchQuery,
-      selectedLesson: clearSelectedLesson ? null : (selectedLesson ?? this.selectedLesson),
+      selectedLesson: clearSelectedLesson
+          ? null
+          : (selectedLesson ?? this.selectedLesson),
       isSearching: isSearching ?? this.isSearching,
-      savedNoteMessage: clearSavedNote ? null : (savedNoteMessage ?? this.savedNoteMessage),
+      savedNoteMessage: clearSavedNote
+          ? null
+          : (savedNoteMessage ?? this.savedNoteMessage),
     );
   }
 }
@@ -128,13 +134,14 @@ class McpNotifier extends Notifier<McpState> {
   Future<void> search(String query) async {
     if (!state.isCraftAiConnected) return;
 
-    state = state.copyWith(isSearching: true, searchQuery: query, clearError: true);
+    state = state.copyWith(
+      isSearching: true,
+      searchQuery: query,
+      clearError: true,
+    );
     try {
       final results = await _client.searchLessons(query: query);
-      state = state.copyWith(
-        isSearching: false,
-        searchResults: results,
-      );
+      state = state.copyWith(isSearching: false, searchResults: results);
     } catch (e) {
       state = state.copyWith(
         isSearching: false,
@@ -147,13 +154,14 @@ class McpNotifier extends Notifier<McpState> {
   Future<void> selectLesson(String lessonId) async {
     if (!state.isCraftAiConnected) return;
 
-    state = state.copyWith(isLoading: true, clearError: true, clearSavedNote: true);
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+      clearSavedNote: true,
+    );
     try {
       final detail = await _client.getLesson(lessonId);
-      state = state.copyWith(
-        isLoading: false,
-        selectedLesson: detail,
-      );
+      state = state.copyWith(isLoading: false, selectedLesson: detail);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -186,14 +194,16 @@ class McpNotifier extends Notifier<McpState> {
 
         state = state.copyWith(
           isLoading: false,
-          savedNoteMessage: 'Урок «${lesson.title}» успешно сохранён в ваши личные заметки.',
+          savedNoteMessage:
+              'Урок «${lesson.title}» успешно сохранён в ваши личные заметки.',
         );
         return confirmed;
       }
 
       state = state.copyWith(
         isLoading: false,
-        savedNoteMessage: 'Урок «${lesson.title}» успешно сохранён в ваши личные заметки.',
+        savedNoteMessage:
+            'Урок «${lesson.title}» успешно сохранён в ваши личные заметки.',
       );
       return result;
     } catch (e) {
@@ -216,5 +226,5 @@ class McpNotifier extends Notifier<McpState> {
 /// Provider family for McpNotifier by ownerId.
 final mcpControllerProvider =
     NotifierProvider.family<McpNotifier, McpState, String>(
-  (arg) => McpNotifier(arg),
-);
+      (arg) => McpNotifier(arg),
+    );

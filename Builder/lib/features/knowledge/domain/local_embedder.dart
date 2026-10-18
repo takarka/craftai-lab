@@ -28,7 +28,10 @@ class LocalHybridSearchEngine {
     final normalized = _normalizeText(text);
 
     // 1. Word tokens with sublinear frequency
-    final words = normalized.split(RegExp(r'\s+')).where((w) => w.length > 1).toList();
+    final words = normalized
+        .split(RegExp(r'\s+'))
+        .where((w) => w.length > 1)
+        .toList();
     final wordFrequencies = <String, int>{};
     for (final w in words) {
       wordFrequencies[w] = (wordFrequencies[w] ?? 0) + 1;
@@ -79,7 +82,10 @@ class LocalHybridSearchEngine {
     final normQuery = _normalizeText(query);
     final normChunk = _normalizeText(chunkText);
 
-    final queryWords = normQuery.split(RegExp(r'\s+')).where((w) => w.length > 2).toSet();
+    final queryWords = normQuery
+        .split(RegExp(r'\s+'))
+        .where((w) => w.length > 2)
+        .toSet();
     if (queryWords.isEmpty) {
       // Query has only very short words or characters
       return normChunk.contains(normQuery) ? 0.8 : 0.0;
@@ -133,11 +139,13 @@ class LocalHybridSearchEngine {
       final score = rawScore.clamp(0.0, 1.0);
       final isAbove = score >= effectiveThreshold;
 
-      scoredList.add(SearchResultChunk(
-        chunk: chunk,
-        score: score,
-        isAboveThreshold: isAbove,
-      ));
+      scoredList.add(
+        SearchResultChunk(
+          chunk: chunk,
+          score: score,
+          isAboveThreshold: isAbove,
+        ),
+      );
     }
 
     // Sort descending by score

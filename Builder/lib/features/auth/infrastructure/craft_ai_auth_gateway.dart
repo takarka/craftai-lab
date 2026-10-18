@@ -24,7 +24,8 @@ class CraftAiAuthGateway implements AuthGateway {
   }
 
   static http.Client _createClient(Uri baseUri) {
-    final isLoopback = ['localhost', '127.0.0.1', '10.0.2.2'].contains(baseUri.host) ||
+    final isLoopback =
+        ['localhost', '127.0.0.1', '10.0.2.2'].contains(baseUri.host) ||
         baseUri.host.startsWith('192.168.');
     if (isLoopback) {
       final io = HttpClient()
@@ -72,10 +73,9 @@ class CraftAiAuthGateway implements AuthGateway {
   Future<void> fetchDocuments(String languageCode) async {
     try {
       final uri = baseUri.resolve('/mobile/auth/documents?lang=$languageCode');
-      final response = await _httpClient.get(
-        uri,
-        headers: const {'Accept': 'application/json'},
-      ).timeout(const Duration(seconds: 10));
+      final response = await _httpClient
+          .get(uri, headers: const {'Accept': 'application/json'})
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -85,7 +85,10 @@ class CraftAiAuthGateway implements AuthGateway {
         final termsTxt = data['termsText'] as String? ?? '';
         final privTxt = data['privacyText'] as String? ?? '';
 
-        if (termsRev.isNotEmpty && privRev.isNotEmpty && termsTxt.isNotEmpty && privTxt.isNotEmpty) {
+        if (termsRev.isNotEmpty &&
+            privRev.isNotEmpty &&
+            termsTxt.isNotEmpty &&
+            privTxt.isNotEmpty) {
           _cachedDocuments[lang] = AuthLegalDocuments(
             terms: LegalDocument(revision: termsRev, body: termsTxt),
             privacy: LegalDocument(revision: privRev, body: privTxt),
@@ -106,23 +109,19 @@ class CraftAiAuthGateway implements AuthGateway {
   }
 
   @override
-  Future<void> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> signIn({required String email, required String password}) async {
     final uri = baseUri.resolve('/mobile/auth/login');
     try {
-      final response = await _httpClient.post(
-        uri,
-        headers: const {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'email': email.trim(),
-          'password': password,
-        }),
-      ).timeout(const Duration(seconds: 15));
+      final response = await _httpClient
+          .post(
+            uri,
+            headers: const {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({'email': email.trim(), 'password': password}),
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -142,7 +141,8 @@ class CraftAiAuthGateway implements AuthGateway {
 
       final errorBody = _tryParseJson(response.body);
       final code = errorBody?['code']?.toString() ?? '';
-      if (code.contains('invalid-credentials') || code.contains('invalid-request')) {
+      if (code.contains('invalid-credentials') ||
+          code.contains('invalid-request')) {
         throw const AppFailure(AppFailureCode.invalidCredentials);
       }
       throw const AppFailure(AppFailureCode.serviceUnavailable);
@@ -169,21 +169,23 @@ class CraftAiAuthGateway implements AuthGateway {
   }) async {
     final uri = baseUri.resolve('/mobile/auth/register');
     try {
-      final response = await _httpClient.post(
-        uri,
-        headers: const {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'name': name.trim(),
-          'email': email.trim(),
-          'password': password,
-          'termsRevision': termsRevision,
-          'privacyRevision': privacyRevision,
-          'language': 'ru',
-        }),
-      ).timeout(const Duration(seconds: 15));
+      final response = await _httpClient
+          .post(
+            uri,
+            headers: const {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({
+              'name': name.trim(),
+              'email': email.trim(),
+              'password': password,
+              'termsRevision': termsRevision,
+              'privacyRevision': privacyRevision,
+              'language': 'ru',
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -194,10 +196,13 @@ class CraftAiAuthGateway implements AuthGateway {
       final errorBody = _tryParseJson(response.body);
       final code = errorBody?['code']?.toString() ?? '';
 
-      if (code == 'AUTH_WEAK_PASSWORD' || response.statusCode == 400 && code.contains('WEAK_PASSWORD')) {
+      if (code == 'AUTH_WEAK_PASSWORD' ||
+          response.statusCode == 400 && code.contains('WEAK_PASSWORD')) {
         throw const AppFailure(AppFailureCode.weakPassword);
       }
-      if (response.statusCode == 409 || code.contains('account-exists') || code.contains('Duplicate')) {
+      if (response.statusCode == 409 ||
+          code.contains('account-exists') ||
+          code.contains('Duplicate')) {
         throw const AppFailure(AppFailureCode.accountExists);
       }
       if (response.statusCode == 429) {
@@ -223,17 +228,16 @@ class CraftAiAuthGateway implements AuthGateway {
   Future<void> requestPasswordReset({required String email}) async {
     final uri = baseUri.resolve('/mobile/auth/forgot-password');
     try {
-      final response = await _httpClient.post(
-        uri,
-        headers: const {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'email': email.trim(),
-          'language': 'ru',
-        }),
-      ).timeout(const Duration(seconds: 15));
+      final response = await _httpClient
+          .post(
+            uri,
+            headers: const {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({'email': email.trim(), 'language': 'ru'}),
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 429) {
         throw const AppFailure(AppFailureCode.rateLimited);
@@ -259,17 +263,19 @@ class CraftAiAuthGateway implements AuthGateway {
   }) async {
     final uri = baseUri.resolve('/mobile/auth/reset-password');
     try {
-      final response = await _httpClient.post(
-        uri,
-        headers: const {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'token': token.trim(),
-          'newPassword': newPassword,
-        }),
-      ).timeout(const Duration(seconds: 15));
+      final response = await _httpClient
+          .post(
+            uri,
+            headers: const {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode({
+              'token': token.trim(),
+              'newPassword': newPassword,
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return;
@@ -278,7 +284,8 @@ class CraftAiAuthGateway implements AuthGateway {
       final errorBody = _tryParseJson(response.body);
       final code = errorBody?['code']?.toString() ?? '';
 
-      if (code == 'AUTH_WEAK_PASSWORD' || response.statusCode == 400 && code.contains('WEAK_PASSWORD')) {
+      if (code == 'AUTH_WEAK_PASSWORD' ||
+          response.statusCode == 400 && code.contains('WEAK_PASSWORD')) {
         throw const AppFailure(AppFailureCode.weakPassword);
       }
       if (response.statusCode == 429) {
@@ -302,7 +309,9 @@ class CraftAiAuthGateway implements AuthGateway {
 
   @override
   Future<void> changePassword({required String newPassword}) async {
-    await _postAuthenticated('/mobile/auth/change-password', {'newPassword': newPassword});
+    await _postAuthenticated('/mobile/auth/change-password', {
+      'newPassword': newPassword,
+    });
     if (sessionRepository is PersistentSessionRepository) {
       (sessionRepository as PersistentSessionRepository).markPasswordChanged();
     }
@@ -310,9 +319,12 @@ class CraftAiAuthGateway implements AuthGateway {
 
   @override
   Future<void> logout() async {
-    final tokens = tokenStorage == null ? null : await tokenStorage!.readTokens();
-    final stored =
-        tokenStorage == null ? null : await tokenStorage!.readRefreshSession();
+    final tokens = tokenStorage == null
+        ? null
+        : await tokenStorage!.readTokens();
+    final stored = tokenStorage == null
+        ? null
+        : await tokenStorage!.readRefreshSession();
     try {
       await _postAuthenticated('/mobile/auth/logout', {
         if (stored != null)
@@ -326,19 +338,28 @@ class CraftAiAuthGateway implements AuthGateway {
     }
   }
 
-  Future<void> _postAuthenticated(String path, Map<String, dynamic> body) async {
-    final tokens = tokenStorage == null ? null : await tokenStorage!.readTokens();
-    if (tokens == null) throw const AppFailure(AppFailureCode.invalidCredentials);
+  Future<void> _postAuthenticated(
+    String path,
+    Map<String, dynamic> body,
+  ) async {
+    final tokens = tokenStorage == null
+        ? null
+        : await tokenStorage!.readTokens();
+    if (tokens == null) {
+      throw const AppFailure(AppFailureCode.invalidCredentials);
+    }
     try {
-      final response = await _httpClient.post(
-        baseUri.resolve(path),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer ${tokens.accessToken}',
-        },
-        body: jsonEncode(body),
-      ).timeout(const Duration(seconds: 15));
+      final response = await _httpClient
+          .post(
+            baseUri.resolve(path),
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'Authorization': 'Bearer ${tokens.accessToken}',
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(const Duration(seconds: 15));
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw const AppFailure(AppFailureCode.serviceUnavailable);
       }
@@ -356,21 +377,24 @@ class CraftAiAuthGateway implements AuthGateway {
     final expiresStr = data['accessTokenExpiresAtUtc'] as String?;
     final refreshExpiresStr = data['refreshExpiresAtUtc'] as String?;
 
-    if (accessToken.isEmpty || refreshToken.isEmpty || userId.isEmpty || refreshExpiresStr == null) {
+    if (accessToken.isEmpty ||
+        refreshToken.isEmpty ||
+        userId.isEmpty ||
+        refreshExpiresStr == null) {
       throw const AppFailure(AppFailureCode.unexpected);
     }
 
     final expiresAtUtc = expiresStr != null
         ? (DateTime.tryParse(expiresStr)?.toUtc() ??
-            DateTime.now().toUtc().add(const Duration(minutes: 15)))
+              DateTime.now().toUtc().add(const Duration(minutes: 15)))
         : DateTime.now().toUtc().add(const Duration(minutes: 15));
 
     final tokens = AuthTokens(
       accessToken: accessToken,
       refreshToken: refreshToken,
       expiresAtUtc: expiresAtUtc,
-      refreshExpiresAtUtc: DateTime.tryParse(refreshExpiresStr)?.toUtc() ??
-          expiresAtUtc,
+      refreshExpiresAtUtc:
+          DateTime.tryParse(refreshExpiresStr)?.toUtc() ?? expiresAtUtc,
     );
 
     if (sessionRepository is PersistentSessionRepository) {

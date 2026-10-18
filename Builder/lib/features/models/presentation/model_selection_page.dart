@@ -34,7 +34,9 @@ class ModelSelectionPage extends ConsumerWidget {
               // Header description
               Text(
                 s.modelsSubtitle,
-                style: BuilderType.body.copyWith(color: BuilderColors.inkSecondary),
+                style: BuilderType.body.copyWith(
+                  color: BuilderColors.inkSecondary,
+                ),
               ),
               const SizedBox(height: 12),
 
@@ -42,7 +44,10 @@ class ModelSelectionPage extends ConsumerWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: BuilderColors.warningTint,
                       borderRadius: BorderRadius.circular(BuilderRadii.chip),
@@ -50,7 +55,11 @@ class ModelSelectionPage extends ConsumerWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const BuilderIcon(BuilderGlyph.globe, size: 14, color: BuilderColors.warning),
+                        const BuilderIcon(
+                          BuilderGlyph.globe,
+                          size: 14,
+                          color: BuilderColors.warning,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           s.modelsDataNotice,
@@ -78,12 +87,18 @@ class ModelSelectionPage extends ConsumerWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const BuilderIcon(BuilderGlyph.info, size: 18, color: BuilderColors.inkSecondary),
+                    const BuilderIcon(
+                      BuilderGlyph.info,
+                      size: 18,
+                      color: BuilderColors.inkSecondary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         s.modelsDisclaimer,
-                        style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
+                        style: BuilderType.small.copyWith(
+                          color: BuilderColors.inkSecondary,
+                        ),
                       ),
                     ),
                   ],
@@ -114,11 +129,16 @@ class ModelSelectionPage extends ConsumerWidget {
                       const SizedBox(height: 8),
                       BuilderButton(
                         key: const Key('models.switchToRecommended'),
-                        label: '${s.modelsStandardTitle} (${s.modelsRecommended})',
+                        label:
+                            '${s.modelsStandardTitle} (${s.modelsRecommended})',
                         variant: BuilderButtonVariant.secondary,
                         onPressed: () {
-                          final alternative = catalog.suggestAlternative(currentSelected);
-                          ref.read(selectedCategoryProvider(ownerId).notifier).select(alternative);
+                          final alternative = catalog.suggestAlternative(
+                            currentSelected,
+                          );
+                          ref
+                              .read(selectedCategoryProvider(ownerId).notifier)
+                              .select(alternative);
                         },
                       ),
                     ],
@@ -135,7 +155,9 @@ class ModelSelectionPage extends ConsumerWidget {
                   isSelected: currentSelected == category,
                   descriptor: catalog.getModel(category),
                   onSelect: () {
-                    ref.read(selectedCategoryProvider(ownerId).notifier).select(category);
+                    ref
+                        .read(selectedCategoryProvider(ownerId).notifier)
+                        .select(category);
                   },
                 ),
                 const SizedBox(height: 12),
@@ -193,16 +215,23 @@ class _ModelCategoryCard extends StatelessWidget {
                     Text(
                       title,
                       style: BuilderType.h3.copyWith(
-                        color: isSelected ? BuilderColors.primary : BuilderColors.ink,
+                        color: isSelected
+                            ? BuilderColors.primary
+                            : BuilderColors.ink,
                       ),
                     ),
                     if (category == ModelCategory.standard) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: BuilderColors.primaryTint,
-                          borderRadius: BorderRadius.circular(BuilderRadii.chip),
+                          borderRadius: BorderRadius.circular(
+                            BuilderRadii.chip,
+                          ),
                         ),
                         child: Text(
                           s.modelsRecommended,
@@ -219,7 +248,10 @@ class _ModelCategoryCard extends StatelessWidget {
               ),
               if (!descriptor.available)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: BuilderColors.warningTint,
                     borderRadius: BorderRadius.circular(BuilderRadii.chip),
@@ -259,20 +291,11 @@ class _ModelCategoryCard extends StatelessWidget {
           const SizedBox(height: 14),
 
           // 3-segment relative scales (F06-V01): Quality, Speed, Price
-          _ScaleRow(
-            label: s.modelsQuality,
-            value: category.qualityRating,
-          ),
+          _ScaleRow(label: s.modelsQuality, value: category.qualityRating),
           const SizedBox(height: 8),
-          _ScaleRow(
-            label: s.modelsSpeed,
-            value: category.speedRating,
-          ),
+          _ScaleRow(label: s.modelsSpeed, value: category.speedRating),
           const SizedBox(height: 8),
-          _ScaleRow(
-            label: s.modelsPrice,
-            value: category.priceRating,
-          ),
+          _ScaleRow(label: s.modelsPrice, value: category.priceRating),
         ],
       ),
     );
@@ -280,10 +303,7 @@ class _ModelCategoryCard extends StatelessWidget {
 }
 
 class _ScaleRow extends StatelessWidget {
-  const _ScaleRow({
-    required this.label,
-    required this.value,
-  });
+  const _ScaleRow({required this.label, required this.value});
 
   final String label;
   final int value;
@@ -303,12 +323,7 @@ class _ScaleRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Expanded(
-          child: BuilderProgress(
-            completed: value,
-            total: 3,
-          ),
-        ),
+        Expanded(child: BuilderProgress(completed: value, total: 3)),
         const SizedBox(width: 8),
         Text(
           '$value/3',

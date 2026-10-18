@@ -4,7 +4,9 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 
 class CipherDecryptionException implements Exception {
-  const CipherDecryptionException([this.message = 'Integrity check failed or invalid key.']);
+  const CipherDecryptionException([
+    this.message = 'Integrity check failed or invalid key.',
+  ]);
   final String message;
 
   @override
@@ -56,7 +58,9 @@ final class StorageCipher {
     }
     final rawBytes = base64Decode(cipherTextBase64);
     if (rawBytes.length < ivLength + tagLength) {
-      throw const CipherDecryptionException('Payload is too short to be valid.');
+      throw const CipherDecryptionException(
+        'Payload is too short to be valid.',
+      );
     }
 
     final iv = rawBytes.sublist(0, ivLength);
@@ -74,11 +78,17 @@ final class StorageCipher {
     try {
       return utf8.decode(plainBytes);
     } catch (_) {
-      throw const CipherDecryptionException('Failed to decode UTF-8 plaintext.');
+      throw const CipherDecryptionException(
+        'Failed to decode UTF-8 plaintext.',
+      );
     }
   }
 
-  static List<int> _applyKeystream(List<int> input, List<int> key, List<int> iv) {
+  static List<int> _applyKeystream(
+    List<int> input,
+    List<int> key,
+    List<int> iv,
+  ) {
     final output = Uint8List(input.length);
     final hmac = Hmac(sha256, key);
     var blockIndex = 0;

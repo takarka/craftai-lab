@@ -14,11 +14,7 @@ class SearchHit {
   });
 
   Map<String, dynamic> toMap() {
-    return {
-      'title': title,
-      'url': url,
-      'snippet': snippet,
-    };
+    return {'title': title, 'url': url, 'snippet': snippet};
   }
 }
 
@@ -27,10 +23,7 @@ class SearchAdapter {
   final http.Client? httpClient;
   final String? baseUrl;
 
-  const SearchAdapter({
-    this.httpClient,
-    this.baseUrl,
-  });
+  const SearchAdapter({this.httpClient, this.baseUrl});
 
   Future<List<SearchHit>> search(String query) async {
     final trimmed = query.trim();
@@ -39,7 +32,9 @@ class SearchAdapter {
     // If HTTP client and baseUrl are configured, attempt real search
     if (httpClient != null && baseUrl != null) {
       try {
-        final uri = Uri.parse('$baseUrl/v1/search').replace(queryParameters: {'q': trimmed});
+        final uri = Uri.parse(
+          '$baseUrl/v1/search',
+        ).replace(queryParameters: {'q': trimmed});
         final response = await httpClient!.get(uri);
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -62,12 +57,14 @@ class SearchAdapter {
       SearchHit(
         title: 'Методика преподавания: $trimmed',
         url: 'https://edu.craftai.kz/methods/lesson-planning',
-        snippet: 'Рекомендации для учителей по теме «$trimmed». Структура урока, дифференциация заданий и критериальное оценивание.',
+        snippet:
+            'Рекомендации для учителей по теме «$trimmed». Структура урока, дифференциация заданий и критериальное оценивание.',
       ),
       SearchHit(
         title: 'Учебные материалы и стандарты 2026',
         url: 'https://edu.craftai.kz/standards/secondary-school',
-        snippet: 'Типовые учебные планы и требования к результатам обучения по предмету для средней школы.',
+        snippet:
+            'Типовые учебные планы и требования к результатам обучения по предмету для средней школы.',
       ),
     ];
   }

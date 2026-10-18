@@ -167,10 +167,7 @@ final class PersistentSessionRepository implements SessionRepository {
   void markOnboardingComplete(String ownerId) {
     if (_currentSnapshot is AuthenticatedSession &&
         (_currentSnapshot as AuthenticatedSession).ownerId == ownerId) {
-      _emit(AuthenticatedSession(
-        ownerId: ownerId,
-        onboardingComplete: true,
-      ));
+      _emit(AuthenticatedSession(ownerId: ownerId, onboardingComplete: true));
     }
   }
 
@@ -178,20 +175,19 @@ final class PersistentSessionRepository implements SessionRepository {
   void markOnboardingIncomplete(String ownerId) {
     if (_currentSnapshot is AuthenticatedSession &&
         (_currentSnapshot as AuthenticatedSession).ownerId == ownerId) {
-      _emit(AuthenticatedSession(
-        ownerId: ownerId,
-        onboardingComplete: false,
-      ));
+      _emit(AuthenticatedSession(ownerId: ownerId, onboardingComplete: false));
     }
   }
 
   void markPasswordChanged() {
     final current = _currentSnapshot;
     if (current is AuthenticatedSession && current.mustChangePassword) {
-      _emit(AuthenticatedSession(
-        ownerId: current.ownerId,
-        onboardingComplete: current.onboardingComplete,
-      ));
+      _emit(
+        AuthenticatedSession(
+          ownerId: current.ownerId,
+          onboardingComplete: current.onboardingComplete,
+        ),
+      );
     }
   }
 

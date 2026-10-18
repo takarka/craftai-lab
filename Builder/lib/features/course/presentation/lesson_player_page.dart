@@ -40,7 +40,8 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   // S23 Practice interactive state
   bool _practiceApplied = false;
   bool _showComparison = false;
-  final TextEditingController _practiceInputController = TextEditingController();
+  final TextEditingController _practiceInputController =
+      TextEditingController();
 
   // S25 Quiz state
   final Map<int, int> _selectedQuizAnswers = {};
@@ -80,11 +81,13 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   Future<void> _handleClose(BuildContext context) async {
     if (!widget.readOnly) {
       // Save checkpoint on close (F10-04, F10-12)
-      await ref.read(courseControllerProvider(widget.ownerId)).saveStep(
-        widget.levelId,
-        _currentStep,
-        practiceEvidenceMet: _practiceEvidenceMet,
-      );
+      await ref
+          .read(courseControllerProvider(widget.ownerId))
+          .saveStep(
+            widget.levelId,
+            _currentStep,
+            practiceEvidenceMet: _practiceEvidenceMet,
+          );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -108,20 +111,22 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
     });
 
     if (!widget.readOnly) {
-      await ref.read(courseControllerProvider(widget.ownerId)).saveStep(
-        widget.levelId,
-        step,
-        practiceEvidenceMet: _practiceEvidenceMet,
-      );
+      await ref
+          .read(courseControllerProvider(widget.ownerId))
+          .saveStep(
+            widget.levelId,
+            step,
+            practiceEvidenceMet: _practiceEvidenceMet,
+          );
     }
   }
 
   Future<void> _submitQuiz(CourseLevel level) async {
     final cs = CourseStrings.of(context);
     if (_selectedQuizAnswers.length < level.quizQuestions.length) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(cs.answerAllQuestions)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(cs.answerAllQuestions)));
       return;
     }
 
@@ -147,17 +152,21 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
     });
 
     if (!widget.readOnly) {
-      await ref.read(courseControllerProvider(widget.ownerId)).submitQuiz(
-        widget.levelId,
-        answers,
-        threshold: level.quizPassThreshold,
-      );
+      await ref
+          .read(courseControllerProvider(widget.ownerId))
+          .submitQuiz(
+            widget.levelId,
+            answers,
+            threshold: level.quizPassThreshold,
+          );
     }
   }
 
   Future<void> _completeLevelAndAdvance(BuildContext context) async {
     if (!widget.readOnly) {
-      await ref.read(courseControllerProvider(widget.ownerId)).completeLevel(widget.levelId);
+      await ref
+          .read(courseControllerProvider(widget.ownerId))
+          .completeLevel(widget.levelId);
     }
 
     if (context.mounted) {
@@ -175,20 +184,29 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   Widget build(BuildContext context) {
     final cs = CourseStrings.of(context);
     final locale = Localizations.localeOf(context).languageCode;
-    final level = CourseCatalog.getLevel(widget.levelId, locale: locale) ?? CourseCatalog.getLevel(widget.levelId);
+    final level =
+        CourseCatalog.getLevel(widget.levelId, locale: locale) ??
+        CourseCatalog.getLevel(widget.levelId);
     if (level == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: Center(child: Text(cs.t('Уровень не найден', 'Деңгей табылмады'))),
+        body: Center(
+          child: Text(cs.t('Уровень не найден', 'Деңгей табылмады')),
+        ),
       );
     }
 
-    final progressAsync = ref.watch(levelProgressProvider((ownerId: widget.ownerId, levelId: widget.levelId)));
-    ref.listen(levelProgressProvider((ownerId: widget.ownerId, levelId: widget.levelId)), (prev, next) {
-      next.whenData((p) {
-        if (!_initialized && p != null) _initFromProgress(p);
-      });
-    });
+    final progressAsync = ref.watch(
+      levelProgressProvider((ownerId: widget.ownerId, levelId: widget.levelId)),
+    );
+    ref.listen(
+      levelProgressProvider((ownerId: widget.ownerId, levelId: widget.levelId)),
+      (prev, next) {
+        next.whenData((p) {
+          if (!_initialized && p != null) _initFromProgress(p);
+        });
+      },
+    );
     progressAsync.whenData((p) {
       if (!_initialized && p != null) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -214,7 +232,9 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             currentStep: _currentStep,
             isKk: cs.kk,
             onStepTap: (step) {
-              if (widget.readOnly || step.stepNumber <= _currentStep.stepNumber || _practiceEvidenceMet) {
+              if (widget.readOnly ||
+                  step.stepNumber <= _currentStep.stepNumber ||
+                  _practiceEvidenceMet) {
                 _moveToStep(step);
               }
             },
@@ -268,7 +288,10 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           ),
           child: Text(
             cs.stepIndicator(1, 5, LessonStep.idea),
-            style: BuilderType.small.copyWith(color: BuilderColors.primary, fontWeight: FontWeight.w700),
+            style: BuilderType.small.copyWith(
+              color: BuilderColors.primary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -294,17 +317,26 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             children: [
               Row(
                 children: [
-                  const BuilderIcon(BuilderGlyph.info, size: 18, color: BuilderColors.primary),
+                  const BuilderIcon(
+                    BuilderGlyph.info,
+                    size: 18,
+                    color: BuilderColors.primary,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(cs.schoolExampleTitle, style: BuilderType.title),
+                    child: Text(
+                      cs.schoolExampleTitle,
+                      style: BuilderType.title,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
                 level.ideaExampleTemplate,
-                style: BuilderType.body.copyWith(color: BuilderColors.inkSecondary),
+                style: BuilderType.body.copyWith(
+                  color: BuilderColors.inkSecondary,
+                ),
               ),
             ],
           ),
@@ -329,7 +361,10 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           ),
           child: Text(
             cs.stepIndicator(2, 5, LessonStep.practice),
-            style: BuilderType.small.copyWith(color: BuilderColors.primary, fontWeight: FontWeight.w700),
+            style: BuilderType.small.copyWith(
+              color: BuilderColors.primary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -345,13 +380,26 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
               children: [
                 Row(
                   children: [
-                    const BuilderIcon(BuilderGlyph.tool, size: 20, color: BuilderColors.primary),
+                    const BuilderIcon(
+                      BuilderGlyph.tool,
+                      size: 20,
+                      color: BuilderColors.primary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(cs.t('Конструктор инструкций (S40)', 'Нұсқаулықтар құрастырғышы (S40)'), style: BuilderType.title),
+                      child: Text(
+                        cs.t(
+                          'Конструктор инструкций (S40)',
+                          'Нұсқаулықтар құрастырғышы (S40)',
+                        ),
+                        style: BuilderType.title,
+                      ),
                     ),
                     if (_practiceEvidenceMet)
-                      BuilderBadge(cs.practiceCompleted, icon: BuilderGlyph.check)
+                      BuilderBadge(
+                        cs.practiceCompleted,
+                        icon: BuilderGlyph.check,
+                      )
                     else
                       BuilderBadge(cs.practiceRequired, neutral: true),
                   ],
@@ -369,7 +417,12 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   width: double.infinity,
                   child: BuilderButton(
                     key: const Key('practice.openInstructionsSkillBtn'),
-                    label: _practiceEvidenceMet ? cs.t('Изменить инструкции', 'Нұсқаулықтарды өзгерту') : cs.t('Открыть экран инструкций', 'Нұсқаулықтар экранын ашу'),
+                    label: _practiceEvidenceMet
+                        ? cs.t('Изменить инструкции', 'Нұсқаулықтарды өзгерту')
+                        : cs.t(
+                            'Открыть экран инструкций',
+                            'Нұсқаулықтар экранын ашу',
+                          ),
                     icon: BuilderGlyph.chevron,
                     onPressed: () async {
                       await Navigator.of(context).push(
@@ -387,8 +440,11 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                           ),
                         ),
                       );
-                      final draft = ref.read(instructionDraftProvider(widget.ownerId));
-                      if (draft.config.enabledRulesCount >= 3 && draft.testResult != null) {
+                      final draft = ref.read(
+                        instructionDraftProvider(widget.ownerId),
+                      );
+                      if (draft.config.enabledRulesCount >= 3 &&
+                          draft.testResult != null) {
                         setState(() {
                           _practiceApplied = true;
                           _practiceEvidenceMet = true;
@@ -411,13 +467,26 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
               children: [
                 Row(
                   children: [
-                    const BuilderIcon(BuilderGlyph.doc, size: 20, color: BuilderColors.primary),
+                    const BuilderIcon(
+                      BuilderGlyph.doc,
+                      size: 20,
+                      color: BuilderColors.primary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(cs.t('База знаний и RAG (S41)', 'Білім қоры және RAG (S41)'), style: BuilderType.title),
+                      child: Text(
+                        cs.t(
+                          'База знаний и RAG (S41)',
+                          'Білім қоры және RAG (S41)',
+                        ),
+                        style: BuilderType.title,
+                      ),
                     ),
                     if (_practiceEvidenceMet)
-                      BuilderBadge(cs.practiceCompleted, icon: BuilderGlyph.check)
+                      BuilderBadge(
+                        cs.practiceCompleted,
+                        icon: BuilderGlyph.check,
+                      )
                     else
                       BuilderBadge(cs.practiceRequired, neutral: true),
                   ],
@@ -435,7 +504,15 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   width: double.infinity,
                   child: BuilderButton(
                     key: const Key('practice.openKnowledgeSkillBtn'),
-                    label: _practiceEvidenceMet ? cs.t('Проверить знания снова', 'Білімді қайта тексеру') : cs.t('Открыть экран базы знаний', 'Білім қоры экранын ашу'),
+                    label: _practiceEvidenceMet
+                        ? cs.t(
+                            'Проверить знания снова',
+                            'Білімді қайта тексеру',
+                          )
+                        : cs.t(
+                            'Открыть экран базы знаний',
+                            'Білім қоры экранын ашу',
+                          ),
                     icon: BuilderGlyph.chevron,
                     onPressed: () async {
                       await Navigator.of(context).push(
@@ -453,8 +530,11 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                           ),
                         ),
                       );
-                      final kState = ref.read(knowledgeControllerProvider(widget.ownerId));
-                      if (kState.documents.isNotEmpty && kState.searchResult != null) {
+                      final kState = ref.read(
+                        knowledgeControllerProvider(widget.ownerId),
+                      );
+                      if (kState.documents.isNotEmpty &&
+                          kState.searchResult != null) {
                         setState(() {
                           _practiceApplied = true;
                           _practiceEvidenceMet = true;
@@ -477,13 +557,26 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
               children: [
                 Row(
                   children: [
-                    const BuilderIcon(BuilderGlyph.memory, size: 20, color: BuilderColors.primary),
+                    const BuilderIcon(
+                      BuilderGlyph.memory,
+                      size: 20,
+                      color: BuilderColors.primary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(cs.t('Долгая память и факты о классе (S42)', 'Ұзақ жады және сынып фактілері (S42)'), style: BuilderType.title),
+                      child: Text(
+                        cs.t(
+                          'Долгая память и факты о классе (S42)',
+                          'Ұзақ жады және сынып фактілері (S42)',
+                        ),
+                        style: BuilderType.title,
+                      ),
                     ),
                     if (_practiceEvidenceMet)
-                      BuilderBadge(cs.practiceCompleted, icon: BuilderGlyph.check)
+                      BuilderBadge(
+                        cs.practiceCompleted,
+                        icon: BuilderGlyph.check,
+                      )
                     else
                       BuilderBadge(cs.practiceRequired, neutral: true),
                   ],
@@ -501,7 +594,12 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   width: double.infinity,
                   child: BuilderButton(
                     key: const Key('practice.openMemorySkillBtn'),
-                    label: _practiceEvidenceMet ? cs.t('Проверить память снова', 'Жадыны қайта тексеру') : cs.t('Открыть экран долгой памяти', 'Ұзақ жады экранын ашу'),
+                    label: _practiceEvidenceMet
+                        ? cs.t('Проверить память снова', 'Жадыны қайта тексеру')
+                        : cs.t(
+                            'Открыть экран долгой памяти',
+                            'Ұзақ жады экранын ашу',
+                          ),
                     icon: BuilderGlyph.chevron,
                     onPressed: () async {
                       await Navigator.of(context).push(
@@ -512,7 +610,9 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                           ),
                         ),
                       );
-                      final mState = ref.read(memoryControllerProvider(widget.ownerId));
+                      final mState = ref.read(
+                        memoryControllerProvider(widget.ownerId),
+                      );
                       if (mState.facts.isNotEmpty) {
                         setState(() {
                           _practiceApplied = true;
@@ -536,13 +636,26 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
               children: [
                 Row(
                   children: [
-                    const BuilderIcon(BuilderGlyph.tool, size: 20, color: BuilderColors.primary),
+                    const BuilderIcon(
+                      BuilderGlyph.tool,
+                      size: 20,
+                      color: BuilderColors.primary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(cs.t('Инструменты на устройстве (S43)', 'Құрылғыдағы құралдар (S43)'), style: BuilderType.title),
+                      child: Text(
+                        cs.t(
+                          'Инструменты на устройстве (S43)',
+                          'Құрылғыдағы құралдар (S43)',
+                        ),
+                        style: BuilderType.title,
+                      ),
                     ),
                     if (_practiceEvidenceMet)
-                      BuilderBadge(cs.practiceCompleted, icon: BuilderGlyph.check)
+                      BuilderBadge(
+                        cs.practiceCompleted,
+                        icon: BuilderGlyph.check,
+                      )
                     else
                       BuilderBadge(cs.practiceRequired, neutral: true),
                   ],
@@ -560,7 +673,15 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   width: double.infinity,
                   child: BuilderButton(
                     key: const Key('practice.openToolsSkillBtn'),
-                    label: _practiceEvidenceMet ? cs.t('Проверить инструменты снова', 'Құралдарды қайта тексеру') : cs.t('Открыть экран инструментов', 'Құралдар экранын ашу'),
+                    label: _practiceEvidenceMet
+                        ? cs.t(
+                            'Проверить инструменты снова',
+                            'Құралдарды қайта тексеру',
+                          )
+                        : cs.t(
+                            'Открыть экран инструментов',
+                            'Құралдар экранын ашу',
+                          ),
                     icon: BuilderGlyph.chevron,
                     onPressed: () async {
                       await Navigator.of(context).push(
@@ -572,9 +693,12 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                         ),
                       );
                       final tRepo = ref.read(toolsRepositoryProvider);
-                      final pending = await tRepo.getPendingActions(widget.ownerId);
+                      final pending = await tRepo.getPendingActions(
+                        widget.ownerId,
+                      );
                       final grants = await tRepo.getGrants(widget.ownerId);
-                      if (grants.any((g) => g.isEnabled) || pending.isNotEmpty) {
+                      if (grants.any((g) => g.isEnabled) ||
+                          pending.isNotEmpty) {
                         setState(() {
                           _practiceApplied = true;
                           _practiceEvidenceMet = true;
@@ -597,9 +721,18 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             children: [
               Row(
                 children: [
-                  const BuilderIcon(BuilderGlyph.bolt, size: 18, color: BuilderColors.primary),
+                  const BuilderIcon(
+                    BuilderGlyph.bolt,
+                    size: 18,
+                    color: BuilderColors.primary,
+                  ),
                   const SizedBox(width: 8),
-                  Expanded(child: Text(cs.practiceLearningDraft, style: BuilderType.title)),
+                  Expanded(
+                    child: Text(
+                      cs.practiceLearningDraft,
+                      style: BuilderType.title,
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   if (_practiceEvidenceMet)
                     BuilderBadge(cs.practiceCompleted, icon: BuilderGlyph.check)
@@ -623,11 +756,14 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   Expanded(
                     child: BuilderButton(
                       key: const Key('practice.applyBtn'),
-                      label: _practiceApplied ? cs.practiceUpdateBtn : cs.practiceApplyBtn,
+                      label: _practiceApplied
+                          ? cs.practiceUpdateBtn
+                          : cs.practiceApplyBtn,
                       onPressed: () {
                         setState(() {
                           _practiceApplied = true;
-                          _practiceEvidenceMet = true; // Evidence met on real interaction (F10-07)
+                          _practiceEvidenceMet =
+                              true; // Evidence met on real interaction (F10-07)
                           _showComparison = true;
                         });
                       },
@@ -653,13 +789,27 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(cs.beforeSetting, style: BuilderType.small.copyWith(fontWeight: FontWeight.w700)),
+                Text(
+                  cs.beforeSetting,
+                  style: BuilderType.small.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(cs.beforePlaceholder, style: BuilderType.small),
                 const Divider(height: 16),
-                Text(cs.afterSetting, style: BuilderType.small.copyWith(fontWeight: FontWeight.w700, color: BuilderColors.primary)),
+                Text(
+                  cs.afterSetting,
+                  style: BuilderType.small.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: BuilderColors.primary,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(level.practiceExpectedAnswer, style: BuilderType.small.copyWith(color: BuilderColors.ink)),
+                Text(
+                  level.practiceExpectedAnswer,
+                  style: BuilderType.small.copyWith(color: BuilderColors.ink),
+                ),
               ],
             ),
           ),
@@ -684,7 +834,10 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           ),
           child: Text(
             cs.stepIndicator(3, 5, LessonStep.underTheHood),
-            style: BuilderType.small.copyWith(color: BuilderColors.primary, fontWeight: FontWeight.w700),
+            style: BuilderType.small.copyWith(
+              color: BuilderColors.primary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -695,38 +848,49 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
 
         Text(cs.xrayLayersTitle, style: BuilderType.title),
         const SizedBox(height: 12),
-        ...level.underTheHoodLayers.map((layer) => Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: BuilderColors.surfaceDisabled),
-              boxShadow: BuilderShadows.card,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const BuilderIcon(BuilderGlyph.code, size: 16, color: BuilderColors.primary),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(layer['layer'] ?? '', style: BuilderType.title),
+        ...level.underTheHoodLayers.map(
+          (layer) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: BuilderColors.surfaceDisabled),
+                boxShadow: BuilderShadows.card,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const BuilderIcon(
+                        BuilderGlyph.code,
+                        size: 16,
+                        color: BuilderColors.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          layer['layer'] ?? '',
+                          style: BuilderType.title,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    layer['detail'] ?? '',
+                    style: BuilderType.small.copyWith(
+                      color: BuilderColors.inkSecondary,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  layer['detail'] ?? '',
-                  style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
           ),
-        )),
+        ),
       ],
     );
   }
@@ -746,7 +910,10 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           ),
           child: Text(
             cs.stepIndicator(4, 5, LessonStep.quiz),
-            style: BuilderType.small.copyWith(color: BuilderColors.primary, fontWeight: FontWeight.w700),
+            style: BuilderType.small.copyWith(
+              color: BuilderColors.primary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
         const SizedBox(height: 12),
@@ -768,7 +935,10 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${qIndex + 1}. ${q.question}', style: BuilderType.title),
+                  Text(
+                    '${qIndex + 1}. ${q.question}',
+                    style: BuilderType.title,
+                  ),
                   const SizedBox(height: 12),
                   ...List.generate(q.options.length, (optIndex) {
                     final opt = q.options[optIndex];
@@ -790,7 +960,9 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                         color: tileColor,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: isSelected ? BuilderColors.primary : BuilderColors.surfaceDisabled,
+                          color: isSelected
+                              ? BuilderColors.primary
+                              : BuilderColors.surfaceDisabled,
                         ),
                       ),
                       // ignore: deprecated_member_use
@@ -823,7 +995,9 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                       ),
                       child: Text(
                         '${cs.explanationPrefix}${q.explanation}',
-                        style: BuilderType.small.copyWith(color: BuilderColors.ink),
+                        style: BuilderType.small.copyWith(
+                          color: BuilderColors.ink,
+                        ),
                       ),
                     ),
                   ],
@@ -838,7 +1012,9 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: _quizPassed ? BuilderColors.primaryTint : BuilderColors.warningTint,
+              color: _quizPassed
+                  ? BuilderColors.primaryTint
+                  : BuilderColors.warningTint,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -848,14 +1024,18 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   children: [
                     BuilderIcon(
                       _quizPassed ? BuilderGlyph.check : BuilderGlyph.info,
-                      color: _quizPassed ? BuilderColors.primary : BuilderColors.warning,
+                      color: _quizPassed
+                          ? BuilderColors.primary
+                          : BuilderColors.warning,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         _quizPassed ? cs.quizPassedTitle : cs.quizFailedTitle,
                         style: BuilderType.title.copyWith(
-                          color: _quizPassed ? BuilderColors.primary : BuilderColors.warning,
+                          color: _quizPassed
+                              ? BuilderColors.primary
+                              : BuilderColors.warning,
                         ),
                       ),
                     ),
@@ -892,7 +1072,10 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           ),
           child: Text(
             cs.stepIndicator(5, 5, LessonStep.summary),
-            style: BuilderType.small.copyWith(color: BuilderColors.primary, fontWeight: FontWeight.w700),
+            style: BuilderType.small.copyWith(
+              color: BuilderColors.primary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
         const SizedBox(height: 16),
@@ -905,7 +1088,9 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
               const SizedBox(height: 8),
               Text(
                 cs.levelCompletedSubtitle,
-                style: BuilderType.body.copyWith(color: BuilderColors.inkSecondary),
+                style: BuilderType.body.copyWith(
+                  color: BuilderColors.inkSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -922,10 +1107,17 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
               if (level.targetSkillName != null) ...[
                 Row(
                   children: [
-                    const BuilderIcon(BuilderGlyph.check, size: 16, color: BuilderColors.primary),
+                    const BuilderIcon(
+                      BuilderGlyph.check,
+                      size: 16,
+                      color: BuilderColors.primary,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(cs.unlockedSkill(level.targetSkillName!), style: BuilderType.body),
+                      child: Text(
+                        cs.unlockedSkill(level.targetSkillName!),
+                        style: BuilderType.body,
+                      ),
                     ),
                   ],
                 ),
@@ -933,7 +1125,11 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
               ],
               Row(
                 children: [
-                  const BuilderIcon(BuilderGlyph.check, size: 16, color: BuilderColors.primary),
+                  const BuilderIcon(
+                    BuilderGlyph.check,
+                    size: 16,
+                    color: BuilderColors.primary,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(cs.configSaved, style: BuilderType.body),
@@ -943,7 +1139,11 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
               const SizedBox(height: 6),
               Row(
                 children: [
-                  const BuilderIcon(BuilderGlyph.check, size: 16, color: BuilderColors.primary),
+                  const BuilderIcon(
+                    BuilderGlyph.check,
+                    size: 16,
+                    color: BuilderColors.primary,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(cs.historySaved, style: BuilderType.body),
@@ -983,9 +1183,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             ),
             const SizedBox(width: 12),
           ],
-          Expanded(
-            child: _buildPrimaryAction(level, cs),
-          ),
+          Expanded(child: _buildPrimaryAction(level, cs)),
         ],
       ),
     );
@@ -1068,7 +1266,10 @@ class _StepIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-        BuilderSpace.md, 0, BuilderSpace.md, BuilderSpace.xxs,
+        BuilderSpace.md,
+        0,
+        BuilderSpace.md,
+        BuilderSpace.xxs,
       ),
       child: Row(
         children: [
@@ -1150,4 +1351,3 @@ class _StepIndicator extends StatelessWidget {
     );
   }
 }
-

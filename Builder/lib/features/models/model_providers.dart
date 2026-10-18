@@ -17,7 +17,11 @@ final craftAiClientProvider = Provider<CraftAiClient?>((ref) {
   final tokenStorage = ref.watch(secureTokenStorageProvider);
   final client = createApiHttpClient(config);
   ref.onDispose(client.close);
-  return CraftAiClient(baseUri: uri, tokenStorage: tokenStorage, httpClient: client);
+  return CraftAiClient(
+    baseUri: uri,
+    tokenStorage: tokenStorage,
+    httpClient: client,
+  );
 });
 
 final modelCatalogRepositoryProvider = Provider<ModelCatalogRepository>((ref) {

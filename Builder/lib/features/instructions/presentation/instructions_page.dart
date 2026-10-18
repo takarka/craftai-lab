@@ -7,10 +7,7 @@ import '../../models/model_providers.dart';
 import '../domain/instruction_models.dart';
 import '../instructions_providers.dart';
 
-enum SkillScreenMode {
-  work,
-  learn,
-}
+enum SkillScreenMode { work, learn }
 
 class InstructionsPage extends ConsumerStatefulWidget {
   final String ownerId;
@@ -41,7 +38,9 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
   @override
   void initState() {
     super.initState();
-    _testQuestionController = TextEditingController(text: 'Объясни, что такое фотосинтез');
+    _testQuestionController = TextEditingController(
+      text: 'Объясни, что такое фотосинтез',
+    );
     _rawTextController = TextEditingController();
     _reflectionController = TextEditingController();
   }
@@ -57,11 +56,16 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
   @override
   Widget build(BuildContext context) {
     final draftState = ref.watch(instructionDraftProvider(widget.ownerId));
-    final draftNotifier = ref.read(instructionDraftProvider(widget.ownerId).notifier);
-    final selectedCategory = ref.watch(selectedCategoryProvider(widget.ownerId));
+    final draftNotifier = ref.read(
+      instructionDraftProvider(widget.ownerId).notifier,
+    );
+    final selectedCategory = ref.watch(
+      selectedCategoryProvider(widget.ownerId),
+    );
 
     // Keep raw text controller in sync if not focused or initially
-    if (_rawTextController.text != draftState.config.rawText && !_isRawTextFocused) {
+    if (_rawTextController.text != draftState.config.rawText &&
+        !_isRawTextFocused) {
       _rawTextController.text = draftState.config.rawText;
     }
 
@@ -144,7 +148,11 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                     const SizedBox(height: 20),
 
                     // 6. Before / After Test Comparison (F11-06)
-                    _buildBeforeAfterTestSection(draftState, draftNotifier, selectedCategory),
+                    _buildBeforeAfterTestSection(
+                      draftState,
+                      draftNotifier,
+                      selectedCategory,
+                    ),
                     const SizedBox(height: 20),
 
                     // 7. Reflection Field for Learn Mode (F11-08)
@@ -190,12 +198,18 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
         children: [
           Row(
             children: [
-              const BuilderIcon(BuilderGlyph.bolt, color: BuilderColors.primary, size: 20),
+              const BuilderIcon(
+                BuilderGlyph.bolt,
+                color: BuilderColors.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Практика уровня 2: Инструкции',
-                  style: BuilderType.title.copyWith(color: BuilderColors.primary),
+                  style: BuilderType.title.copyWith(
+                    color: BuilderColors.primary,
+                  ),
                 ),
               ),
             ],
@@ -214,10 +228,7 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                 label: '3+ правила (${draftState.config.enabledRulesCount}/3)',
                 isDone: rulesMet,
               ),
-              _buildTaskCriterion(
-                label: 'Тест запущен',
-                isDone: testMet,
-              ),
+              _buildTaskCriterion(label: 'Тест запущен', isDone: testMet),
               _buildTaskCriterion(
                 label: 'Рефлексия записана',
                 isDone: reflectionMet,
@@ -233,7 +244,9 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isDone ? BuilderColors.primaryTint : BuilderColors.surfaceDisabled,
+        color: isDone
+            ? BuilderColors.primaryTint
+            : BuilderColors.surfaceDisabled,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isDone ? BuilderColors.primary : BuilderColors.line,
@@ -251,7 +264,9 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
           Text(
             label,
             style: BuilderType.small.copyWith(
-              color: isDone ? BuilderColors.primary : BuilderColors.inkSecondary,
+              color: isDone
+                  ? BuilderColors.primary
+                  : BuilderColors.inkSecondary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -291,7 +306,10 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                 Row(
                   children: [
                     const Expanded(
-                      child: Text('Модуль инструкций', style: BuilderType.title),
+                      child: Text(
+                        'Модуль инструкций',
+                        style: BuilderType.title,
+                      ),
                     ),
                     BuilderBadge(
                       '${draftState.config.enabledRulesCount} активных',
@@ -315,7 +333,10 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
   // --------------------------------------------------------------------------
   // 3. Mode Selector (Structured vs Raw)
   // --------------------------------------------------------------------------
-  Widget _buildModeSelector(InstructionDraftState draftState, InstructionDraftNotifier draftNotifier) {
+  Widget _buildModeSelector(
+    InstructionDraftState draftState,
+    InstructionDraftNotifier draftNotifier,
+  ) {
     final isRaw = draftState.config.isRawMode;
     return Container(
       decoration: BoxDecoration(
@@ -343,14 +364,20 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                       BuilderIcon(
                         BuilderGlyph.tool,
                         size: 16,
-                        color: !isRaw ? BuilderColors.primary : BuilderColors.inkSecondary,
+                        color: !isRaw
+                            ? BuilderColors.primary
+                            : BuilderColors.inkSecondary,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         'Конструктор правил',
                         style: BuilderType.small.copyWith(
-                          color: !isRaw ? BuilderColors.ink : BuilderColors.inkSecondary,
-                          fontWeight: !isRaw ? FontWeight.w700 : FontWeight.w500,
+                          color: !isRaw
+                              ? BuilderColors.ink
+                              : BuilderColors.inkSecondary,
+                          fontWeight: !isRaw
+                              ? FontWeight.w700
+                              : FontWeight.w500,
                         ),
                       ),
                     ],
@@ -377,13 +404,17 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                       BuilderIcon(
                         BuilderGlyph.doc,
                         size: 16,
-                        color: isRaw ? BuilderColors.primary : BuilderColors.inkSecondary,
+                        color: isRaw
+                            ? BuilderColors.primary
+                            : BuilderColors.inkSecondary,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         'Прямой текст',
                         style: BuilderType.small.copyWith(
-                          color: isRaw ? BuilderColors.ink : BuilderColors.inkSecondary,
+                          color: isRaw
+                              ? BuilderColors.ink
+                              : BuilderColors.inkSecondary,
                           fontWeight: isRaw ? FontWeight.w700 : FontWeight.w500,
                         ),
                       ),
@@ -401,7 +432,10 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
   // --------------------------------------------------------------------------
   // 4A. Structured Rules Section
   // --------------------------------------------------------------------------
-  Widget _buildStructuredRulesSection(InstructionDraftState draftState, InstructionDraftNotifier draftNotifier) {
+  Widget _buildStructuredRulesSection(
+    InstructionDraftState draftState,
+    InstructionDraftNotifier draftNotifier,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -420,7 +454,9 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                     avatar: BuilderIcon(
                       group.glyph,
                       size: 16,
-                      color: _selectedGroupFilter == group ? BuilderColors.primary : BuilderColors.inkSecondary,
+                      color: _selectedGroupFilter == group
+                          ? BuilderColors.primary
+                          : BuilderColors.inkSecondary,
                     ),
                     selectedColor: BuilderColors.primaryTint,
                     backgroundColor: BuilderColors.surfaceDisabled,
@@ -448,7 +484,9 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
 
         // Empty state for custom group
         if (_selectedGroupFilter == InstructionGroup.custom &&
-            !draftState.config.rules.any((r) => r.group == InstructionGroup.custom)) ...[
+            !draftState.config.rules.any(
+              (r) => r.group == InstructionGroup.custom,
+            )) ...[
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
@@ -482,13 +520,18 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
     );
   }
 
-  Widget _buildRuleCard(InstructionRule rule, InstructionDraftNotifier draftNotifier) {
+  Widget _buildRuleCard(
+    InstructionRule rule,
+    InstructionDraftNotifier draftNotifier,
+  ) {
     return Container(
       key: Key('instructions.ruleCard.${rule.id}'),
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: rule.isEnabled ? BuilderColors.surface : BuilderColors.surfaceDisabled,
+        color: rule.isEnabled
+            ? BuilderColors.surface
+            : BuilderColors.surfaceDisabled,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: rule.isEnabled ? BuilderColors.primary : BuilderColors.line,
@@ -504,14 +547,20 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                 child: Text(
                   rule.title,
                   style: BuilderType.title.copyWith(
-                    color: rule.isEnabled ? BuilderColors.ink : BuilderColors.inkSecondary,
+                    color: rule.isEnabled
+                        ? BuilderColors.ink
+                        : BuilderColors.inkSecondary,
                   ),
                 ),
               ),
               if (rule.isCustom)
                 IconButton(
                   key: Key('instructions.deleteRuleBtn.${rule.id}'),
-                  icon: const BuilderIcon(BuilderGlyph.trash, size: 18, color: BuilderColors.warning),
+                  icon: const BuilderIcon(
+                    BuilderGlyph.trash,
+                    size: 18,
+                    color: BuilderColors.warning,
+                  ),
                   onPressed: () => draftNotifier.deleteCustomRule(rule.id),
                 ),
               Switch(
@@ -550,14 +599,20 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
   // --------------------------------------------------------------------------
   // 4B. Raw Text Section (F11-05)
   // --------------------------------------------------------------------------
-  Widget _buildRawTextSection(InstructionDraftState draftState, InstructionDraftNotifier draftNotifier) {
+  Widget _buildRawTextSection(
+    InstructionDraftState draftState,
+    InstructionDraftNotifier draftNotifier,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           children: [
             Expanded(
-              child: Text('Прямое редактирование текста инструкции', style: BuilderType.h3),
+              child: Text(
+                'Прямое редактирование текста инструкции',
+                style: BuilderType.h3,
+              ),
             ),
             BuilderBadge('Raw Mode', neutral: true),
           ],
@@ -582,7 +637,9 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
             style: BuilderType.mono.copyWith(fontSize: 13),
             decoration: InputDecoration(
               hintText: 'Введите полный текст инструкции для ассистента...',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               filled: true,
               fillColor: Colors.white,
             ),
@@ -616,33 +673,48 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
         children: [
           Row(
             children: [
-              const BuilderIcon(BuilderGlyph.doc, size: 18, color: BuilderColors.primary),
+              const BuilderIcon(
+                BuilderGlyph.doc,
+                size: 18,
+                color: BuilderColors.primary,
+              ),
               const SizedBox(width: 8),
               const Expanded(
-                child: Text('Итоговая инструкция (превью)', style: BuilderType.title),
+                child: Text(
+                  'Итоговая инструкция (превью)',
+                  style: BuilderType.title,
+                ),
               ),
               // Token Counter Indicator
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isOverLimit ? BuilderColors.warningTint : BuilderColors.surfaceDisabled,
+                  color: isOverLimit
+                      ? BuilderColors.warningTint
+                      : BuilderColors.surfaceDisabled,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isOverLimit ? BuilderColors.warning : BuilderColors.line,
+                    color: isOverLimit
+                        ? BuilderColors.warning
+                        : BuilderColors.line,
                   ),
                 ),
                 child: Text(
                   '~$tokens / 500 токенов',
                   style: BuilderType.small.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: isOverLimit ? BuilderColors.warning : BuilderColors.ink,
+                    color: isOverLimit
+                        ? BuilderColors.warning
+                        : BuilderColors.ink,
                   ),
                 ),
               ),
               IconButton(
                 key: const Key('instructions.previewToggleBtn'),
                 icon: BuilderIcon(
-                  _isPreviewExpanded ? BuilderGlyph.close : BuilderGlyph.chevron,
+                  _isPreviewExpanded
+                      ? BuilderGlyph.close
+                      : BuilderGlyph.chevron,
                   size: 16,
                 ),
                 onPressed: () {
@@ -661,12 +733,20 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
               ),
               child: const Row(
                 children: [
-                  BuilderIcon(BuilderGlyph.info, size: 16, color: BuilderColors.warning),
+                  BuilderIcon(
+                    BuilderGlyph.info,
+                    size: 16,
+                    color: BuilderColors.warning,
+                  ),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Инструкция слишком длинная: модель может пропускать правила в процессе диалога.',
-                      style: TextStyle(fontSize: 12, color: BuilderColors.warning, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: BuilderColors.warning,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -684,10 +764,14 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                 border: Border.all(color: BuilderColors.line),
               ),
               child: SelectableText(
-                activeText.isNotEmpty ? activeText : '(Инструкция пуста: включите правила или добавьте текст)',
+                activeText.isNotEmpty
+                    ? activeText
+                    : '(Инструкция пуста: включите правила или добавьте текст)',
                 style: BuilderType.mono.copyWith(
                   fontSize: 12,
-                  color: activeText.isNotEmpty ? BuilderColors.ink : BuilderColors.inkSecondary,
+                  color: activeText.isNotEmpty
+                      ? BuilderColors.ink
+                      : BuilderColors.inkSecondary,
                 ),
               ),
             ),
@@ -711,15 +795,16 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
         children: [
           Row(
             children: [
-              const BuilderIcon(BuilderGlyph.search, size: 20, color: BuilderColors.primary),
+              const BuilderIcon(
+                BuilderGlyph.search,
+                size: 20,
+                color: BuilderColors.primary,
+              ),
               const SizedBox(width: 8),
               const Expanded(
                 child: Text('Проверка «До / После»', style: BuilderType.h3),
               ),
-              BuilderBadge(
-                'Модель: ${selectedCategory.id}',
-                neutral: true,
-              ),
+              BuilderBadge('Модель: ${selectedCategory.id}', neutral: true),
             ],
           ),
           const SizedBox(height: 8),
@@ -741,7 +826,9 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
             width: double.infinity,
             child: BuilderButton(
               key: const Key('instructions.testBeforeAfterBtn'),
-              label: draftState.isTesting ? 'Выполняется проверка...' : 'Проверить ответ (До / После)',
+              label: draftState.isTesting
+                  ? 'Выполняется проверка...'
+                  : 'Проверить ответ (До / После)',
               icon: BuilderGlyph.bolt,
               variant: BuilderButtonVariant.primary,
               loading: draftState.isTesting,
@@ -786,7 +873,10 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                     children: [
                       const BuilderBadge('До (без инструкций)', neutral: true),
                       const Spacer(),
-                      Text('Трасса: ${draftState.testResult!.beforeTrace.requestId.substring(0, 18)}...', style: BuilderType.mono.copyWith(fontSize: 10)),
+                      Text(
+                        'Трасса: ${draftState.testResult!.beforeTrace.requestId.substring(0, 18)}...',
+                        style: BuilderType.mono.copyWith(fontSize: 10),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -813,15 +903,23 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                 children: [
                   Row(
                     children: [
-                      const BuilderBadge('После (с инструкциями)', icon: BuilderGlyph.check),
+                      const BuilderBadge(
+                        'После (с инструкциями)',
+                        icon: BuilderGlyph.check,
+                      ),
                       const Spacer(),
-                      Text('Трасса: ${draftState.testResult!.afterTrace.requestId.substring(0, 18)}...', style: BuilderType.mono.copyWith(fontSize: 10)),
+                      Text(
+                        'Трасса: ${draftState.testResult!.afterTrace.requestId.substring(0, 18)}...',
+                        style: BuilderType.mono.copyWith(fontSize: 10),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
                     draftState.testResult!.afterAnswer,
-                    style: BuilderType.body.copyWith(fontWeight: FontWeight.w500),
+                    style: BuilderType.body.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -842,7 +940,11 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
         children: [
           const Row(
             children: [
-              BuilderIcon(BuilderGlyph.info, size: 18, color: BuilderColors.primary),
+              BuilderIcon(
+                BuilderGlyph.info,
+                size: 18,
+                color: BuilderColors.primary,
+              ),
               SizedBox(width: 8),
               Expanded(
                 child: Text('Рефлексия учителя', style: BuilderType.title),
@@ -860,12 +962,15 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
             controller: _reflectionController,
             maxLines: 2,
             decoration: const InputDecoration(
-              hintText: 'Например: Ответ стал кратким, структурированным по пунктам и в роли помощника учителя биологии.',
+              hintText:
+                  'Например: Ответ стал кратким, структурированным по пунктам и в роли помощника учителя биологии.',
               border: OutlineInputBorder(),
             ),
             onChanged: (val) {
               setState(() {
-                _checkPracticeEvidence(ref.read(instructionDraftProvider(widget.ownerId)));
+                _checkPracticeEvidence(
+                  ref.read(instructionDraftProvider(widget.ownerId)),
+                );
               });
             },
           ),
@@ -895,7 +1000,11 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
       child: const Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          BuilderIcon(BuilderGlyph.info, size: 18, color: BuilderColors.inkSecondary),
+          BuilderIcon(
+            BuilderGlyph.info,
+            size: 18,
+            color: BuilderColors.inkSecondary,
+          ),
           SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -937,7 +1046,9 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
               key: const Key('instructions.saveBtn'),
               label: draftState.isSaving
                   ? 'Сохранение...'
-                  : (isLearnMode ? 'Завершить практику и сохранить' : 'Сохранить инструкции'),
+                  : (isLearnMode
+                        ? 'Завершить практику и сохранить'
+                        : 'Сохранить инструкции'),
               icon: BuilderGlyph.check,
               loading: draftState.isSaving,
               onPressed: draftState.isSaving
@@ -946,7 +1057,9 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                       if (isLearnMode && !_practiceEvidenceMet) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Для завершения практики выберите минимум 3 правила, запустите тест и напишите рефлексию.'),
+                            content: Text(
+                              'Для завершения практики выберите минимум 3 правила, запустите тест и напишите рефлексию.',
+                            ),
                           ),
                         );
                         return;
@@ -957,7 +1070,9 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                       if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Инструкции сохранены. Создана новая версия ассистента.'),
+                          content: Text(
+                            'Инструкции сохранены. Создана новая версия ассистента.',
+                          ),
                         ),
                       );
 
@@ -977,7 +1092,10 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
   // --------------------------------------------------------------------------
   // Dialog: Add Custom Rule (F11-04)
   // --------------------------------------------------------------------------
-  void _showAddCustomRuleDialog(BuildContext context, InstructionDraftNotifier draftNotifier) {
+  void _showAddCustomRuleDialog(
+    BuildContext context,
+    InstructionDraftNotifier draftNotifier,
+  ) {
     final titleController = TextEditingController();
     final textController = TextEditingController();
     final explanationController = TextEditingController();
@@ -1002,13 +1120,12 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                       value: selectedGroup,
                       isExpanded: true,
                       items: InstructionGroup.values.map((g) {
-                        return DropdownMenuItem(
-                          value: g,
-                          child: Text(g.label),
-                        );
+                        return DropdownMenuItem(value: g, child: Text(g.label));
                       }).toList(),
                       onChanged: (val) {
-                        if (val != null) setDialogState(() => selectedGroup = val);
+                        if (val != null) {
+                          setDialogState(() => selectedGroup = val);
+                        }
                       },
                     ),
                     const SizedBox(height: 12),
@@ -1026,7 +1143,8 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                       maxLines: 3,
                       decoration: const InputDecoration(
                         labelText: 'Текст правила (для модели)',
-                        hintText: 'Ты объясняешь химические реакции с формулами...',
+                        hintText:
+                            'Ты объясняешь химические реакции с формулами...',
                         border: OutlineInputBorder(),
                       ),
                     ),

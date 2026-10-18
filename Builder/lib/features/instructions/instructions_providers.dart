@@ -17,10 +17,11 @@ final instructionsRepositoryProvider = Provider<InstructionsRepository>((ref) {
   return PersistentInstructionsRepository(database: storageDatabase);
 });
 
-final instructionConfigProvider = FutureProvider.family<InstructionConfig, String>((ref, ownerId) async {
-  final repo = ref.watch(instructionsRepositoryProvider);
-  return repo.getInstructionConfig(ownerId);
-});
+final instructionConfigProvider =
+    FutureProvider.family<InstructionConfig, String>((ref, ownerId) async {
+      final repo = ref.watch(instructionsRepositoryProvider);
+      return repo.getInstructionConfig(ownerId);
+    });
 
 class TestComparisonResult {
   final String question;
@@ -81,11 +82,14 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
   @override
   InstructionDraftState build() {
     final initialConfigAsync = ref.watch(instructionConfigProvider(ownerId));
-    final initialConfig = initialConfigAsync.asData?.value ??
+    final initialConfig =
+        initialConfigAsync.asData?.value ??
         InstructionConfig(
           isRawMode: false,
           rawText: '',
-          rules: InstructionPresets.defaultRules.map((r) => r.copyWith(ownerId: ownerId)).toList(),
+          rules: InstructionPresets.defaultRules
+              .map((r) => r.copyWith(ownerId: ownerId))
+              .toList(),
         );
 
     return InstructionDraftState(config: initialConfig);
@@ -116,10 +120,7 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
     }
 
     state = state.copyWith(
-      config: state.config.copyWith(
-        isRawMode: isRawMode,
-        rawText: rawText,
-      ),
+      config: state.config.copyWith(isRawMode: isRawMode, rawText: rawText),
       errorMessage: null,
     );
   }
@@ -144,7 +145,9 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
       group: group,
       title: title.trim(),
       text: text.trim(),
-      explanation: explanation.trim().isNotEmpty ? explanation.trim() : 'Пользовательское правило',
+      explanation: explanation.trim().isNotEmpty
+          ? explanation.trim()
+          : 'Пользовательское правило',
       isEnabled: true,
       sortOrder: state.config.rules.length + 1,
       isCustom: true,
@@ -232,13 +235,25 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
           ),
         ],
         steps: const [
-          TraceStep(stepIndex: 1, title: 'Сборка запроса', description: 'Инструкция отсутствует', location: LocationTag.onDevice),
-          TraceStep(stepIndex: 2, title: 'Генерация ответа', description: 'Ответ базовой модели без правил', location: LocationTag.craftAi),
+          TraceStep(
+            stepIndex: 1,
+            title: 'Сборка запроса',
+            description: 'Инструкция отсутствует',
+            location: LocationTag.onDevice,
+          ),
+          TraceStep(
+            stepIndex: 2,
+            title: 'Генерация ответа',
+            description: 'Ответ базовой модели без правил',
+            location: LocationTag.craftAi,
+          ),
         ],
         usage: TraceUsage(
           promptTokens: beforeManifest.estimatedTokens,
           completionTokens: (beforeAnswer.length / 3.5).ceil(),
-          totalTokens: beforeManifest.estimatedTokens + (beforeAnswer.length / 3.5).ceil(),
+          totalTokens:
+              beforeManifest.estimatedTokens +
+              (beforeAnswer.length / 3.5).ceil(),
           durationMs: 320,
           isServerReported: false,
           costTier: 2,
@@ -256,7 +271,9 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
         category: category.id,
         catalogRevision: '2026-03-31-01',
         contextWindow: 128000,
-        activeInstruction: activeInstruction.isNotEmpty ? activeInstruction : null,
+        activeInstruction: activeInstruction.isNotEmpty
+            ? activeInstruction
+            : null,
         conversationHistory: const [],
         userPrompt: question,
       );
@@ -277,7 +294,9 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
           TraceLayer(
             type: TraceLayerType.instruction,
             title: 'Активная инструкция',
-            contentSnippet: activeInstruction.isNotEmpty ? activeInstruction : 'Инструкция пуста',
+            contentSnippet: activeInstruction.isNotEmpty
+                ? activeInstruction
+                : 'Инструкция пуста',
             tokenCount: (activeInstruction.length / 3.5).ceil(),
             location: LocationTag.onDevice,
           ),
@@ -297,13 +316,24 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
           ),
         ],
         steps: const [
-          TraceStep(stepIndex: 1, title: 'Сборка запроса', description: 'Подстановка инструкций учителя', location: LocationTag.onDevice),
-          TraceStep(stepIndex: 2, title: 'Генерация ответа', description: 'Ответ модели с учётом роли и ограничений', location: LocationTag.craftAi),
+          TraceStep(
+            stepIndex: 1,
+            title: 'Сборка запроса',
+            description: 'Подстановка инструкций учителя',
+            location: LocationTag.onDevice,
+          ),
+          TraceStep(
+            stepIndex: 2,
+            title: 'Генерация ответа',
+            description: 'Ответ модели с учётом роли и ограничений',
+            location: LocationTag.craftAi,
+          ),
         ],
         usage: TraceUsage(
           promptTokens: afterManifest.estimatedTokens,
           completionTokens: (afterAnswer.length / 3.5).ceil(),
-          totalTokens: afterManifest.estimatedTokens + (afterAnswer.length / 3.5).ceil(),
+          totalTokens:
+              afterManifest.estimatedTokens + (afterAnswer.length / 3.5).ceil(),
           durationMs: 340,
           isServerReported: false,
           costTier: 2,
@@ -327,10 +357,7 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
         executedAtUtc: now,
       );
 
-      state = state.copyWith(
-        isTesting: false,
-        testResult: result,
-      );
+      state = state.copyWith(isTesting: false, testResult: result);
 
       return result;
     } catch (e) {
@@ -352,26 +379,44 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
     }
 
     final buffer = StringBuffer();
-    final isBullet = instructionText.contains('Списком') || instructionText.contains('маркированными');
+    final isBullet =
+        instructionText.contains('Списком') ||
+        instructionText.contains('маркированными');
     final isMax5 = instructionText.contains('5 предложений');
     final isBold = instructionText.contains('жирным');
     final isBio = instructionText.contains('биологии');
 
     if (isBio) {
-      buffer.writeln('Здравствуйте! Как ваш методический помощник по биологии, объясняю суть процесса:');
+      buffer.writeln(
+        'Здравствуйте! Как ваш методический помощник по биологии, объясняю суть процесса:',
+      );
     }
 
     if (isBullet) {
-      buffer.writeln('• **Фотосинтез** — процесс образования органических веществ из воды и углекислого газа под действием солнечного света.');
-      buffer.writeln('• **Хлоропласты** — органоиды растительной клетки, содержащие зеленый пигмент хлорофилл, где и происходит синтез.');
-      buffer.writeln('• **Кислород** — побочный продукт реакции, выделяющийся в атмосферу для дыхания.');
-      buffer.writeln('• **Глюкоза** — питательное вещество, запасающее энергию для роста растения.');
+      buffer.writeln(
+        '• **Фотосинтез** — процесс образования органических веществ из воды и углекислого газа под действием солнечного света.',
+      );
+      buffer.writeln(
+        '• **Хлоропласты** — органоиды растительной клетки, содержащие зеленый пигмент хлорофилл, где и происходит синтез.',
+      );
+      buffer.writeln(
+        '• **Кислород** — побочный продукт реакции, выделяющийся в атмосферу для дыхания.',
+      );
+      buffer.writeln(
+        '• **Глюкоза** — питательное вещество, запасающее энергию для роста растения.',
+      );
     } else if (isMax5) {
-      buffer.writeln('Фотосинтез — это способ питания зеленых растений с помощью солнечного света. Растения поглощают воду и углекислый газ, вырабатывая глюкозу и выделяя кислород. Главную роль в этом процессе играет пигмент хлорофилл в листьях.');
+      buffer.writeln(
+        'Фотосинтез — это способ питания зеленых растений с помощью солнечного света. Растения поглощают воду и углекислый газ, вырабатывая глюкозу и выделяя кислород. Главную роль в этом процессе играет пигмент хлорофилл в листьях.',
+      );
     } else if (isBold) {
-      buffer.writeln('**Фотосинтез** — ключевой процесс биосферы, обеспечивающий всё живое энергией и кислородом. Реакция протекает в специальных клеточных структурах — **хлоропластах** при обязательном участии пигмента **хлорофилла**.');
+      buffer.writeln(
+        '**Фотосинтез** — ключевой процесс биосферы, обеспечивающий всё живое энергией и кислородом. Реакция протекает в специальных клеточных структурах — **хлоропластах** при обязательном участии пигмента **хлорофилла**.',
+      );
     } else {
-      buffer.writeln('Фотосинтез — это образование органических веществ из неорганических на свету в хлоропластах растений с выделением кислорода.');
+      buffer.writeln(
+        'Фотосинтез — это образование органических веществ из неорганических на свету в хлоропластах растений с выделением кислорода.',
+      );
     }
 
     return buffer.toString().trim();
@@ -389,10 +434,12 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
       final actualReason = (reason != null && reason.trim().isNotEmpty)
           ? reason.trim()
           : (state.config.isRawMode
-              ? 'Обновлен прямой текст инструкции'
-              : 'Обновлены правила (${state.config.enabledRulesCount} активных)');
+                ? 'Обновлен прямой текст инструкции'
+                : 'Обновлены правила (${state.config.enabledRulesCount} активных)');
 
-      final assistantController = ref.read(assistantControllerProvider(ownerId));
+      final assistantController = ref.read(
+        assistantControllerProvider(ownerId),
+      );
       await assistantController.saveInstructions(
         systemRules: systemRules,
         reason: actualReason,
@@ -413,6 +460,8 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
 }
 
 final instructionDraftProvider =
-    NotifierProvider.family<InstructionDraftNotifier, InstructionDraftState, String>(
-  InstructionDraftNotifier.new,
-);
+    NotifierProvider.family<
+      InstructionDraftNotifier,
+      InstructionDraftState,
+      String
+    >(InstructionDraftNotifier.new);

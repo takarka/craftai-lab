@@ -15,7 +15,8 @@ class AssistantVersionsPage extends ConsumerStatefulWidget {
   final String ownerId;
 
   @override
-  ConsumerState<AssistantVersionsPage> createState() => _AssistantVersionsPageState();
+  ConsumerState<AssistantVersionsPage> createState() =>
+      _AssistantVersionsPageState();
 }
 
 class _AssistantVersionsPageState extends ConsumerState<AssistantVersionsPage> {
@@ -50,7 +51,9 @@ class _AssistantVersionsPageState extends ConsumerState<AssistantVersionsPage> {
     );
 
     if (confirmed == true && mounted) {
-      await ref.read(assistantControllerProvider(widget.ownerId)).manualSaveVersion(reasonController.text);
+      await ref
+          .read(assistantControllerProvider(widget.ownerId))
+          .manualSaveVersion(reasonController.text);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Версия успешно сохранена')),
@@ -59,7 +62,10 @@ class _AssistantVersionsPageState extends ConsumerState<AssistantVersionsPage> {
     }
   }
 
-  Future<void> _handleRollback(AssistantVersion version, AssistantConfig? currentConfig) async {
+  Future<void> _handleRollback(
+    AssistantVersion version,
+    AssistantConfig? currentConfig,
+  ) async {
     if (version.isCurrent) return;
 
     final confirmed = await showRollbackConfirmationSheet(
@@ -71,7 +77,9 @@ class _AssistantVersionsPageState extends ConsumerState<AssistantVersionsPage> {
     if (confirmed == true && mounted) {
       final s = AppLocalizations.of(context);
       try {
-        await ref.read(assistantControllerProvider(widget.ownerId)).rollbackToVersion(version.versionNumber);
+        await ref
+            .read(assistantControllerProvider(widget.ownerId))
+            .rollbackToVersion(version.versionNumber);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(s.rollbackSuccess(version.versionNumber))),
@@ -91,7 +99,9 @@ class _AssistantVersionsPageState extends ConsumerState<AssistantVersionsPage> {
   Widget build(BuildContext context) {
     final s = AppLocalizations.of(context);
     final versionsAsync = ref.watch(assistantVersionsProvider(widget.ownerId));
-    final currentConfigAsync = ref.watch(assistantConfigProvider(widget.ownerId));
+    final currentConfigAsync = ref.watch(
+      assistantConfigProvider(widget.ownerId),
+    );
     final currentConfig = currentConfigAsync.asData?.value;
 
     return Scaffold(
@@ -113,13 +123,16 @@ class _AssistantVersionsPageState extends ConsumerState<AssistantVersionsPage> {
       body: SafeArea(
         child: versionsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, _) => Center(child: Text('Ошибка загрузки версий: $err')),
+          error: (err, _) =>
+              Center(child: Text('Ошибка загрузки версий: $err')),
           data: (versions) {
             if (versions.isEmpty) {
               return Center(
                 child: Text(
                   'История версий пуста',
-                  style: BuilderType.body.copyWith(color: BuilderColors.inkSecondary),
+                  style: BuilderType.body.copyWith(
+                    color: BuilderColors.inkSecondary,
+                  ),
                 ),
               );
             }
@@ -170,7 +183,9 @@ class _VersionTile extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: version.isCurrent ? BuilderColors.primary : BuilderColors.surfaceDisabled,
+                  color: version.isCurrent
+                      ? BuilderColors.primary
+                      : BuilderColors.surfaceDisabled,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -184,7 +199,10 @@ class _VersionTile extends StatelessWidget {
               const SizedBox(width: 8),
               if (version.isCurrent)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: BuilderColors.primaryTint,
                     borderRadius: BorderRadius.circular(BuilderRadii.chip),
@@ -192,7 +210,11 @@ class _VersionTile extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const BuilderIcon(BuilderGlyph.check, size: 15, color: BuilderColors.primary),
+                      const BuilderIcon(
+                        BuilderGlyph.check,
+                        size: 15,
+                        color: BuilderColors.primary,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         s.assistantVersionCurrent,
@@ -208,7 +230,9 @@ class _VersionTile extends StatelessWidget {
               const Spacer(),
               Text(
                 formattedDate,
-                style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
+                style: BuilderType.small.copyWith(
+                  color: BuilderColors.inkSecondary,
+                ),
               ),
             ],
           ),
@@ -217,18 +241,26 @@ class _VersionTile extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'Имя: ${version.snapshot.name} · Модель: ${version.snapshot.selectedCategory?.name ?? 'По умолчанию'} · Умений: ${version.snapshot.enabledSkills.length}',
-            style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
+            style: BuilderType.small.copyWith(
+              color: BuilderColors.inkSecondary,
+            ),
           ),
           if (version.missingResources.isNotEmpty) ...[
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.warning_amber_rounded, size: 16, color: BuilderColors.warning),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 16,
+                  color: BuilderColors.warning,
+                ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     s.assistantVersionMissingResources,
-                    style: BuilderType.small.copyWith(color: BuilderColors.warning),
+                    style: BuilderType.small.copyWith(
+                      color: BuilderColors.warning,
+                    ),
                   ),
                 ),
               ],

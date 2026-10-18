@@ -52,7 +52,9 @@ class LocalDataSettingsPage extends ConsumerWidget {
                     children: [
                       _DataRow(
                         icon: Icons.chat_bubble_outline,
-                        title: s.localDataConversations(data.conversationsCount),
+                        title: s.localDataConversations(
+                          data.conversationsCount,
+                        ),
                         subtitle: '${data.messagesCount} сообщений',
                       ),
                       const Divider(height: 16),
@@ -87,7 +89,9 @@ class LocalDataSettingsPage extends ConsumerWidget {
               const SizedBox(height: 6),
               Text(
                 s.localDataRetentionSubtitle,
-                style: BuilderType.body.copyWith(color: BuilderColors.inkSecondary),
+                style: BuilderType.body.copyWith(
+                  color: BuilderColors.inkSecondary,
+                ),
               ),
               const SizedBox(height: 12),
               BuilderSegments<int?>(
@@ -99,7 +103,9 @@ class LocalDataSettingsPage extends ConsumerWidget {
                 ],
                 value: retentionDays,
                 onChanged: (days) {
-                  ref.read(assistantControllerProvider(ownerId)).setRetentionDays(days);
+                  ref
+                      .read(assistantControllerProvider(ownerId))
+                      .setRetentionDays(days);
                 },
               ),
               const SizedBox(height: 32),
@@ -109,7 +115,9 @@ class LocalDataSettingsPage extends ConsumerWidget {
               const SizedBox(height: 6),
               Text(
                 'Полная очистка локальных материалов с возвратом к начальной настройке.',
-                style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
+                style: BuilderType.small.copyWith(
+                  color: BuilderColors.inkSecondary,
+                ),
               ),
               const SizedBox(height: 12),
               SizedBox(
@@ -119,7 +127,8 @@ class LocalDataSettingsPage extends ConsumerWidget {
                   label: s.assistantResetButton,
                   variant: BuilderButtonVariant.danger,
                   icon: BuilderGlyph.trash,
-                  onPressed: () => showResetConfirmationDialog(context, ownerId: ownerId),
+                  onPressed: () =>
+                      showResetConfirmationDialog(context, ownerId: ownerId),
                 ),
               ),
             ],
@@ -131,11 +140,7 @@ class LocalDataSettingsPage extends ConsumerWidget {
 }
 
 class _DataRow extends StatelessWidget {
-  const _DataRow({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-  });
+  const _DataRow({required this.icon, required this.title, this.subtitle});
 
   final IconData icon;
   final String title;
@@ -154,7 +159,12 @@ class _DataRow extends StatelessWidget {
               Text(title, style: BuilderType.title),
               if (subtitle != null) ...[
                 const SizedBox(height: 2),
-                Text(subtitle!, style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary)),
+                Text(
+                  subtitle!,
+                  style: BuilderType.small.copyWith(
+                    color: BuilderColors.inkSecondary,
+                  ),
+                ),
               ],
             ],
           ),

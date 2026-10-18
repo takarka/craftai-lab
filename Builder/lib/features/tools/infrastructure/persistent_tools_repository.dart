@@ -14,9 +14,7 @@ class PersistentToolsRepository implements ToolsRepository {
   final StorageDatabase database;
   final Map<String, OsPermissionStatus> _osPermissions = {};
 
-  PersistentToolsRepository({
-    required this.database,
-  });
+  PersistentToolsRepository({required this.database});
 
   Future<void> _ensureOpen() async {
     if (!database.isOpen) {
@@ -204,7 +202,10 @@ class PersistentToolsRepository implements ToolsRepository {
   }
 
   @override
-  Future<void> setOsPermission(String toolName, OsPermissionStatus status) async {
+  Future<void> setOsPermission(
+    String toolName,
+    OsPermissionStatus status,
+  ) async {
     _osPermissions[toolName] = status;
   }
 }
@@ -308,10 +309,7 @@ class InMemoryToolsRepository implements ToolsRepository {
     String ownerId, {
     int limit = 20,
   }) async {
-    return _invocations
-        .where((i) => i.ownerId == ownerId)
-        .take(limit)
-        .toList();
+    return _invocations.where((i) => i.ownerId == ownerId).take(limit).toList();
   }
 
   @override
@@ -320,7 +318,10 @@ class InMemoryToolsRepository implements ToolsRepository {
   }
 
   @override
-  Future<void> setOsPermission(String toolName, OsPermissionStatus status) async {
+  Future<void> setOsPermission(
+    String toolName,
+    OsPermissionStatus status,
+  ) async {
     _osPermissions[toolName] = status;
   }
 }

@@ -19,16 +19,17 @@ final secureTokenStorageProvider = Provider<SecureTokenStorage>((ref) {
   );
 });
 
-final persistentSessionRepositoryProvider = Provider<PersistentSessionRepository?>((ref) {
-  final tokenStorage = ref.watch(secureTokenStorageProvider);
-  final db = ref.watch(storageDatabaseProvider);
-  final wsService = ref.watch(workspaceStorageServiceProvider);
+final persistentSessionRepositoryProvider =
+    Provider<PersistentSessionRepository?>((ref) {
+      final tokenStorage = ref.watch(secureTokenStorageProvider);
+      final db = ref.watch(storageDatabaseProvider);
+      final wsService = ref.watch(workspaceStorageServiceProvider);
 
-  if (db == null || wsService == null) return null;
+      if (db == null || wsService == null) return null;
 
-  return PersistentSessionRepository(
-    tokenStorage: tokenStorage,
-    database: db,
-    workspaceStorageService: wsService,
-  );
-});
+      return PersistentSessionRepository(
+        tokenStorage: tokenStorage,
+        database: db,
+        workspaceStorageService: wsService,
+      );
+    });

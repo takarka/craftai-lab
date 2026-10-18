@@ -121,7 +121,13 @@ class ChatMessage {
     };
   }
 
-  factory ChatMessage.fromMap(Map<String, dynamic> map, {String? category, String? modelId, String? errorMessage, bool isReported = false}) {
+  factory ChatMessage.fromMap(
+    Map<String, dynamic> map, {
+    String? category,
+    String? modelId,
+    String? errorMessage,
+    bool isReported = false,
+  }) {
     return ChatMessage(
       id: map['id'] as String,
       conversationId: map['conversation_id'] as String,

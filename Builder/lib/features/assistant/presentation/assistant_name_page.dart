@@ -23,7 +23,10 @@ class _AssistantNamePageState extends ConsumerState<AssistantNamePage> {
   @override
   void initState() {
     super.initState();
-    final config = ref.read(assistantConfigProvider(widget.ownerId)).asData?.value;
+    final config = ref
+        .read(assistantConfigProvider(widget.ownerId))
+        .asData
+        ?.value;
     _controller = TextEditingController(text: config?.name ?? '');
   }
 
@@ -58,7 +61,9 @@ class _AssistantNamePageState extends ConsumerState<AssistantNamePage> {
     });
 
     try {
-      await ref.read(assistantControllerProvider(widget.ownerId)).saveName(text);
+      await ref
+          .read(assistantControllerProvider(widget.ownerId))
+          .saveName(text);
       if (mounted) {
         setState(() {
           _saving = false;
@@ -99,15 +104,14 @@ class _AssistantNamePageState extends ConsumerState<AssistantNamePage> {
             children: [
               // Character live preview (F09-V02)
               const Center(
-                child: BuilderCharacter(
-                  size: 96,
-                  mood: CharacterMood.idle,
-                ),
+                child: BuilderCharacter(size: 96, mood: CharacterMood.idle),
               ),
               const SizedBox(height: 16),
               Text(
                 s.assistantNameSubtitle,
-                style: BuilderType.body.copyWith(color: BuilderColors.inkSecondary),
+                style: BuilderType.body.copyWith(
+                  color: BuilderColors.inkSecondary,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -121,7 +125,8 @@ class _AssistantNamePageState extends ConsumerState<AssistantNamePage> {
                   TextField(
                     key: const Key('assistant.nameField'),
                     controller: _controller,
-                    maxLength: 35, // Soft buffer to allow viewing exceeding graphemes
+                    maxLength:
+                        35, // Soft buffer to allow viewing exceeding graphemes
                     onChanged: (val) {
                       setState(() {
                         _validate(val, s);
@@ -132,8 +137,12 @@ class _AssistantNamePageState extends ConsumerState<AssistantNamePage> {
                       errorText: _error,
                       counterText: '$currentCharactersCount / 30',
                       counterStyle: TextStyle(
-                        color: isCountExceeded ? BuilderColors.warning : BuilderColors.inkSecondary,
-                        fontWeight: isCountExceeded ? FontWeight.w700 : FontWeight.w400,
+                        color: isCountExceeded
+                            ? BuilderColors.warning
+                            : BuilderColors.inkSecondary,
+                        fontWeight: isCountExceeded
+                            ? FontWeight.w700
+                            : FontWeight.w400,
                       ),
                     ),
                   ),
@@ -149,7 +158,10 @@ class _AssistantNamePageState extends ConsumerState<AssistantNamePage> {
                       key: const Key('assistant.nameSaveBtn'),
                       label: 'Сохранить',
                       loading: _saving,
-                      onPressed: (_controller.text.trim().isEmpty || isCountExceeded) ? null : _handleSave,
+                      onPressed:
+                          (_controller.text.trim().isEmpty || isCountExceeded)
+                          ? null
+                          : _handleSave,
                     ),
                   ),
                   const SizedBox(width: 12),

@@ -62,7 +62,9 @@ class Conversation {
       title: map['title'] as String,
       createdAtUtc: DateTime.parse(map['created_at_utc'] as String),
       activityAtUtc: DateTime.parse(map['activity_at_utc'] as String),
-      retentionPolicy: RetentionPolicy.fromString(map['retention_policy'] as String?),
+      retentionPolicy: RetentionPolicy.fromString(
+        map['retention_policy'] as String?,
+      ),
     );
   }
 }

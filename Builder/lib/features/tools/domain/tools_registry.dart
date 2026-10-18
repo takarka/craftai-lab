@@ -15,7 +15,8 @@ class ToolsRegistry {
     const ToolDefinition(
       name: readCalendar,
       displayName: 'Чтение календаря',
-      description: 'Просмотреть события и расписание уроков за указанный период времени.',
+      description:
+          'Просмотреть события и расписание уроков за указанный период времени.',
       category: ToolCategory.calendar,
       capability: ToolCapability.readOnly,
       defaultOsPermission: OsPermissionStatus.notRequested,
@@ -24,11 +25,13 @@ class ToolsRegistry {
         'properties': {
           'start_date': {
             'type': 'string',
-            'description': 'Начало периода (ISO-8601, например 2026-10-20T08:00:00Z)',
+            'description':
+                'Начало периода (ISO-8601, например 2026-10-20T08:00:00Z)',
           },
           'end_date': {
             'type': 'string',
-            'description': 'Конец периода (ISO-8601, например 2026-10-20T18:00:00Z)',
+            'description':
+                'Конец периода (ISO-8601, например 2026-10-20T18:00:00Z)',
           },
         },
         'required': ['start_date', 'end_date'],
@@ -37,7 +40,8 @@ class ToolsRegistry {
     const ToolDefinition(
       name: createCalendarEvent,
       displayName: 'Создание события',
-      description: 'Создать новое событие, урок или консультацию в календаре (требует подтверждения учителя).',
+      description:
+          'Создать новое событие, урок или консультацию в календаре (требует подтверждения учителя).',
       category: ToolCategory.calendar,
       capability: ToolCapability.requiresConfirmation,
       defaultOsPermission: OsPermissionStatus.notRequested,
@@ -46,7 +50,8 @@ class ToolsRegistry {
         'properties': {
           'title': {
             'type': 'string',
-            'description': 'Название события или урока (например: «Консультация по алгебре 7Б»)',
+            'description':
+                'Название события или урока (например: «Консультация по алгебре 7Б»)',
           },
           'start_time': {
             'type': 'string',
@@ -56,10 +61,7 @@ class ToolsRegistry {
             'type': 'string',
             'description': 'Время окончания (ISO-8601)',
           },
-          'is_all_day': {
-            'type': 'boolean',
-            'description': 'Весь день',
-          },
+          'is_all_day': {'type': 'boolean', 'description': 'Весь день'},
           'location': {
             'type': 'string',
             'description': 'Кабинет или место проведения',
@@ -77,21 +79,16 @@ class ToolsRegistry {
     const ToolDefinition(
       name: createNote,
       displayName: 'Создать заметку',
-      description: 'Сохранить учебный конспект, план урока или черновик в приватных заметках на устройстве.',
+      description:
+          'Сохранить учебный конспект, план урока или черновик в приватных заметках на устройстве.',
       category: ToolCategory.notes,
       capability: ToolCapability.requiresConfirmation,
       defaultOsPermission: OsPermissionStatus.notRequired,
       parametersSchema: {
         'type': 'object',
         'properties': {
-          'title': {
-            'type': 'string',
-            'description': 'Заголовок заметки',
-          },
-          'content': {
-            'type': 'string',
-            'description': 'Содержимое заметки',
-          },
+          'title': {'type': 'string', 'description': 'Заголовок заметки'},
+          'content': {'type': 'string', 'description': 'Содержимое заметки'},
         },
         'required': ['title', 'content'],
       },
@@ -99,7 +96,8 @@ class ToolsRegistry {
     const ToolDefinition(
       name: readNotes,
       displayName: 'Поиск заметок',
-      description: 'Найти и прочитать сохранённые заметки и черновики ассистента.',
+      description:
+          'Найти и прочитать сохранённые заметки и черновики ассистента.',
       category: ToolCategory.notes,
       capability: ToolCapability.readOnly,
       defaultOsPermission: OsPermissionStatus.notRequired,
@@ -108,7 +106,8 @@ class ToolsRegistry {
         'properties': {
           'query': {
             'type': 'string',
-            'description': 'Поисковый запрос по заголовку или содержимому заметок',
+            'description':
+                'Поисковый запрос по заголовку или содержимому заметок',
           },
         },
       },
@@ -116,7 +115,8 @@ class ToolsRegistry {
     const ToolDefinition(
       name: deleteNote,
       displayName: 'Удалить заметку',
-      description: 'Удалить сохранённую заметку (требует подтверждения учителя).',
+      description:
+          'Удалить сохранённую заметку (требует подтверждения учителя).',
       category: ToolCategory.notes,
       capability: ToolCapability.requiresConfirmation,
       defaultOsPermission: OsPermissionStatus.notRequired,
@@ -136,7 +136,8 @@ class ToolsRegistry {
     const ToolDefinition(
       name: prepareCall,
       displayName: 'Подготовить звонок / SMS',
-      description: 'Подготовить черновик вызова или сообщения и открыть системный диалог набора номера (без автовызова).',
+      description:
+          'Подготовить черновик вызова или сообщения и открыть системный диалог набора номера (без автовызова).',
       category: ToolCategory.communication,
       capability: ToolCapability.requiresConfirmation,
       defaultOsPermission: OsPermissionStatus.notRequired,
@@ -162,7 +163,8 @@ class ToolsRegistry {
     const ToolDefinition(
       name: webSearch,
       displayName: 'Поиск в интернете',
-      description: 'Найти актуальные образовательные статьи или материалы в интернете через CraftAI Search (по умолчанию выключен).',
+      description:
+          'Найти актуальные образовательные статьи или материалы в интернете через CraftAI Search (по умолчанию выключен).',
       category: ToolCategory.search,
       capability: ToolCapability.readOnly,
       defaultOsPermission: OsPermissionStatus.notRequired,

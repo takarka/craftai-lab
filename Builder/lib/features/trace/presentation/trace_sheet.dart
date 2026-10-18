@@ -5,21 +5,13 @@ import '../domain/request_trace.dart';
 import '../domain/trace_analogy.dart';
 import '../trace_providers.dart';
 
-enum TraceTab {
-  schema,
-  xray,
-  analogy,
-}
+enum TraceTab { schema, xray, analogy }
 
 class TraceSheet extends ConsumerStatefulWidget {
   final String requestId;
   final VoidCallback? onClose;
 
-  const TraceSheet({
-    super.key,
-    required this.requestId,
-    this.onClose,
-  });
+  const TraceSheet({super.key, required this.requestId, this.onClose});
 
   static Future<void> show(BuildContext context, {required String requestId}) {
     return showModalBottomSheet(
@@ -52,7 +44,8 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
   @override
   Widget build(BuildContext context) {
     final traceAsync = ref.watch(traceProvider(widget.requestId));
-    final isKk = Localizations.localeOf(context).languageCode.toLowerCase() == 'kk';
+    final isKk =
+        Localizations.localeOf(context).languageCode.toLowerCase() == 'kk';
 
     return traceAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -65,7 +58,9 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
               Icon(Icons.error_outline, size: 48, color: BuilderColors.warning),
               const SizedBox(height: 12),
               Text(
-                isKk ? 'Трассаны жүктеу мүмкін болмады' : 'Не удалось загрузить трассу',
+                isKk
+                    ? 'Трассаны жүктеу мүмкін болмады'
+                    : 'Не удалось загрузить трассу',
                 style: BuilderType.title,
               ),
               const SizedBox(height: 8),
@@ -84,7 +79,11 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.find_in_page_outlined, size: 48, color: BuilderColors.inkSecondary),
+                Icon(
+                  Icons.find_in_page_outlined,
+                  size: 48,
+                  color: BuilderColors.inkSecondary,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   isKk ? 'Трасса табылмады' : 'Трасса не найдена',
@@ -238,7 +237,7 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
                       color: Color(0x1F0B1B33),
                       blurRadius: 3,
                       offset: Offset(0, 1),
-                    )
+                    ),
                   ]
                 : null,
           ),
@@ -247,7 +246,9 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: isActive ? BuilderColors.primary : BuilderColors.inkSecondary,
+              color: isActive
+                  ? BuilderColors.primary
+                  : BuilderColors.inkSecondary,
             ),
           ),
         ),
@@ -284,8 +285,12 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
         else if (trace.status == TraceStatus.error)
           _buildStatusBanner(
             icon: Icons.error_outline,
-            title: isKk ? 'Сұраныс қатемен аяқталды' : 'Ошибка выполнения запроса',
-            subtitle: trace.errorCode ?? (isKk ? 'Модель жауап бермеді.' : 'Модель не вернула ответ.'),
+            title: isKk
+                ? 'Сұраныс қатемен аяқталды'
+                : 'Ошибка выполнения запроса',
+            subtitle:
+                trace.errorCode ??
+                (isKk ? 'Модель жауап бермеді.' : 'Модель не вернула ответ.'),
             color: BuilderColors.warning,
           ),
 
@@ -328,7 +333,11 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: color),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -343,7 +352,12 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
     );
   }
 
-  Widget _buildStepItem(TraceStep step, bool isLast, RequestTrace trace, bool isKk) {
+  Widget _buildStepItem(
+    TraceStep step,
+    bool isLast,
+    RequestTrace trace,
+    bool isKk,
+  ) {
     final iconColor = step.location == LocationTag.abroad
         ? const Color(0xFFE8772E)
         : BuilderColors.primary;
@@ -465,17 +479,27 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
         style: TextStyle(
           fontSize: 10.5,
           fontWeight: FontWeight.w600,
-          color: isAbroad ? const Color(0xFFE65100) : BuilderColors.inkSecondary,
+          color: isAbroad
+              ? const Color(0xFFE65100)
+              : BuilderColors.inkSecondary,
         ),
       ),
     );
   }
 
   Widget _buildTokenDistributionBar(RequestTrace trace, bool isKk) {
-    final instruction = trace.layers.where((l) => l.type == TraceLayerType.instruction).fold(0, (sum, l) => sum + l.tokenCount);
-    final memory = trace.layers.where((l) => l.type == TraceLayerType.memory).fold(0, (sum, l) => sum + l.tokenCount);
-    final retrieval = trace.layers.where((l) => l.type == TraceLayerType.retrieval).fold(0, (sum, l) => sum + l.tokenCount);
-    final userPrompt = trace.layers.where((l) => l.type == TraceLayerType.userPrompt).fold(0, (sum, l) => sum + l.tokenCount);
+    final instruction = trace.layers
+        .where((l) => l.type == TraceLayerType.instruction)
+        .fold(0, (sum, l) => sum + l.tokenCount);
+    final memory = trace.layers
+        .where((l) => l.type == TraceLayerType.memory)
+        .fold(0, (sum, l) => sum + l.tokenCount);
+    final retrieval = trace.layers
+        .where((l) => l.type == TraceLayerType.retrieval)
+        .fold(0, (sum, l) => sum + l.tokenCount);
+    final userPrompt = trace.layers
+        .where((l) => l.type == TraceLayerType.userPrompt)
+        .fold(0, (sum, l) => sum + l.tokenCount);
 
     final total = instruction + memory + retrieval + userPrompt;
     if (total == 0) return const SizedBox.shrink();
@@ -519,13 +543,25 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
           runSpacing: 4,
           children: [
             if (instruction > 0)
-              _buildLegendDot(BuilderColors.primary, '${isKk ? 'Нұсқаулық' : 'Инструкция'} $instruction'),
+              _buildLegendDot(
+                BuilderColors.primary,
+                '${isKk ? 'Нұсқаулық' : 'Инструкция'} $instruction',
+              ),
             if (memory > 0)
-              _buildLegendDot(const Color(0xFFE8772E), '${isKk ? 'Жад' : 'Память'} $memory'),
+              _buildLegendDot(
+                const Color(0xFFE8772E),
+                '${isKk ? 'Жад' : 'Память'} $memory',
+              ),
             if (retrieval > 0)
-              _buildLegendDot(const Color(0xFF7FA3E0), '${isKk ? 'Құжаттар' : 'Документы'} $retrieval'),
+              _buildLegendDot(
+                const Color(0xFF7FA3E0),
+                '${isKk ? 'Құжаттар' : 'Документы'} $retrieval',
+              ),
             if (userPrompt > 0)
-              _buildLegendDot(BuilderColors.ink, '${isKk ? 'Сұрақ' : 'Вопрос'} $userPrompt'),
+              _buildLegendDot(
+                BuilderColors.ink,
+                '${isKk ? 'Сұрақ' : 'Вопрос'} $userPrompt',
+              ),
           ],
         ),
         const SizedBox(height: 4),
@@ -544,7 +580,10 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
         ),
         const SizedBox(width: 4),
         Text(
@@ -592,7 +631,11 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
     );
   }
 
-  Widget _buildMetricCard({required String value, required String label, String? sublabel}) {
+  Widget _buildMetricCard({
+    required String value,
+    required String label,
+    String? sublabel,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       decoration: BoxDecoration(
@@ -613,18 +656,12 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
           const SizedBox(height: 2),
           Text(
             label,
-            style: TextStyle(
-              fontSize: 11,
-              color: BuilderColors.inkSecondary,
-            ),
+            style: TextStyle(fontSize: 11, color: BuilderColors.inkSecondary),
           ),
           if (sublabel != null)
             Text(
               sublabel,
-              style: TextStyle(
-                fontSize: 9.5,
-                color: BuilderColors.inkDisabled,
-              ),
+              style: TextStyle(fontSize: 9.5, color: BuilderColors.inkDisabled),
             ),
         ],
       ),
@@ -731,10 +768,7 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: 5,
-              color: borderColor,
-            ),
+            Container(width: 5, color: borderColor),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(12),
@@ -756,7 +790,10 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
                         if (layer.tokenCount > 0) ...[
                           Text(
                             '${layer.tokenCount} ${isKk ? 'ток.' : 'ток.'}',
-                            style: TextStyle(fontSize: 11.5, color: BuilderColors.inkSecondary),
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              color: BuilderColors.inkSecondary,
+                            ),
                           ),
                           const SizedBox(width: 6),
                         ],
@@ -768,7 +805,10 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
                     const SizedBox(height: 6),
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF3F5FA),
                         borderRadius: BorderRadius.circular(8),
@@ -852,7 +892,11 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.lightbulb_outline, color: BuilderColors.primary, size: 20),
+              Icon(
+                Icons.lightbulb_outline,
+                color: BuilderColors.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text.rich(
@@ -901,7 +945,11 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Icon(Icons.arrow_forward, size: 16, color: BuilderColors.inkDisabled),
+            child: Icon(
+              Icons.arrow_forward,
+              size: 16,
+              color: BuilderColors.inkDisabled,
+            ),
           ),
           Expanded(
             child: Container(

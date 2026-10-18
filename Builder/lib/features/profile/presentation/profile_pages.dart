@@ -572,9 +572,7 @@ class _RemindersCard extends ConsumerWidget {
             key: const Key('profile.remindersDropdown'),
             initialValue: reminderState.frequency,
             isExpanded: true,
-            decoration: InputDecoration(
-              labelText: s.reminders,
-            ),
+            decoration: InputDecoration(labelText: s.reminders),
             items: ReminderFrequency.values
                 .map(
                   (freq) => DropdownMenuItem(
@@ -632,7 +630,11 @@ class _RemindersCard extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(
                       children: [
-                        const Icon(Icons.alarm, size: 16, color: BuilderColors.primary),
+                        const Icon(
+                          Icons.alarm,
+                          size: 16,
+                          color: BuilderColors.primary,
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -706,7 +708,8 @@ class _AccountDeletionCard extends ConsumerStatefulWidget {
   final String? ownerId;
 
   @override
-  ConsumerState<_AccountDeletionCard> createState() => _AccountDeletionCardState();
+  ConsumerState<_AccountDeletionCard> createState() =>
+      _AccountDeletionCardState();
 }
 
 class _AccountDeletionCardState extends ConsumerState<_AccountDeletionCard> {
@@ -788,9 +791,7 @@ class _AccountDeletionCardState extends ConsumerState<_AccountDeletionCard> {
           TextButton.icon(
             key: const Key('profile.deleteAccountBtn'),
             onPressed: _deleting ? null : _handleDelete,
-            style: TextButton.styleFrom(
-              foregroundColor: BuilderColors.warning,
-            ),
+            style: TextButton.styleFrom(foregroundColor: BuilderColors.warning),
             icon: _deleting
                 ? const SizedBox.square(
                     dimension: 18,
@@ -818,7 +819,10 @@ class _ProfileHelpPageState extends State<ProfileHelpPage> {
     final s = ProfileStrings.of(context);
     final query = _query.trim().toLowerCase();
     final items = s.faq
-        .where((item) => '${item.question} ${item.answer}'.toLowerCase().contains(query))
+        .where(
+          (item) =>
+              '${item.question} ${item.answer}'.toLowerCase().contains(query),
+        )
         .toList();
     return _ProfileScaffold(
       title: s.help,
@@ -945,18 +949,14 @@ class _SupportContactSheetState extends State<_SupportContactSheet> {
           TextField(
             key: const Key('profile.supportSubject'),
             controller: _subjectController,
-            decoration: InputDecoration(
-              labelText: s.supportSubject,
-            ),
+            decoration: InputDecoration(labelText: s.supportSubject),
           ),
           const SizedBox(height: BuilderSpace.sm),
           TextField(
             key: const Key('profile.supportMessage'),
             controller: _messageController,
             maxLines: 4,
-            decoration: InputDecoration(
-              labelText: s.supportMessage,
-            ),
+            decoration: InputDecoration(labelText: s.supportMessage),
           ),
           const SizedBox(height: BuilderSpace.md),
           BuilderButton(

@@ -248,10 +248,12 @@ class RequestTrace {
           .map((message) => message['content'] ?? '')
           .join('\n\n');
 
-      if (manifest.activeInstruction != null && manifest.activeInstruction!.trim().isNotEmpty) {
+      if (manifest.activeInstruction != null &&
+          manifest.activeInstruction!.trim().isNotEmpty) {
         instructionSnippet = manifest.activeInstruction!;
         instructionTokens = estimator.estimateTokens(instructionSnippet);
-      } else if (rawSystemText.trim().isNotEmpty && manifest.knowledgeChunks.isEmpty) {
+      } else if (rawSystemText.trim().isNotEmpty &&
+          manifest.knowledgeChunks.isEmpty) {
         instructionSnippet = rawSystemText;
         instructionTokens = estimator.estimateTokens(instructionSnippet);
       } else {
@@ -265,7 +267,9 @@ class RequestTrace {
         memoryTokens = 0;
       }
       if (manifest.knowledgeChunks.isNotEmpty) {
-        retrievalSnippet = manifest.knowledgeChunks.map((c) => '[Источник]: $c').join('\n\n');
+        retrievalSnippet = manifest.knowledgeChunks
+            .map((c) => '[Источник]: $c')
+            .join('\n\n');
         retrievalTokens = estimator.estimateTokens(retrievalSnippet);
       } else {
         retrievalTokens = 0;

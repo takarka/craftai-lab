@@ -55,7 +55,8 @@ class ToolDefinition {
     required this.parametersSchema,
   });
 
-  bool get requiresConfirmation => capability == ToolCapability.requiresConfirmation;
+  bool get requiresConfirmation =>
+      capability == ToolCapability.requiresConfirmation;
 
   /// Returns wire-format schema for LLM function calling / tools array.
   Map<String, dynamic> toWireSchema() {
@@ -81,7 +82,8 @@ class ToolDefinition {
       }
     }
 
-    final properties = parametersSchema['properties'] as Map<String, dynamic>? ?? {};
+    final properties =
+        parametersSchema['properties'] as Map<String, dynamic>? ?? {};
     for (final entry in args.entries) {
       final propName = entry.key;
       final propVal = entry.value;
@@ -98,9 +100,12 @@ class ToolDefinition {
           errors.add('Параметр $propName должен быть целым числом');
         }
 
-        if (expectedType == 'string' && (propName.endsWith('_time') || propName.endsWith('_date'))) {
+        if (expectedType == 'string' &&
+            (propName.endsWith('_time') || propName.endsWith('_date'))) {
           if (propVal is String && DateTime.tryParse(propVal) == null) {
-            errors.add('Параметр $propName должен содержать корректную дату/время ISO-8601');
+            errors.add(
+              'Параметр $propName должен содержать корректную дату/время ISO-8601',
+            );
           }
         }
       }

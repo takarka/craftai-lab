@@ -43,9 +43,11 @@ class McpConnector {
       id: craftAiLessonsId,
       title: 'Каталог уроков CraftAI',
       subtitle: 'Методические материалы и готовые планы уроков',
-      description: 'Учебный MCP-сервер с базой проверенных методических планов уроков по математике, физике и другим школьным предметам.',
+      description:
+          'Учебный MCP-сервер с базой проверенных методических планов уроков по математике, физике и другим школьным предметам.',
       isComingSoon: false,
-      dataDisclosure: 'Передаёт поисковые запросы по теме урока в каталог CraftAI. '
+      dataDisclosure:
+          'Передаёт поисковые запросы по теме урока в каталог CraftAI. '
           'Возвращает тексты планов уроков и конспектов. Не передаёт персональные данные учеников.',
       glyph: BuilderGlyph.doc,
       capabilities: [
@@ -57,7 +59,8 @@ class McpConnector {
       id: googleDriveId,
       title: 'Google Диск',
       subtitle: 'Школьные документы и рабочие программы',
-      description: 'Интеграция с личными и общими папками Google Drive для быстрого поиска учебных документов.',
+      description:
+          'Интеграция с личными и общими папками Google Drive для быстрого поиска учебных документов.',
       isComingSoon: true,
       dataDisclosure: 'Потребует авторизацию через аккаунт Google.',
       glyph: BuilderGlyph.cloud,
@@ -66,18 +69,22 @@ class McpConnector {
       id: googleCalendarId,
       title: 'Google Календарь',
       subtitle: 'Синхронизация школьного расписания',
-      description: 'Двусторонняя синхронизация уроков и консультаций с внешним Google Календарём.',
+      description:
+          'Двусторонняя синхронизация уроков и консультаций с внешним Google Календарём.',
       isComingSoon: true,
-      dataDisclosure: 'Потребует доступ к просмотру и созданию событий в Google Calendar.',
+      dataDisclosure:
+          'Потребует доступ к просмотру и созданию событий в Google Calendar.',
       glyph: BuilderGlyph.calendar,
     ),
     McpConnector(
       id: kundelikId,
       title: 'Электронный журнал',
       subtitle: 'Темы уроков и расписание классов',
-      description: 'Интеграция со школьным журналом для чтения утверждённого поурочного планирования.',
+      description:
+          'Интеграция со школьным журналом для чтения утверждённого поурочного планирования.',
       isComingSoon: true,
-      dataDisclosure: 'Потребует подключение к закрытому API школьного портала.',
+      dataDisclosure:
+          'Потребует подключение к закрытому API школьного портала.',
       glyph: BuilderGlyph.doc,
     ),
   ];

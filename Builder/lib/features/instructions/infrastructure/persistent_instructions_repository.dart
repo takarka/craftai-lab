@@ -54,21 +54,17 @@ class PersistentInstructionsRepository implements InstructionsRepository {
       final defaultRules = InstructionPresets.defaultRules;
 
       for (final rule in defaultRules) {
-        batch.insert(
-          StorageSchemaV1.tableInstructionRules,
-          {
-            'id': '${rule.id}_$ownerId',
-            'owner_id': ownerId,
-            'group_name': rule.group.id,
-            'rule_text': rule.text,
-            'is_enabled': rule.isEnabled ? 1 : 0,
-            'sort_order': rule.sortOrder,
-            'source': 'preset',
-            'revision': 1,
-            'updated_at_utc': nowUtc,
-          },
-          conflictAlgorithm: ConflictAlgorithm.ignore,
-        );
+        batch.insert(StorageSchemaV1.tableInstructionRules, {
+          'id': '${rule.id}_$ownerId',
+          'owner_id': ownerId,
+          'group_name': rule.group.id,
+          'rule_text': rule.text,
+          'is_enabled': rule.isEnabled ? 1 : 0,
+          'sort_order': rule.sortOrder,
+          'source': 'preset',
+          'revision': 1,
+          'updated_at_utc': nowUtc,
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
       }
       await batch.commit(noResult: true);
 
@@ -122,7 +118,9 @@ class PersistentInstructionsRepository implements InstructionsRepository {
 
     // Check if raw mode was saved in systemRules
     final isRaw = systemRules.isNotEmpty && systemRules.first == '__RAW_MODE__';
-    final rawText = (isRaw && systemRules.length > 1) ? systemRules[1] : InstructionConfig.assemble(dbRules);
+    final rawText = (isRaw && systemRules.length > 1)
+        ? systemRules[1]
+        : InstructionConfig.assemble(dbRules);
 
     return InstructionConfig(
       isRawMode: isRaw,
@@ -132,29 +130,30 @@ class PersistentInstructionsRepository implements InstructionsRepository {
   }
 
   @override
-  Future<void> saveInstructionConfig(String ownerId, InstructionConfig config) async {
+  Future<void> saveInstructionConfig(
+    String ownerId,
+    InstructionConfig config,
+  ) async {
     await _ensureOpen();
     final nowUtc = DateTime.now().toUtc().toIso8601String();
 
     await database.db.transaction((txn) async {
       // 1. Sync rules in tableInstructionRules
       for (final rule in config.rules) {
-        final ruleId = rule.id.contains(ownerId) ? rule.id : '${rule.id}_$ownerId';
-        await txn.insert(
-          StorageSchemaV1.tableInstructionRules,
-          {
-            'id': ruleId,
-            'owner_id': ownerId,
-            'group_name': rule.group.id,
-            'rule_text': rule.text,
-            'is_enabled': rule.isEnabled ? 1 : 0,
-            'sort_order': rule.sortOrder,
-            'source': rule.isCustom ? 'custom' : 'preset',
-            'revision': rule.revision + 1,
-            'updated_at_utc': nowUtc,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        final ruleId = rule.id.contains(ownerId)
+            ? rule.id
+            : '${rule.id}_$ownerId';
+        await txn.insert(StorageSchemaV1.tableInstructionRules, {
+          'id': ruleId,
+          'owner_id': ownerId,
+          'group_name': rule.group.id,
+          'rule_text': rule.text,
+          'is_enabled': rule.isEnabled ? 1 : 0,
+          'sort_order': rule.sortOrder,
+          'source': rule.isCustom ? 'custom' : 'preset',
+          'revision': rule.revision + 1,
+          'updated_at_utc': nowUtc,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
 
       // 2. Sync system_rules_json in tableAssistantConfigurations
@@ -177,21 +176,17 @@ class PersistentInstructionsRepository implements InstructionsRepository {
     final nowUtc = DateTime.now().toUtc().toIso8601String();
     final ruleId = rule.id.contains(ownerId) ? rule.id : '${rule.id}_$ownerId';
 
-    await database.db.insert(
-      StorageSchemaV1.tableInstructionRules,
-      {
-        'id': ruleId,
-        'owner_id': ownerId,
-        'group_name': rule.group.id,
-        'rule_text': rule.text,
-        'is_enabled': rule.isEnabled ? 1 : 0,
-        'sort_order': rule.sortOrder,
-        'source': 'custom',
-        'revision': 1,
-        'updated_at_utc': nowUtc,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await database.db.insert(StorageSchemaV1.tableInstructionRules, {
+      'id': ruleId,
+      'owner_id': ownerId,
+      'group_name': rule.group.id,
+      'rule_text': rule.text,
+      'is_enabled': rule.isEnabled ? 1 : 0,
+      'sort_order': rule.sortOrder,
+      'source': 'custom',
+      'revision': 1,
+      'updated_at_utc': nowUtc,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   @override
@@ -218,28 +213,22 @@ class PersistentInstructionsRepository implements InstructionsRepository {
 
       final defaultRules = InstructionPresets.defaultRules;
       for (final rule in defaultRules) {
-        await txn.insert(
-          StorageSchemaV1.tableInstructionRules,
-          {
-            'id': '${rule.id}_$ownerId',
-            'owner_id': ownerId,
-            'group_name': rule.group.id,
-            'rule_text': rule.text,
-            'is_enabled': 0,
-            'sort_order': rule.sortOrder,
-            'source': 'preset',
-            'revision': 1,
-            'updated_at_utc': nowUtc,
-          },
-        );
+        await txn.insert(StorageSchemaV1.tableInstructionRules, {
+          'id': '${rule.id}_$ownerId',
+          'owner_id': ownerId,
+          'group_name': rule.group.id,
+          'rule_text': rule.text,
+          'is_enabled': 0,
+          'sort_order': rule.sortOrder,
+          'source': 'preset',
+          'revision': 1,
+          'updated_at_utc': nowUtc,
+        });
       }
 
       await txn.update(
         StorageSchemaV1.tableAssistantConfigurations,
-        {
-          'system_rules_json': '[]',
-          'updated_at_utc': nowUtc,
-        },
+        {'system_rules_json': '[]', 'updated_at_utc': nowUtc},
         where: 'owner_id = ?',
         whereArgs: [ownerId],
       );

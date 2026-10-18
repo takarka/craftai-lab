@@ -66,8 +66,12 @@ class ToolInvocationRecord {
       invocationSource: map['invocation_source'] as String? ?? 'assistant_chat',
       args: parsedArgs,
       result: parsedResult,
-      startedAtUtc: DateTime.tryParse(map['started_at_utc'] as String? ?? '')?.toUtc() ?? DateTime.now().toUtc(),
-      completedAtUtc: DateTime.tryParse(map['completed_at_utc'] as String? ?? '')?.toUtc(),
+      startedAtUtc:
+          DateTime.tryParse(map['started_at_utc'] as String? ?? '')?.toUtc() ??
+          DateTime.now().toUtc(),
+      completedAtUtc: DateTime.tryParse(
+        map['completed_at_utc'] as String? ?? '',
+      )?.toUtc(),
       executionId: map['execution_id'] as String?,
     );
   }

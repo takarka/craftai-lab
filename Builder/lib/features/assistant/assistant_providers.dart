@@ -19,7 +19,10 @@ final assistantRepositoryProvider = Provider<AssistantRepository?>((ref) {
   return PersistentAssistantRepository(database: db, workspaceService: ws);
 });
 
-final completedCourseLevelsProvider = FutureProvider.family<Set<int>, String>((ref, ownerId) async {
+final completedCourseLevelsProvider = FutureProvider.family<Set<int>, String>((
+  ref,
+  ownerId,
+) async {
   final db = ref.watch(storageDatabaseProvider);
   if (db == null) return {1};
   if (!db.isOpen) await db.open();
@@ -39,35 +42,43 @@ final completedCourseLevelsProvider = FutureProvider.family<Set<int>, String>((r
   return completed;
 });
 
-final assistantConfigProvider = FutureProvider.family<AssistantConfig?, String>((ref, ownerId) async {
-  final repo = ref.watch(assistantRepositoryProvider);
-  if (repo == null) return null;
-  return repo.getConfiguration(ownerId);
-});
+final assistantConfigProvider = FutureProvider.family<AssistantConfig?, String>(
+  (ref, ownerId) async {
+    final repo = ref.watch(assistantRepositoryProvider);
+    if (repo == null) return null;
+    return repo.getConfiguration(ownerId);
+  },
+);
 
-final assistantVersionsProvider = FutureProvider.family<List<AssistantVersion>, String>((ref, ownerId) async {
-  // Re-read when config changes
-  ref.watch(assistantConfigProvider(ownerId));
-  final repo = ref.watch(assistantRepositoryProvider);
-  if (repo == null) return [];
-  return repo.getVersions(ownerId);
-});
+final assistantVersionsProvider =
+    FutureProvider.family<List<AssistantVersion>, String>((ref, ownerId) async {
+      // Re-read when config changes
+      ref.watch(assistantConfigProvider(ownerId));
+      final repo = ref.watch(assistantRepositoryProvider);
+      if (repo == null) return [];
+      return repo.getVersions(ownerId);
+    });
 
-final localDataSummaryProvider = FutureProvider.family<LocalDataSummary, String>((ref, ownerId) async {
-  final repo = ref.watch(assistantRepositoryProvider);
-  if (repo == null) return const LocalDataSummary();
-  return repo.getLocalDataSummary(ownerId);
-});
+final localDataSummaryProvider =
+    FutureProvider.family<LocalDataSummary, String>((ref, ownerId) async {
+      final repo = ref.watch(assistantRepositoryProvider);
+      if (repo == null) return const LocalDataSummary();
+      return repo.getLocalDataSummary(ownerId);
+    });
 
-final storageRetentionDaysProvider = FutureProvider.family<int?, String>((ref, ownerId) async {
+final storageRetentionDaysProvider = FutureProvider.family<int?, String>((
+  ref,
+  ownerId,
+) async {
   final repo = ref.watch(assistantRepositoryProvider);
   if (repo == null) return null;
   return repo.getStorageRetentionDays(ownerId);
 });
 
-final assistantControllerProvider = Provider.family<AssistantController, String>((ref, ownerId) {
-  return AssistantController(ref: ref, ownerId: ownerId);
-});
+final assistantControllerProvider =
+    Provider.family<AssistantController, String>((ref, ownerId) {
+      return AssistantController(ref: ref, ownerId: ownerId);
+    });
 
 class AssistantController {
   AssistantController({required this.ref, required this.ownerId});
@@ -90,7 +101,9 @@ class AssistantController {
       throw ArgumentError('Имя превышает 30 символов');
     }
 
-    final currentConfig = await ref.read(assistantConfigProvider(ownerId).future);
+    final currentConfig = await ref.read(
+      assistantConfigProvider(ownerId).future,
+    );
     final selectedCat = ref.read(selectedCategoryProvider(ownerId));
 
     await _repo.commitChange(
@@ -109,16 +122,17 @@ class AssistantController {
 
   Future<void> saveLanguage(AssistantLanguage newLanguage) async {
     final store = ref.read(profileStoreProvider);
-    final preferences = await ref.read(teacherPreferencesProvider(ownerId).future);
-    final currentConfig = await ref.read(assistantConfigProvider(ownerId).future);
+    final preferences = await ref.read(
+      teacherPreferencesProvider(ownerId).future,
+    );
+    final currentConfig = await ref.read(
+      assistantConfigProvider(ownerId).future,
+    );
     final selectedCat = ref.read(selectedCategoryProvider(ownerId));
 
     if (store != null && preferences != null) {
       await store.savePreferences(
-        permit: WorkspaceWritePermit(
-          ownerId: ownerId,
-          canCommit: () => true,
-        ),
+        permit: WorkspaceWritePermit(ownerId: ownerId, canCommit: () => true),
         setup: preferences.setup.copyWith(language: newLanguage),
         uiLanguage: preferences.uiLanguage,
       );
@@ -126,16 +140,21 @@ class AssistantController {
     }
 
     final langRule = switch (newLanguage) {
-      AssistantLanguage.kazakh => 'Негізгі жауап тілі: қазақша. Барлық жауаптар мен материалдарды тек қазақ тілінде құрастыр.',
-      AssistantLanguage.russian => 'Основной язык ответов: русский. Формулируй ответы и методические материалы на русском языке.',
-      AssistantLanguage.bilingual => 'Двуязычный режим: отвечай на том языке, на котором обращается учитель (русский или казахский).',
+      AssistantLanguage.kazakh =>
+        'Негізгі жауап тілі: қазақша. Барлық жауаптар мен материалдарды тек қазақ тілінде құрастыр.',
+      AssistantLanguage.russian =>
+        'Основной язык ответов: русский. Формулируй ответы и методические материалы на русском языке.',
+      AssistantLanguage.bilingual =>
+        'Двуязычный режим: отвечай на том языке, на котором обращается учитель (русский или казахский).',
     };
 
     final currentRules = List<String>.from(currentConfig?.systemRules ?? []);
-    currentRules.removeWhere((r) =>
-        r.startsWith('Негізгі жауап тілі') ||
-        r.startsWith('Основной язык ответов') ||
-        r.startsWith('Двуязычный режим'));
+    currentRules.removeWhere(
+      (r) =>
+          r.startsWith('Негізгі жауап тілі') ||
+          r.startsWith('Основной язык ответов') ||
+          r.startsWith('Двуязычный режим'),
+    );
     currentRules.insert(0, langRule);
 
     final langTitle = switch (newLanguage) {
@@ -163,12 +182,16 @@ class AssistantController {
       throw StateError('Умение ${skill.title} пока недоступно');
     }
 
-    final completedLevels = await ref.read(completedCourseLevelsProvider(ownerId).future);
+    final completedLevels = await ref.read(
+      completedCourseLevelsProvider(ownerId).future,
+    );
     if (!completedLevels.contains(skill.level)) {
       throw StateError('Умение откроется на уровне ${skill.level}');
     }
 
-    final currentConfig = await ref.read(assistantConfigProvider(ownerId).future);
+    final currentConfig = await ref.read(
+      assistantConfigProvider(ownerId).future,
+    );
     final currentSkills = Set<String>.from(currentConfig?.enabledSkills ?? {});
 
     if (enable) {
@@ -194,10 +217,14 @@ class AssistantController {
   }
 
   Future<void> manualSaveVersion(String? reason) async {
-    final currentConfig = await ref.read(assistantConfigProvider(ownerId).future);
+    final currentConfig = await ref.read(
+      assistantConfigProvider(ownerId).future,
+    );
     final selectedCat = ref.read(selectedCategoryProvider(ownerId));
 
-    final actualReason = (reason != null && reason.trim().isNotEmpty) ? reason.trim() : 'Ручное сохранение';
+    final actualReason = (reason != null && reason.trim().isNotEmpty)
+        ? reason.trim()
+        : 'Ручное сохранение';
 
     await _repo.commitChange(
       ownerId: ownerId,
@@ -217,7 +244,9 @@ class AssistantController {
     required List<String> systemRules,
     String? reason,
   }) async {
-    final currentConfig = await ref.read(assistantConfigProvider(ownerId).future);
+    final currentConfig = await ref.read(
+      assistantConfigProvider(ownerId).future,
+    );
     final selectedCat = ref.read(selectedCategoryProvider(ownerId));
     final currentSkills = Set<String>.from(currentConfig?.enabledSkills ?? {});
 
@@ -243,7 +272,9 @@ class AssistantController {
   }
 
   Future<void> rollbackToVersion(int targetVersionNumber) async {
-    final completedLevels = await ref.read(completedCourseLevelsProvider(ownerId).future);
+    final completedLevels = await ref.read(
+      completedCourseLevelsProvider(ownerId).future,
+    );
     final allowedSkills = AssistantSkillId.values
         .where((s) => !s.comingSoon && completedLevels.contains(s.level))
         .map((s) => s.id)
@@ -258,7 +289,9 @@ class AssistantController {
     // Refresh model category in models provider if restored
     final restoredConfig = await _repo.getConfiguration(ownerId);
     if (restoredConfig?.selectedCategory != null) {
-      ref.read(selectedCategoryProvider(ownerId).notifier).select(restoredConfig!.selectedCategory!);
+      ref
+          .read(selectedCategoryProvider(ownerId).notifier)
+          .select(restoredConfig!.selectedCategory!);
     }
 
     ref.invalidate(assistantConfigProvider(ownerId));
@@ -300,6 +333,8 @@ class AssistantController {
     ref.invalidate(completedCourseLevelsProvider(ownerId));
 
     // 4. Reset onboarding controller state to allow S03 setup
-    ref.read(onboardingControllerProvider(ownerId).notifier).resetForRecreation();
+    ref
+        .read(onboardingControllerProvider(ownerId).notifier)
+        .resetForRecreation();
   }
 }

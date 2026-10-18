@@ -12,9 +12,7 @@ class PersistentMemoryRepository implements MemoryRepository {
   // In-memory candidate suggestions (F13-03: candidate facts are ephemeral until saved)
   final Map<String, List<MemoryCandidateFact>> _candidates = {};
 
-  PersistentMemoryRepository({
-    required this.database,
-  });
+  PersistentMemoryRepository({required this.database});
 
   Future<void> _ensureOpen() async {
     if (!database.isOpen) {
@@ -58,7 +56,8 @@ class PersistentMemoryRepository implements MemoryRepository {
   }) async {
     final db = await _db;
     final now = DateTime.now().toUtc();
-    final id = 'fact_${now.millisecondsSinceEpoch}_${factText.hashCode.abs() % 10000}';
+    final id =
+        'fact_${now.millisecondsSinceEpoch}_${factText.hashCode.abs() % 10000}';
 
     final fact = MemoryFact(
       id: id,
@@ -123,10 +122,7 @@ class PersistentMemoryRepository implements MemoryRepository {
   }
 
   @override
-  Future<void> toggleFact({
-    required String id,
-    required bool isEnabled,
-  }) async {
+  Future<void> toggleFact({required String id, required bool isEnabled}) async {
     final db = await _db;
     final now = DateTime.now().toUtc();
 
@@ -156,10 +152,7 @@ class PersistentMemoryRepository implements MemoryRepository {
   }
 
   @override
-  Future<void> deleteFact({
-    required String id,
-    required String ownerId,
-  }) async {
+  Future<void> deleteFact({required String id, required String ownerId}) async {
     // Physical deletion per ADR-02 (F13-06, F13-12)
     final db = await _db;
     final now = DateTime.now().toUtc();
@@ -264,7 +257,11 @@ class PersistentMemoryRepository implements MemoryRepository {
     return created;
   }
 
-  Future<void> _touchAssistantConfig(DatabaseExecutor txn, String ownerId, DateTime now) async {
+  Future<void> _touchAssistantConfig(
+    DatabaseExecutor txn,
+    String ownerId,
+    DateTime now,
+  ) async {
     try {
       await txn.rawUpdate(
         '''
@@ -340,10 +337,7 @@ class InMemoryMemoryRepository implements MemoryRepository {
   }
 
   @override
-  Future<void> toggleFact({
-    required String id,
-    required bool isEnabled,
-  }) async {
+  Future<void> toggleFact({required String id, required bool isEnabled}) async {
     for (final list in _facts.values) {
       final idx = list.indexWhere((f) => f.id == id);
       if (idx != -1) {
@@ -357,10 +351,7 @@ class InMemoryMemoryRepository implements MemoryRepository {
   }
 
   @override
-  Future<void> deleteFact({
-    required String id,
-    required String ownerId,
-  }) async {
+  Future<void> deleteFact({required String id, required String ownerId}) async {
     _facts[ownerId]?.removeWhere((f) => f.id == id);
   }
 

@@ -128,9 +128,13 @@ class _AuthPageState extends ConsumerState<AuthPage>
     final gateway = ref.watch(authGatewayProvider);
     final registering = widget.kind == AuthFormKind.register;
     final recovering = widget.kind == AuthFormKind.recovery;
-    final resetting = widget.kind == AuthFormKind.resetPassword || widget.kind == AuthFormKind.changePassword;
+    final resetting =
+        widget.kind == AuthFormKind.resetPassword ||
+        widget.kind == AuthFormKind.changePassword;
     final changingPassword = widget.kind == AuthFormKind.changePassword;
-    final hasValidToken = changingPassword || (widget.resetToken != null && widget.resetToken!.trim().isNotEmpty);
+    final hasValidToken =
+        changingPassword ||
+        (widget.resetToken != null && widget.resetToken!.trim().isNotEmpty);
     final documents = _documents();
     final revision = _revision(documents);
     final accepted = revision != null && _acceptedRevision == revision;
@@ -253,7 +257,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
                             AuthPasswordField(
                               key: const Key('auth.password'),
                               controller: _password,
-                              label: resetting ? strings.authNewPassword : strings.authPassword,
+                              label: resetting
+                                  ? strings.authNewPassword
+                                  : strings.authPassword,
                               enabled: !submission.busy,
                               newPassword: registering || resetting,
                               textInputAction: registering || resetting
@@ -261,7 +267,8 @@ class _AuthPageState extends ConsumerState<AuthPage>
                                   : TextInputAction.done,
                               validator: (value) =>
                                   AuthValidation.password(value, strings),
-                              onSubmitted: !registering && !resetting && canSubmit
+                              onSubmitted:
+                                  !registering && !resetting && canSubmit
                                   ? (_) => _submit()
                                   : null,
                             ),
@@ -369,11 +376,11 @@ class _AuthPageState extends ConsumerState<AuthPage>
                           const SizedBox(height: 12),
                           TextButton(
                             onPressed: submission.busy
-                              ? null
-                              : () {
-                                  _clearSecrets();
-                                  context.go('/sign-in');
-                                },
+                                ? null
+                                : () {
+                                    _clearSecrets();
+                                    context.go('/sign-in');
+                                  },
                             child: Text(strings.authBackToSignIn),
                           ),
                         ],

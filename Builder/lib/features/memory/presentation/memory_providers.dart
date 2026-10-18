@@ -88,10 +88,7 @@ class MemoryNotifier extends Notifier<MemoryState> {
         factText: trimmed,
         source: MemoryFactSource.manual,
       );
-      state = state.copyWith(
-        facts: [...state.facts, fact],
-        isSaving: false,
-      );
+      state = state.copyWith(facts: [...state.facts, fact], isSaving: false);
       return fact;
     } catch (e) {
       state = state.copyWith(
@@ -154,7 +151,9 @@ class MemoryNotifier extends Notifier<MemoryState> {
       );
       state = state.copyWith(
         facts: [...state.facts, fact],
-        candidateFacts: state.candidateFacts.where((c) => c.id != candidateId).toList(),
+        candidateFacts: state.candidateFacts
+            .where((c) => c.id != candidateId)
+            .toList(),
         isSaving: false,
       );
     } catch (e) {
@@ -172,7 +171,9 @@ class MemoryNotifier extends Notifier<MemoryState> {
         candidateId: candidateId,
       );
       state = state.copyWith(
-        candidateFacts: state.candidateFacts.where((c) => c.id != candidateId).toList(),
+        candidateFacts: state.candidateFacts
+            .where((c) => c.id != candidateId)
+            .toList(),
       );
     } catch (e) {
       state = state.copyWith(errorMessage: 'Ошибка отклонения: $e');
@@ -182,7 +183,9 @@ class MemoryNotifier extends Notifier<MemoryState> {
   Future<void> loadEducationalPresets() async {
     state = state.copyWith(isSaving: true, errorMessage: null);
     try {
-      final presets = await _repo.loadEducationalPracticePresets(ownerId: ownerId);
+      final presets = await _repo.loadEducationalPracticePresets(
+        ownerId: ownerId,
+      );
       state = state.copyWith(
         facts: [...state.facts, ...presets],
         isSaving: false,
@@ -199,5 +202,5 @@ class MemoryNotifier extends Notifier<MemoryState> {
 /// Provider for S42 Memory page state by ownerId.
 final memoryControllerProvider =
     NotifierProvider.family<MemoryNotifier, MemoryState, String>(
-  (arg) => MemoryNotifier(arg),
-);
+      (arg) => MemoryNotifier(arg),
+    );

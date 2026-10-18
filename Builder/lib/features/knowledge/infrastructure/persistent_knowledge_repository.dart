@@ -25,8 +25,8 @@ class PersistentKnowledgeRepository implements KnowledgeRepository {
     this.baseStorageDir,
     SentenceWindowChunker? chunker,
     LocalHybridSearchEngine? searchEngine,
-  })  : chunker = chunker ?? const SentenceWindowChunker(),
-        searchEngine = searchEngine ?? const LocalHybridSearchEngine();
+  }) : chunker = chunker ?? const SentenceWindowChunker(),
+       searchEngine = searchEngine ?? const LocalHybridSearchEngine();
 
   static const int maxFileSizeBytes = 10 * 1024 * 1024; // 10 MB per F12-01
 
@@ -56,13 +56,16 @@ class PersistentKnowledgeRepository implements KnowledgeRepository {
     if (rows.isEmpty) return const [];
 
     // Also get chunk counts per document
-    final chunkCountsRows = await database.db.rawQuery('''
+    final chunkCountsRows = await database.db.rawQuery(
+      '''
       SELECT r.document_id, COUNT(c.id) as chunk_count
       FROM ${StorageSchemaV1.tableKnowledgeChunks} c
       JOIN ${StorageSchemaV1.tableDocumentRevisions} r ON c.revision_id = r.id
       WHERE c.owner_id = ?
       GROUP BY r.document_id
-    ''', [ownerId]);
+    ''',
+      [ownerId],
+    );
 
     final chunkCounts = <String, int>{};
     for (final r in chunkCountsRows) {
@@ -81,7 +84,10 @@ class PersistentKnowledgeRepository implements KnowledgeRepository {
   }
 
   @override
-  Future<KnowledgeDocument?> getDocumentById(String ownerId, String docId) async {
+  Future<KnowledgeDocument?> getDocumentById(
+    String ownerId,
+    String docId,
+  ) async {
     await _ensureOpen();
 
     final rows = await database.db.query(
@@ -95,10 +101,14 @@ class PersistentKnowledgeRepository implements KnowledgeRepository {
   }
 
   @override
-  Future<List<KnowledgeChunk>> getChunksForOwner(String ownerId, {bool enabledOnly = true}) async {
+  Future<List<KnowledgeChunk>> getChunksForOwner(
+    String ownerId, {
+    bool enabledOnly = true,
+  }) async {
     await _ensureOpen();
 
-    final sql = '''
+    final sql =
+        '''
       SELECT c.*, d.file_name as doc_name, d.id as doc_id, d.is_enabled
       FROM ${StorageSchemaV1.tableKnowledgeChunks} c
       JOIN ${StorageSchemaV1.tableDocumentRevisions} r ON c.revision_id = r.id
@@ -190,13 +200,16 @@ class PersistentKnowledgeRepository implements KnowledgeRepository {
     // 4. Stable doc and rev IDs
     final now = DateTime.now().toUtc();
     final nowIso = now.toIso8601String();
-    final docId = 'doc_${now.millisecondsSinceEpoch}_${contentHash.substring(0, 8)}';
+    final docId =
+        'doc_${now.millisecondsSinceEpoch}_${contentHash.substring(0, 8)}';
     final revId = 'rev_${now.millisecondsSinceEpoch}';
 
     // 5. Store binary copy safely in private workspace directory (F12-02)
     final baseDir = await _resolveBaseDir();
     final safeFileName = _sanitizeFileName(fileName);
-    final knowledgeDir = Directory(p.join(baseDir, 'workspaces', ownerId, 'knowledge'));
+    final knowledgeDir = Directory(
+      p.join(baseDir, 'workspaces', ownerId, 'knowledge'),
+    );
     if (!await knowledgeDir.exists()) {
       await knowledgeDir.create(recursive: true);
     }
@@ -235,37 +248,29 @@ class PersistentKnowledgeRepository implements KnowledgeRepository {
     // 8. Transactional persistence in SQLite
     await database.transaction((txn) async {
       // Insert Document
-      await txn.insert(
-        StorageSchemaV1.tableKnowledgeDocuments,
-        {
-          'id': docId,
-          'owner_id': ownerId,
-          'content_hash': contentHash,
-          'file_name': safeFileName,
-          'file_format': format.extension,
-          'file_size_bytes': bytes.length,
-          'is_enabled': 1,
-          'index_status': DocumentProcessingStatus.ready.dbValue,
-          'created_at_utc': nowIso,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await txn.insert(StorageSchemaV1.tableKnowledgeDocuments, {
+        'id': docId,
+        'owner_id': ownerId,
+        'content_hash': contentHash,
+        'file_name': safeFileName,
+        'file_format': format.extension,
+        'file_size_bytes': bytes.length,
+        'is_enabled': 1,
+        'index_status': DocumentProcessingStatus.ready.dbValue,
+        'created_at_utc': nowIso,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       // Insert Revision
-      await txn.insert(
-        StorageSchemaV1.tableDocumentRevisions,
-        {
-          'id': revId,
-          'document_id': docId,
-          'owner_id': ownerId,
-          'parser_version': 'v1.0',
-          'embedding_model_id': 'on-device-hybrid-v1',
-          'text_content': extracted.fullText,
-          'blob_path': blobPath,
-          'created_at_utc': nowIso,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await txn.insert(StorageSchemaV1.tableDocumentRevisions, {
+        'id': revId,
+        'document_id': docId,
+        'owner_id': ownerId,
+        'parser_version': 'v1.0',
+        'embedding_model_id': 'on-device-hybrid-v1',
+        'text_content': extracted.fullText,
+        'blob_path': blobPath,
+        'created_at_utc': nowIso,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       // Insert Chunks
       final batch = txn.batch();
@@ -275,20 +280,16 @@ class PersistentKnowledgeRepository implements KnowledgeRepository {
           'metadata': chunk.metadata,
         });
 
-        batch.insert(
-          StorageSchemaV1.tableKnowledgeChunks,
-          {
-            'id': chunk.id,
-            'revision_id': revId,
-            'owner_id': ownerId,
-            'chunk_index': chunk.chunkIndex,
-            'chunk_text': chunk.chunkText,
-            'page_number': chunk.pageNumber,
-            'byte_offset': chunk.byteOffset,
-            'embedding_metadata_json': metaJson,
-          },
-          conflictAlgorithm: ConflictAlgorithm.replace,
-        );
+        batch.insert(StorageSchemaV1.tableKnowledgeChunks, {
+          'id': chunk.id,
+          'revision_id': revId,
+          'owner_id': ownerId,
+          'chunk_index': chunk.chunkIndex,
+          'chunk_text': chunk.chunkText,
+          'page_number': chunk.pageNumber,
+          'byte_offset': chunk.byteOffset,
+          'embedding_metadata_json': metaJson,
+        }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
       await batch.commit(noResult: true);
     });
@@ -421,5 +422,6 @@ class KnowledgeFileDeletionException implements Exception {
   const KnowledgeFileDeletionException();
 
   @override
-  String toString() => 'Не удалось физически удалить файл. Документ отключён; повторите удаление.';
+  String toString() =>
+      'Не удалось физически удалить файл. Документ отключён; повторите удаление.';
 }

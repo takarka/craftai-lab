@@ -348,4 +348,37 @@ S50/S54/S55/S56 подключены к отдельным маршрутам в
 - **274 теста прошли успешно** (`All tests passed!`).
 - `flutter analyze` — 0 замечаний (`No issues found!`).
 
+## F19: Настройка мобильной сборки и поставки (18 октября 2026)
+
+Реализован полный комплекс требований этапа F19 по подготовке мобильной поставки:
+
+1. **Идентификаторы приложений и пакеты (`kz.craftai.builder`):**
+   - Устранён временный идентификатор `com.example.builder` из всех нативных файлов Android и iOS.
+   - Android: `namespace` и `applicationId` в `build.gradle.kts` переведены на `kz.craftai.builder`. Файл `MainActivity.kt` перемещён в директорию `android/app/src/main/kotlin/kz/craftai/builder/MainActivity.kt` с пакетом `kz.craftai.builder`.
+   - iOS: `PRODUCT_BUNDLE_IDENTIFIER` в `ios/Runner.xcodeproj/project.pbxproj` переведён на `kz.craftai.builder` и `kz.craftai.builder.RunnerTests`. Название приложения: «Craft Builder».
+
+2. **Манифесты разрешений и Proguard/R8 (`android/`):**
+   - В основной `AndroidManifest.xml` добавлены разрешения `android.permission.INTERNET` и `android.permission.ACCESS_NETWORK_STATE`, необходимые для стабильного подключения к CraftAI API в release-сборках.
+   - Добавлен `android/app/proguard-rules.pro` и зарегистрирован в `buildTypes.release` для защиты от обфускации критических JNI/платформенных каналов Flutter, `sqflite` и `flutter_secure_storage`.
+
+3. **Apple Privacy Manifest (`ios/Runner/PrivacyInfo.xcprivacy`):**
+   - Создан файл манифеста приватности по требованиям Apple App Store: декларированы используемые API (`NSPrivacyAccessedAPITypeUserDefaults` с обоснованием `CA92.1` и `NSPrivacyAccessedAPITypeFileTimestamp` с обоснованием `C617.1`), подтверждено отсутствие межсетевого трекинга (`NSPrivacyTracking: false`).
+   - Манифест зарегистрирован в `project.pbxproj` в секциях PBXBuildFile, PBXFileReference, Runner PBXGroup и PBXResourcesBuildPhase.
+
+4. **Безопасная конфигурация release-подписи:**
+   - В `build.gradle.kts` реализована параметризация release-подписи через переменные окружения (`KEYSTORE_PATH`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`) или Gradle properties без сохранения закрытых ключей и паролей в git.
+
+5. **CI/CD автоматизация (`.github/workflows/builder-ci.yml`):**
+   - Настроены стабильные версии GitHub Actions (`actions/checkout@v4`, `actions/setup-java@v4`).
+   - Конвейер включает валидацию формата (`dart format --output=none --set-exit-if-changed lib test`), статический анализ (`flutter analyze`), запуск полного набора тестов (`flutter test`) и сборку arm64 release APK / release iOS без подписи.
+
+6. **Форматирование кодовой базы:**
+   - 100% файлов приведены к стандарту форматирования Dart (`dart format lib test`), проверка форматирования завершается с кодом 0.
+
+### Проверки F19
+- **274 теста прошли успешно** (`All tests passed!`).
+- `flutter analyze` — 0 замечаний (`No issues found!`).
+- `dart format --output=none --set-exit-if-changed lib test` — exit code 0.
+
+
 

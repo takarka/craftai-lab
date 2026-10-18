@@ -116,7 +116,9 @@ class _ToolConfirmationCardState extends State<ToolConfirmationCard> {
                         Expanded(
                           child: Text(
                             '${entry.value}',
-                            style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.ink),
+                            style: BuilderTypography.bodySmall.copyWith(
+                              color: BuilderColors.ink,
+                            ),
                           ),
                         ),
                       ],

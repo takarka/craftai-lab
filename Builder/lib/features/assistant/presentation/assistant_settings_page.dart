@@ -22,17 +22,28 @@ class AssistantSettingsPage extends ConsumerWidget {
     final configAsync = ref.watch(assistantConfigProvider(ownerId));
     final versionsAsync = ref.watch(assistantVersionsProvider(ownerId));
     final summaryAsync = ref.watch(localDataSummaryProvider(ownerId));
-    final completedLevelsAsync = ref.watch(completedCourseLevelsProvider(ownerId));
+    final completedLevelsAsync = ref.watch(
+      completedCourseLevelsProvider(ownerId),
+    );
 
     final config = configAsync.asData?.value;
     final versions = versionsAsync.asData?.value ?? [];
     final summary = summaryAsync.asData?.value;
     final completedLevels = completedLevelsAsync.asData?.value ?? {1};
 
-    final currentVersionNumber = versions.isNotEmpty ? versions.first.versionNumber : 1;
-    final highestLevel = completedLevels.fold<int>(1, (max, lvl) => lvl > max ? lvl : max);
-    final preferences = ref.watch(teacherPreferencesProvider(ownerId)).asData?.value;
-    final assistantLanguage = preferences?.setup.language ?? AssistantLanguage.russian;
+    final currentVersionNumber = versions.isNotEmpty
+        ? versions.first.versionNumber
+        : 1;
+    final highestLevel = completedLevels.fold<int>(
+      1,
+      (max, lvl) => lvl > max ? lvl : max,
+    );
+    final preferences = ref
+        .watch(teacherPreferencesProvider(ownerId))
+        .asData
+        ?.value;
+    final assistantLanguage =
+        preferences?.setup.language ?? AssistantLanguage.russian;
 
     return Scaffold(
       appBar: AppBar(
@@ -60,7 +71,9 @@ class AssistantSettingsPage extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            config?.name.isNotEmpty == true ? config!.name : 'Ассистент',
+                            config?.name.isNotEmpty == true
+                                ? config!.name
+                                : 'Ассистент',
                             style: BuilderType.h3,
                           ),
                           const SizedBox(height: 4),
@@ -99,7 +112,8 @@ class AssistantSettingsPage extends ConsumerWidget {
               BuilderLinkRow(
                 key: const Key('assistantSettings.languageRow'),
                 title: 'Язык ответов ассистента',
-                subtitle: '${languageLabel(assistantLanguage, s)} · Создаёт новую версию',
+                subtitle:
+                    '${languageLabel(assistantLanguage, s)} · Создаёт новую версию',
                 icon: BuilderGlyph.globe,
                 onTap: () => _showLanguageSelectionSheet(
                   context,
@@ -124,9 +138,17 @@ class AssistantSettingsPage extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(s.assistantInstructionsCardTitle, style: BuilderType.title),
+                              Text(
+                                s.assistantInstructionsCardTitle,
+                                style: BuilderType.title,
+                              ),
                               const SizedBox(height: 2),
-                              Text(s.assistantInstructionsCardSubtitle, style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary)),
+                              Text(
+                                s.assistantInstructionsCardSubtitle,
+                                style: BuilderType.small.copyWith(
+                                  color: BuilderColors.inkSecondary,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -138,14 +160,21 @@ class AssistantSettingsPage extends ConsumerWidget {
                       onTap: () => context.push('/assistant/settings/versions'),
                       borderRadius: BorderRadius.circular(8),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: BuilderColors.surfaceDisabled,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Row(
                           children: [
-                            const BuilderIcon(BuilderGlyph.code, size: 16, color: BuilderColors.primary),
+                            const BuilderIcon(
+                              BuilderGlyph.code,
+                              size: 16,
+                              color: BuilderColors.primary,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
@@ -156,7 +185,11 @@ class AssistantSettingsPage extends ConsumerWidget {
                                 ),
                               ),
                             ),
-                            const Icon(Icons.chevron_right, size: 18, color: BuilderColors.inkSecondary),
+                            const Icon(
+                              Icons.chevron_right,
+                              size: 18,
+                              color: BuilderColors.inkSecondary,
+                            ),
                           ],
                         ),
                       ),
@@ -176,13 +209,18 @@ class AssistantSettingsPage extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(s.assistantMemoryCardTitle, style: BuilderType.title),
+                          Text(
+                            s.assistantMemoryCardTitle,
+                            style: BuilderType.title,
+                          ),
                           const SizedBox(height: 2),
                           Text(
                             summary != null
                                 ? '${summary.memoryFactsCount} сохранённых фактов'
                                 : s.assistantMemoryCardSubtitle,
-                            style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
+                            style: BuilderType.small.copyWith(
+                              color: BuilderColors.inkSecondary,
+                            ),
                           ),
                         ],
                       ),
@@ -204,13 +242,18 @@ class AssistantSettingsPage extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(s.assistantDocumentsCardTitle, style: BuilderType.title),
+                          Text(
+                            s.assistantDocumentsCardTitle,
+                            style: BuilderType.title,
+                          ),
                           const SizedBox(height: 2),
                           Text(
                             summary != null
                                 ? '${summary.documentsCount} документов (${summary.chunksCount} фрагментов)'
                                 : s.assistantDocumentsCardSubtitle,
-                            style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
+                            style: BuilderType.small.copyWith(
+                              color: BuilderColors.inkSecondary,
+                            ),
                           ),
                         ],
                       ),
@@ -226,7 +269,13 @@ class AssistantSettingsPage extends ConsumerWidget {
               for (final skill in AssistantSkillId.values)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: _buildSkillCard(context, ref, skill, config, completedLevels),
+                  child: _buildSkillCard(
+                    context,
+                    ref,
+                    skill,
+                    config,
+                    completedLevels,
+                  ),
                 ),
               const SizedBox(height: 16),
 
@@ -241,17 +290,21 @@ class AssistantSettingsPage extends ConsumerWidget {
                     icon: BuilderGlyph.back,
                     onPressed: () async {
                       try {
-                        await ref.read(assistantControllerProvider(ownerId)).undoLastChange();
+                        await ref
+                            .read(assistantControllerProvider(ownerId))
+                            .undoLastChange();
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Последнее изменение отменено')),
+                            const SnackBar(
+                              content: Text('Последнее изменение отменено'),
+                            ),
                           );
                         }
                       } catch (e) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Ошибка: $e')),
-                          );
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text('Ошибка: $e')));
                         }
                       }
                     },
@@ -278,7 +331,8 @@ class AssistantSettingsPage extends ConsumerWidget {
                   label: s.assistantResetButton,
                   variant: BuilderButtonVariant.danger,
                   icon: BuilderGlyph.trash,
-                  onPressed: () => showResetConfirmationDialog(context, ownerId: ownerId),
+                  onPressed: () =>
+                      showResetConfirmationDialog(context, ownerId: ownerId),
                 ),
               ),
             ],
@@ -316,19 +370,26 @@ class AssistantSettingsPage extends ConsumerWidget {
       icon: skill.glyph,
       status: status,
       level: skill.level,
-      onChanged: (status == SkillStatus.enabled || status == SkillStatus.disabled)
+      onChanged:
+          (status == SkillStatus.enabled || status == SkillStatus.disabled)
           ? (val) {
-              ref.read(assistantControllerProvider(ownerId)).toggleSkill(skill, val);
+              ref
+                  .read(assistantControllerProvider(ownerId))
+                  .toggleSkill(skill, val);
             }
           : null,
       onTap: () {
-        if (skill == AssistantSkillId.instructions && (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
+        if (skill == AssistantSkillId.instructions &&
+            (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
           context.push('/assistant/instructions');
-        } else if (skill == AssistantSkillId.knowledge && (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
+        } else if (skill == AssistantSkillId.knowledge &&
+            (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
           context.push('/assistant/knowledge');
-        } else if (skill == AssistantSkillId.memory && (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
+        } else if (skill == AssistantSkillId.memory &&
+            (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
           context.push('/assistant/memory');
-        } else if (skill == AssistantSkillId.tools && (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
+        } else if (skill == AssistantSkillId.tools &&
+            (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
           context.push('/assistant/tools');
         }
       },
@@ -367,10 +428,12 @@ class _AssistantLanguageSheet extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_AssistantLanguageSheet> createState() => _AssistantLanguageSheetState();
+  ConsumerState<_AssistantLanguageSheet> createState() =>
+      _AssistantLanguageSheetState();
 }
 
-class _AssistantLanguageSheetState extends ConsumerState<_AssistantLanguageSheet> {
+class _AssistantLanguageSheetState
+    extends ConsumerState<_AssistantLanguageSheet> {
   late AssistantLanguage _selectedLanguage;
   bool _saving = false;
 
@@ -384,18 +447,24 @@ class _AssistantLanguageSheetState extends ConsumerState<_AssistantLanguageSheet
     if (_saving) return;
     setState(() => _saving = true);
     try {
-      await ref.read(assistantControllerProvider(widget.ownerId)).saveLanguage(_selectedLanguage);
+      await ref
+          .read(assistantControllerProvider(widget.ownerId))
+          .saveLanguage(_selectedLanguage);
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Язык ассистента обновлён (создана версия v${widget.currentVersion + 1})')),
+          SnackBar(
+            content: Text(
+              'Язык ассистента обновлён (создана версия v${widget.currentVersion + 1})',
+            ),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка обновления языка: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Ошибка обновления языка: $e')));
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -410,7 +479,9 @@ class _AssistantLanguageSheetState extends ConsumerState<_AssistantLanguageSheet
     return Container(
       decoration: const BoxDecoration(
         color: BuilderColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(BuilderRadii.sheet)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(BuilderRadii.sheet),
+        ),
       ),
       padding: const EdgeInsets.all(BuilderSpace.lg),
       child: SafeArea(
@@ -443,7 +514,11 @@ class _AssistantLanguageSheetState extends ConsumerState<_AssistantLanguageSheet
                 children: [
                   const Padding(
                     padding: EdgeInsets.only(top: 2),
-                    child: BuilderIcon(BuilderGlyph.info, size: 18, color: BuilderColors.primary),
+                    child: BuilderIcon(
+                      BuilderGlyph.info,
+                      size: 18,
+                      color: BuilderColors.primary,
+                    ),
                   ),
                   const SizedBox(width: BuilderSpace.xs),
                   Expanded(
@@ -451,7 +526,10 @@ class _AssistantLanguageSheetState extends ConsumerState<_AssistantLanguageSheet
                       'Смена языка создаст новую версию ассистента (v$nextVersion). '
                       'Ассистент начнёт формулировать ответы и генерировать материалы на выбранном языке. '
                       'Сохранённые диалоги, память и документы останутся на месте.',
-                      style: BuilderType.small.copyWith(color: BuilderColors.primary, height: 1.35),
+                      style: BuilderType.small.copyWith(
+                        color: BuilderColors.primary,
+                        height: 1.35,
+                      ),
                     ),
                   ),
                 ],
@@ -521,7 +599,9 @@ class _AssistantLanguageSheetState extends ConsumerState<_AssistantLanguageSheet
           children: [
             Icon(
               isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
-              color: isSelected ? BuilderColors.primary : BuilderColors.inkSecondary,
+              color: isSelected
+                  ? BuilderColors.primary
+                  : BuilderColors.inkSecondary,
               size: 22,
             ),
             const SizedBox(width: BuilderSpace.sm),
@@ -531,7 +611,12 @@ class _AssistantLanguageSheetState extends ConsumerState<_AssistantLanguageSheet
                 children: [
                   Text(title, style: BuilderType.title),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary)),
+                  Text(
+                    subtitle,
+                    style: BuilderType.small.copyWith(
+                      color: BuilderColors.inkSecondary,
+                    ),
+                  ),
                 ],
               ),
             ),

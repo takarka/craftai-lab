@@ -126,7 +126,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/change-password',
-        builder: (context, state) => const AuthPage(kind: AuthFormKind.changePassword),
+        builder: (context, state) =>
+            const AuthPage(kind: AuthFormKind.changePassword),
       ),
       GoRoute(
         path: '/legal/terms',

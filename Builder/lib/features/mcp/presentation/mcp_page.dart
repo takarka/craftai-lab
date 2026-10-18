@@ -10,10 +10,7 @@ import 'mcp_providers.dart';
 class McpPage extends ConsumerStatefulWidget {
   final String ownerId;
 
-  const McpPage({
-    super.key,
-    required this.ownerId,
-  });
+  const McpPage({super.key, required this.ownerId});
 
   @override
   ConsumerState<McpPage> createState() => _McpPageState();
@@ -43,7 +40,9 @@ class _McpPageState extends ConsumerState<McpPage> {
         scrolledUnderElevation: 0,
         title: Text(
           'Внешние интеграции (MCP)',
-          style: BuilderTypography.titleMedium.copyWith(color: BuilderColors.ink),
+          style: BuilderTypography.titleMedium.copyWith(
+            color: BuilderColors.ink,
+          ),
         ),
         actions: [
           // "Готово" button returns to S43 ToolsPage (F15 acceptance criteria)
@@ -72,121 +71,135 @@ class _McpPageState extends ConsumerState<McpPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                // 1. Data Disclosure Banner (F15-02)
-                Container(
-                  key: const Key('mcp.disclosureBanner'),
-                  padding: const EdgeInsets.all(BuilderSpace.sm),
-                  decoration: BoxDecoration(
-                    color: BuilderColors.surface,
-                    borderRadius: BorderRadius.circular(BuilderRadii.card),
-                    border: Border.all(color: BuilderColors.line),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.only(top: 2),
-                        child: BuilderIcon(BuilderGlyph.info, size: 20, color: BuilderColors.primary),
-                      ),
-                      const SizedBox(width: BuilderSpace.xs),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Стандарт Model Context Protocol (MCP)',
-                              style: BuilderTypography.labelMedium.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: BuilderColors.ink,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'MCP позволяет ассистенту безопасно обращаться к внешним каталогам знаний через доверенный шлюз. '
-                              'Подключение выполняется через ваш аккаунт CraftAI. Запросы не содержат персональных данных учеников.',
-                              style: BuilderTypography.bodySmall.copyWith(
-                                color: BuilderColors.inkSecondary,
-                                height: 1.35,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: BuilderSpace.md),
-
-                // Error Banner
-                if (state.errorMessage != null) ...[
+                  // 1. Data Disclosure Banner (F15-02)
                   Container(
+                    key: const Key('mcp.disclosureBanner'),
                     padding: const EdgeInsets.all(BuilderSpace.sm),
                     decoration: BoxDecoration(
-                      color: BuilderColors.warning.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(BuilderRadii.tile),
-                      border: Border.all(color: BuilderColors.warning.withValues(alpha: 0.4)),
-                    ),
-                    child: Text(
-                      state.errorMessage!,
-                      style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.warning),
-                    ),
-                  ),
-                  const SizedBox(height: BuilderSpace.md),
-                ],
-
-                // Success Message Banner
-                if (state.savedNoteMessage != null) ...[
-                  Container(
-                    key: const Key('mcp.savedNoteBanner'),
-                    padding: const EdgeInsets.all(BuilderSpace.sm),
-                    decoration: BoxDecoration(
-                      color: Colors.green.shade50,
-                      borderRadius: BorderRadius.circular(BuilderRadii.tile),
-                      border: Border.all(color: Colors.green.shade200),
+                      color: BuilderColors.surface,
+                      borderRadius: BorderRadius.circular(BuilderRadii.card),
+                      border: Border.all(color: BuilderColors.line),
                     ),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const BuilderIcon(BuilderGlyph.check, size: 18, color: Colors.green),
+                        const Padding(
+                          padding: EdgeInsets.only(top: 2),
+                          child: BuilderIcon(
+                            BuilderGlyph.info,
+                            size: 20,
+                            color: BuilderColors.primary,
+                          ),
+                        ),
                         const SizedBox(width: BuilderSpace.xs),
                         Expanded(
-                          child: Text(
-                            state.savedNoteMessage!,
-                            style: BuilderTypography.bodySmall.copyWith(color: Colors.green.shade900),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Стандарт Model Context Protocol (MCP)',
+                                style: BuilderTypography.labelMedium.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: BuilderColors.ink,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'MCP позволяет ассистенту безопасно обращаться к внешним каталогам знаний через доверенный шлюз. '
+                                'Подключение выполняется через ваш аккаунт CraftAI. Запросы не содержат персональных данных учеников.',
+                                style: BuilderTypography.bodySmall.copyWith(
+                                  color: BuilderColors.inkSecondary,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: BuilderSpace.md),
-                ],
 
-                // 2. Working Connector: Каталог уроков CraftAI (F15-01)
-                _buildCraftAiConnectorCard(state, controller),
-                const SizedBox(height: BuilderSpace.md),
+                  // Error Banner
+                  if (state.errorMessage != null) ...[
+                    Container(
+                      padding: const EdgeInsets.all(BuilderSpace.sm),
+                      decoration: BoxDecoration(
+                        color: BuilderColors.warning.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(BuilderRadii.tile),
+                        border: Border.all(
+                          color: BuilderColors.warning.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      child: Text(
+                        state.errorMessage!,
+                        style: BuilderTypography.bodySmall.copyWith(
+                          color: BuilderColors.warning,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: BuilderSpace.md),
+                  ],
 
-                // 3. Educational Protocol Viewer ("Под капотом", F15-07)
-                if (state.isCraftAiConnected) ...[
-                  _buildEducationalRpcLogSection(client),
+                  // Success Message Banner
+                  if (state.savedNoteMessage != null) ...[
+                    Container(
+                      key: const Key('mcp.savedNoteBanner'),
+                      padding: const EdgeInsets.all(BuilderSpace.sm),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(BuilderRadii.tile),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: Row(
+                        children: [
+                          const BuilderIcon(
+                            BuilderGlyph.check,
+                            size: 18,
+                            color: Colors.green,
+                          ),
+                          const SizedBox(width: BuilderSpace.xs),
+                          Expanded(
+                            child: Text(
+                              state.savedNoteMessage!,
+                              style: BuilderTypography.bodySmall.copyWith(
+                                color: Colors.green.shade900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: BuilderSpace.md),
+                  ],
+
+                  // 2. Working Connector: Каталог уроков CraftAI (F15-01)
+                  _buildCraftAiConnectorCard(state, controller),
                   const SizedBox(height: BuilderSpace.md),
-                ],
 
-                // 4. Coming Soon Connectors (F15-10)
-                Text(
-                  'Планируемые интеграции (Скоро)',
-                  style: BuilderTypography.titleSmall.copyWith(
-                    color: BuilderColors.ink,
-                    fontWeight: FontWeight.w700,
+                  // 3. Educational Protocol Viewer ("Под капотом", F15-07)
+                  if (state.isCraftAiConnected) ...[
+                    _buildEducationalRpcLogSection(client),
+                    const SizedBox(height: BuilderSpace.md),
+                  ],
+
+                  // 4. Coming Soon Connectors (F15-10)
+                  Text(
+                    'Планируемые интеграции (Скоро)',
+                    style: BuilderTypography.titleSmall.copyWith(
+                      color: BuilderColors.ink,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(height: BuilderSpace.xs),
-                ...McpConnector.allConnectors
-                    .where((c) => c.isComingSoon)
-                    .map((c) => _buildComingSoonConnectorCard(c)),
+                  const SizedBox(height: BuilderSpace.xs),
+                  ...McpConnector.allConnectors
+                      .where((c) => c.isComingSoon)
+                      .map((c) => _buildComingSoonConnectorCard(c)),
 
-                const SizedBox(height: BuilderSpace.lg),
-              ],
+                  const SizedBox(height: BuilderSpace.lg),
+                ],
+              ),
             ),
-          ),
     );
   }
 
@@ -200,7 +213,9 @@ class _McpPageState extends ConsumerState<McpPage> {
         color: BuilderColors.surface,
         borderRadius: BorderRadius.circular(BuilderRadii.card),
         border: Border.all(
-          color: state.isCraftAiConnected ? BuilderColors.primary : BuilderColors.line,
+          color: state.isCraftAiConnected
+              ? BuilderColors.primary
+              : BuilderColors.line,
           width: state.isCraftAiConnected ? 1.5 : 1.0,
         ),
       ),
@@ -225,13 +240,17 @@ class _McpPageState extends ConsumerState<McpPage> {
                     const SizedBox(height: 2),
                     Text(
                       connector.subtitle,
-                      style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.inkSecondary),
+                      style: BuilderTypography.bodySmall.copyWith(
+                        color: BuilderColors.inkSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
               _buildStatusBadge(
-                state.isCraftAiConnected ? McpConnectionStatus.connected : McpConnectionStatus.disconnected,
+                state.isCraftAiConnected
+                    ? McpConnectionStatus.connected
+                    : McpConnectionStatus.disconnected,
               ),
             ],
           ),
@@ -239,7 +258,10 @@ class _McpPageState extends ConsumerState<McpPage> {
 
           Text(
             connector.description,
-            style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.ink, height: 1.35),
+            style: BuilderTypography.bodySmall.copyWith(
+              color: BuilderColors.ink,
+              height: 1.35,
+            ),
           ),
           const SizedBox(height: BuilderSpace.sm),
 
@@ -247,17 +269,33 @@ class _McpPageState extends ConsumerState<McpPage> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              key: Key(state.isCraftAiConnected ? 'mcp.disconnectBtn' : 'mcp.connectBtn'),
-              icon: BuilderIcon(
-                state.isCraftAiConnected ? BuilderGlyph.close : BuilderGlyph.bolt,
-                size: 18,
-                color: state.isCraftAiConnected ? Colors.red.shade700 : Colors.white,
+              key: Key(
+                state.isCraftAiConnected
+                    ? 'mcp.disconnectBtn'
+                    : 'mcp.connectBtn',
               ),
-              label: Text(state.isCraftAiConnected ? 'Отключить каталог' : 'Подключить каталог уроков'),
+              icon: BuilderIcon(
+                state.isCraftAiConnected
+                    ? BuilderGlyph.close
+                    : BuilderGlyph.bolt,
+                size: 18,
+                color: state.isCraftAiConnected
+                    ? Colors.red.shade700
+                    : Colors.white,
+              ),
+              label: Text(
+                state.isCraftAiConnected
+                    ? 'Отключить каталог'
+                    : 'Подключить каталог уроков',
+              ),
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 44),
-                backgroundColor: state.isCraftAiConnected ? Colors.red.shade50 : BuilderColors.primary,
-                foregroundColor: state.isCraftAiConnected ? Colors.red.shade700 : Colors.white,
+                backgroundColor: state.isCraftAiConnected
+                    ? Colors.red.shade50
+                    : BuilderColors.primary,
+                foregroundColor: state.isCraftAiConnected
+                    ? Colors.red.shade700
+                    : Colors.white,
                 elevation: 0,
               ),
               onPressed: () {
@@ -286,7 +324,11 @@ class _McpPageState extends ConsumerState<McpPage> {
                 padding: const EdgeInsets.only(bottom: 6),
                 child: Row(
                   children: [
-                    const BuilderIcon(BuilderGlyph.check, size: 16, color: BuilderColors.primary),
+                    const BuilderIcon(
+                      BuilderGlyph.check,
+                      size: 16,
+                      color: BuilderColors.primary,
+                    ),
                     const SizedBox(width: BuilderSpace.xs),
                     Expanded(
                       child: Text(
@@ -316,10 +358,16 @@ class _McpPageState extends ConsumerState<McpPage> {
                 suffixIcon: IconButton(
                   key: const Key('mcp.searchSubmitBtn'),
                   icon: const BuilderIcon(BuilderGlyph.chevron, size: 18),
-                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                  constraints: const BoxConstraints(
+                    minWidth: 44,
+                    minHeight: 44,
+                  ),
                   onPressed: () => controller.search(_searchController.text),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(BuilderRadii.tile),
                   borderSide: const BorderSide(color: BuilderColors.line),
@@ -331,13 +379,20 @@ class _McpPageState extends ConsumerState<McpPage> {
 
             // Search results list (F15-06)
             if (state.isSearching)
-              const Center(child: Padding(padding: EdgeInsets.all(12), child: CircularProgressIndicator()))
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: CircularProgressIndicator(),
+                ),
+              )
             else if (state.searchResults.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
                   'Уроки по запросу не найдены. Попробуйте другой запрос.',
-                  style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.inkSecondary),
+                  style: BuilderTypography.bodySmall.copyWith(
+                    color: BuilderColors.inkSecondary,
+                  ),
                 ),
               )
             else ...[
@@ -349,7 +404,9 @@ class _McpPageState extends ConsumerState<McpPage> {
                 ),
               ),
               const SizedBox(height: 6),
-              ...state.searchResults.map((item) => _buildLessonItemTile(item, controller)),
+              ...state.searchResults.map(
+                (item) => _buildLessonItemTile(item, controller),
+              ),
             ],
 
             // Selected lesson preview modal / card
@@ -416,7 +473,9 @@ class _McpPageState extends ConsumerState<McpPage> {
           const SizedBox(height: 2),
           Text(
             item.summary,
-            style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.inkSecondary),
+            style: BuilderTypography.bodySmall.copyWith(
+              color: BuilderColors.inkSecondary,
+            ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
@@ -425,7 +484,10 @@ class _McpPageState extends ConsumerState<McpPage> {
     );
   }
 
-  Widget _buildLessonDetailCard(McpLessonDetail detail, McpNotifier controller) {
+  Widget _buildLessonDetailCard(
+    McpLessonDetail detail,
+    McpNotifier controller,
+  ) {
     return Container(
       key: const Key('mcp.lessonDetailCard'),
       padding: const EdgeInsets.all(BuilderSpace.md),
@@ -460,12 +522,17 @@ class _McpPageState extends ConsumerState<McpPage> {
           const SizedBox(height: 4),
           Text(
             '${detail.subject} · ${detail.grade} класс · Автор: ${detail.author}',
-            style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.inkSecondary),
+            style: BuilderTypography.bodySmall.copyWith(
+              color: BuilderColors.inkSecondary,
+            ),
           ),
           const Divider(height: BuilderSpace.md),
           Text(
             detail.content,
-            style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.ink, height: 1.4),
+            style: BuilderTypography.bodySmall.copyWith(
+              color: BuilderColors.ink,
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: BuilderSpace.md),
 
@@ -506,7 +573,11 @@ class _McpPageState extends ConsumerState<McpPage> {
             onTap: () => setState(() => _showLogs = !_showLogs),
             child: Row(
               children: [
-                const BuilderIcon(BuilderGlyph.code, size: 18, color: BuilderColors.primary),
+                const BuilderIcon(
+                  BuilderGlyph.code,
+                  size: 18,
+                  color: BuilderColors.primary,
+                ),
                 const SizedBox(width: BuilderSpace.xs),
                 Expanded(
                   child: Text(
@@ -529,7 +600,9 @@ class _McpPageState extends ConsumerState<McpPage> {
             const SizedBox(height: BuilderSpace.xs),
             Text(
               'Реальные JSON-RPC 2.0 вызовы к шлюзу без секретов авторизации (F15-07):',
-              style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.inkSecondary),
+              style: BuilderTypography.bodySmall.copyWith(
+                color: BuilderColors.inkSecondary,
+              ),
             ),
             const SizedBox(height: 6),
             ...client.recentLogs.take(3).map((log) {
@@ -545,17 +618,29 @@ class _McpPageState extends ConsumerState<McpPage> {
                   children: [
                     Text(
                       'Метод: ${log.method} (${log.durationMs} мс)',
-                      style: const TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        color: Colors.greenAccent,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Запрос:\n${log.requestJson}',
-                      style: const TextStyle(color: Colors.white70, fontSize: 10, fontFamily: 'monospace'),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 10,
+                        fontFamily: 'monospace',
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Ответ:\n${log.responseJson}',
-                      style: const TextStyle(color: Colors.amberAccent, fontSize: 10, fontFamily: 'monospace'),
+                      style: const TextStyle(
+                        color: Colors.amberAccent,
+                        fontSize: 10,
+                        fontFamily: 'monospace',
+                      ),
                       maxLines: 6,
                       overflow: TextOverflow.ellipsis,
                     ),

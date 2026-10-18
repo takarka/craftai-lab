@@ -17,18 +17,23 @@ class SecureKeyUnavailableException implements Exception {
 
 /// Production secure key storage backed by OS Keychain / Android Keystore.
 final class PlatformSecureKeyStorage implements SecureKeyStorage {
-  const PlatformSecureKeyStorage({
-    FlutterSecureStorage? storage,
-  }) : _storage = storage ?? const FlutterSecureStorage(
-          aOptions: AndroidOptions(resetOnError: true),
-          iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-        );
+  const PlatformSecureKeyStorage({FlutterSecureStorage? storage})
+    : _storage =
+          storage ??
+          const FlutterSecureStorage(
+            aOptions: AndroidOptions(resetOnError: true),
+            iOptions: IOSOptions(
+              accessibility: KeychainAccessibility.first_unlock,
+            ),
+          );
 
   final FlutterSecureStorage _storage;
   static const _keyPrefix = 'craftai_builder_storage_key_';
 
   @override
-  Future<List<int>> getOrCreateStorageKey({required String installationId}) async {
+  Future<List<int>> getOrCreateStorageKey({
+    required String installationId,
+  }) async {
     if (installationId.trim().isEmpty) {
       throw const SecureKeyUnavailableException('Installation ID is required.');
     }
@@ -43,7 +48,9 @@ final class PlatformSecureKeyStorage implements SecureKeyStorage {
       await _storage.write(key: keyName, value: base64Encode(newKey));
       return newKey;
     } catch (e) {
-      throw SecureKeyUnavailableException('Failed to access hardware keystore: $e');
+      throw SecureKeyUnavailableException(
+        'Failed to access hardware keystore: $e',
+      );
     }
   }
 
@@ -53,7 +60,9 @@ final class PlatformSecureKeyStorage implements SecureKeyStorage {
     try {
       await _storage.delete(key: keyName);
     } catch (e) {
-      throw SecureKeyUnavailableException('Failed to remove keystore entry: $e');
+      throw SecureKeyUnavailableException(
+        'Failed to remove keystore entry: $e',
+      );
     }
   }
 }
@@ -65,7 +74,9 @@ final class InMemorySecureKeyStorage implements SecureKeyStorage {
   final Map<String, List<int>> _keys = {};
 
   @override
-  Future<List<int>> getOrCreateStorageKey({required String installationId}) async {
+  Future<List<int>> getOrCreateStorageKey({
+    required String installationId,
+  }) async {
     if (installationId.trim().isEmpty) {
       throw const SecureKeyUnavailableException('Installation ID is required.');
     }

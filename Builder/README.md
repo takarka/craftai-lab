@@ -12,7 +12,7 @@ flutter pub get
 flutter run -d chrome --dart-define=APP_ENV=dev
 ```
 
-Также сохранены отдельные проекты Android и iOS с идентификатором `com.example.builder`. Для сборки Android нужны Android SDK и JDK 17; для iOS — macOS и Xcode. Перед публикацией замените пример идентификатора и настройте подпись.
+Также сохранены отдельные проекты Android и iOS с постоянным идентификатором `kz.craftai.builder`. Для сборки Android нужны Android SDK и JDK 17; для iOS — macOS и Xcode. Подпись настраивается через переменные окружения CI/локальной сборки.
 
 Публичная конфигурация: `APP_ENV=dev|staging|prod` (по умолчанию `prod`), `CRAFTAI_API_BASE_URL=https://…` — только base URL CraftAI, без ключей/query/fragment. До подключения API URL можно не задавать: приложение не подставляет вымышленный сервер и не отправляет запросы. HTTP допускается только для loopback в dev. Даже при заданном URL реальная авторизация ещё не реализована.
 

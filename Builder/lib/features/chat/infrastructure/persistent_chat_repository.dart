@@ -36,7 +36,11 @@ class PersistentChatRepository implements ChatRepository {
     final conversation = Conversation(
       id: 'conv_${now.millisecondsSinceEpoch}_${now.microsecond}_${++_counter}',
       ownerId: ownerId,
-      title: title ?? (retentionPolicy == RetentionPolicy.ephemeral ? 'Временный разговор' : 'Новый разговор'),
+      title:
+          title ??
+          (retentionPolicy == RetentionPolicy.ephemeral
+              ? 'Временный разговор'
+              : 'Новый разговор'),
       createdAtUtc: now,
       activityAtUtc: now,
       retentionPolicy: retentionPolicy,
@@ -69,10 +73,11 @@ class PersistentChatRepository implements ChatRepository {
     );
 
     final persistent = rows.map((r) => Conversation.fromMap(r)).toList();
-    final ephemeral = _ephemeralConversations.values
-        .where((c) => c.ownerId == ownerId)
-        .toList()
-      ..sort((a, b) => b.activityAtUtc.compareTo(a.activityAtUtc));
+    final ephemeral =
+        _ephemeralConversations.values
+            .where((c) => c.ownerId == ownerId)
+            .toList()
+          ..sort((a, b) => b.activityAtUtc.compareTo(a.activityAtUtc));
 
     return [...ephemeral, ...persistent];
   }
@@ -143,11 +148,14 @@ class PersistentChatRepository implements ChatRepository {
   }
 
   @override
-  Future<List<ChatMessage>> getMessages({required String conversationId}) async {
+  Future<List<ChatMessage>> getMessages({
+    required String conversationId,
+  }) async {
     if (_ephemeralConversations.containsKey(conversationId)) {
       final msgs = _ephemeralMessages[conversationId] ?? [];
       return msgs.map((m) {
-        final reported = m.requestId != null && _reportedRequestIds.contains(m.requestId);
+        final reported =
+            m.requestId != null && _reportedRequestIds.contains(m.requestId);
         return m.copyWith(isReported: reported);
       }).toList();
     }
@@ -162,7 +170,8 @@ class PersistentChatRepository implements ChatRepository {
 
     return rows.map((r) {
       final msg = ChatMessage.fromMap(r);
-      final reported = msg.requestId != null && _reportedRequestIds.contains(msg.requestId);
+      final reported =
+          msg.requestId != null && _reportedRequestIds.contains(msg.requestId);
       return msg.copyWith(isReported: reported);
     }).toList();
   }
@@ -254,7 +263,9 @@ class PersistentChatRepository implements ChatRepository {
   }
 
   @override
-  Future<ContextManifest?> getContextManifest({required String requestId}) async {
+  Future<ContextManifest?> getContextManifest({
+    required String requestId,
+  }) async {
     return _manifests[requestId];
   }
 }
@@ -288,7 +299,9 @@ class InMemoryChatRepository implements ChatRepository {
 
   @override
   Future<List<Conversation>> getConversations({required String ownerId}) async {
-    final list = _conversations.values.where((c) => c.ownerId == ownerId).toList();
+    final list = _conversations.values
+        .where((c) => c.ownerId == ownerId)
+        .toList();
     list.sort((a, b) => b.activityAtUtc.compareTo(a.activityAtUtc));
     return list;
   }
@@ -319,9 +332,12 @@ class InMemoryChatRepository implements ChatRepository {
   }
 
   @override
-  Future<List<ChatMessage>> getMessages({required String conversationId}) async {
+  Future<List<ChatMessage>> getMessages({
+    required String conversationId,
+  }) async {
     return (_messages[conversationId] ?? []).map((m) {
-      final reported = m.requestId != null && _reportedRequestIds.contains(m.requestId);
+      final reported =
+          m.requestId != null && _reportedRequestIds.contains(m.requestId);
       return m.copyWith(isReported: reported);
     }).toList();
   }
@@ -378,7 +394,9 @@ class InMemoryChatRepository implements ChatRepository {
   }
 
   @override
-  Future<ContextManifest?> getContextManifest({required String requestId}) async {
+  Future<ContextManifest?> getContextManifest({
+    required String requestId,
+  }) async {
     return _manifests[requestId];
   }
 }

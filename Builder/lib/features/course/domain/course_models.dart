@@ -33,13 +33,7 @@ enum LessonStep {
   }
 }
 
-enum LevelStatus {
-  locked,
-  available,
-  inProgress,
-  completed,
-  comingSoon,
-}
+enum LevelStatus { locked, available, inProgress, completed, comingSoon }
 
 @immutable
 class QuizQuestion {
@@ -102,6 +96,7 @@ class CourseLevel {
   });
 
   final int id;
+
   /// Stable editorial identity. Numeric [id] remains the progress/checkpoint key.
   String get contentId => 'course.level.${id.toString().padLeft(2, '0')}';
   final String title;
@@ -201,5 +196,7 @@ class OverallCourseProgress {
   final Set<int> completedLevelIds;
 
   bool get isAllCompleted => completedLevelsCount >= totalActiveLevels;
-  double get progressRatio => totalActiveLevels > 0 ? (completedLevelsCount / totalActiveLevels).clamp(0.0, 1.0) : 0.0;
+  double get progressRatio => totalActiveLevels > 0
+      ? (completedLevelsCount / totalActiveLevels).clamp(0.0, 1.0)
+      : 0.0;
 }

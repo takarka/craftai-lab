@@ -71,13 +71,13 @@ mountOnboarding(
   String locale = 'ru',
 }) async {
   final session = ChangingSession();
-  final policy = policyRepository ??
-      (InMemoryPolicyRepository()
-        ..acknowledgePolicy(
-          ownerId: 'owner-a',
-          policyId: 'd02_cross_border_transfer',
-          policyVersion: 'v1.0',
-        ));
+  final policy =
+      policyRepository ??
+      (InMemoryPolicyRepository()..acknowledgePolicy(
+        ownerId: 'owner-a',
+        policyId: 'd02_cross_border_transfer',
+        policyVersion: 'v1.0',
+      ));
   final container = ProviderContainer(
     overrides: [
       appConfigProvider.overrideWithValue(

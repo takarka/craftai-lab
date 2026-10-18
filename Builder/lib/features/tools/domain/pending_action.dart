@@ -112,8 +112,12 @@ class PendingAction {
       paramsHash: map['params_hash'] as String,
       params: parsedParams,
       status: PendingActionStatus.fromId(map['status'] as String? ?? 'pending'),
-      expiresAtUtc: DateTime.tryParse(map['expires_at_utc'] as String? ?? '')?.toUtc(),
-      createdAtUtc: DateTime.tryParse(map['created_at_utc'] as String? ?? '')?.toUtc() ?? DateTime.now().toUtc(),
+      expiresAtUtc: DateTime.tryParse(
+        map['expires_at_utc'] as String? ?? '',
+      )?.toUtc(),
+      createdAtUtc:
+          DateTime.tryParse(map['created_at_utc'] as String? ?? '')?.toUtc() ??
+          DateTime.now().toUtc(),
     );
   }
 
@@ -152,10 +156,14 @@ class PendingActionStateMachine {
   /// Transitions an approved action to executed. Throws StateError if not approved.
   PendingAction markExecuted(PendingAction action) {
     if (action.status == PendingActionStatus.executed) {
-      throw StateError('Действие уже было исполнено (защита от повторного выполнения)');
+      throw StateError(
+        'Действие уже было исполнено (защита от повторного выполнения)',
+      );
     }
     if (action.status != PendingActionStatus.approved) {
-      throw StateError('Нельзя исполнить не подтверждённое действие: ${action.status.label}');
+      throw StateError(
+        'Нельзя исполнить не подтверждённое действие: ${action.status.label}',
+      );
     }
     return action.copyWith(status: PendingActionStatus.executed);
   }

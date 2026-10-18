@@ -18,7 +18,10 @@ final traceRepositoryProvider = Provider<TraceRepository>((ref) {
   );
 });
 
-final traceProvider = FutureProvider.family<RequestTrace?, String>((ref, requestId) async {
+final traceProvider = FutureProvider.family<RequestTrace?, String>((
+  ref,
+  requestId,
+) async {
   final repo = ref.watch(traceRepositoryProvider);
   if (requestId == 'sample' || requestId == 'sample-trace-748') {
     return repo.getSampleTrace();

@@ -8,7 +8,10 @@ class DocumentProcessingException implements Exception {
   final String code;
   final String message;
 
-  const DocumentProcessingException({required this.code, required this.message});
+  const DocumentProcessingException({
+    required this.code,
+    required this.message,
+  });
 
   @override
   String toString() => 'DocumentProcessingException($code): $message';
@@ -35,7 +38,10 @@ class TextExtractor {
     required DocumentFormat format,
     required String fileName,
   }) async {
-    return compute(_extractIsolateWorker, _ExtractJob(bytes: bytes, format: format, fileName: fileName));
+    return compute(
+      _extractIsolateWorker,
+      _ExtractJob(bytes: bytes, format: format, fileName: fileName),
+    );
   }
 
   static ExtractedDocumentText _extractIsolateWorker(_ExtractJob job) {
@@ -98,7 +104,10 @@ class TextExtractor {
   // --------------------------------------------------------------------------
   static ExtractedDocumentText _extractDocx(Uint8List bytes) {
     if (bytes.isEmpty) {
-      throw const DocumentProcessingException(code: 'empty_text', message: 'Файл пуст');
+      throw const DocumentProcessingException(
+        code: 'empty_text',
+        message: 'Файл пуст',
+      );
     }
 
     Archive archive;
@@ -123,7 +132,8 @@ class TextExtractor {
     if (documentXmlFile == null) {
       throw const DocumentProcessingException(
         code: 'corrupt_file',
-        message: 'Файл не является корректным документом DOCX (отсутствует word/document.xml)',
+        message:
+            'Файл не является корректным документом DOCX (отсутствует word/document.xml)',
       );
     }
 
@@ -185,7 +195,10 @@ class TextExtractor {
   // --------------------------------------------------------------------------
   static ExtractedDocumentText _extractPdf(Uint8List bytes) {
     if (bytes.isEmpty) {
-      throw const DocumentProcessingException(code: 'empty_text', message: 'Файл пуст');
+      throw const DocumentProcessingException(
+        code: 'empty_text',
+        message: 'Файл пуст',
+      );
     }
 
     // Validate PDF header %PDF-
@@ -203,7 +216,8 @@ class TextExtractor {
     if (rawString.contains('/Encrypt')) {
       throw const DocumentProcessingException(
         code: 'password_protected',
-        message: 'Документ защищен паролем. Снимите защиту для добавления в знания.',
+        message:
+            'Документ защищен паролем. Снимите защиту для добавления в знания.',
       );
     }
 
@@ -236,10 +250,13 @@ class TextExtractor {
 
     // 3. Scan check: if PDF has pages/images but 0 extractable characters
     if (fullText.isEmpty) {
-      if (rawString.contains('/Image') || rawString.contains('/Subtype /Image') || hasPageMarkers) {
+      if (rawString.contains('/Image') ||
+          rawString.contains('/Subtype /Image') ||
+          hasPageMarkers) {
         throw const DocumentProcessingException(
           code: 'scanned_image_no_text',
-          message: 'Документ содержит изображение/скан без текстового слоя. Требуется распознавание текста (OCR).',
+          message:
+              'Документ содержит изображение/скан без текстового слоя. Требуется распознавание текста (OCR).',
         );
       }
       throw const DocumentProcessingException(
@@ -312,7 +329,10 @@ class TextExtractor {
 
   static void _extractFromPdfStreams(Uint8List bytes, StringBuffer output) {
     final raw = latin1.decode(bytes);
-    final streamPattern = RegExp(r'stream[\r\n]+(.*?)[\r\n]+endstream', dotAll: true);
+    final streamPattern = RegExp(
+      r'stream[\r\n]+(.*?)[\r\n]+endstream',
+      dotAll: true,
+    );
 
     for (final m in streamPattern.allMatches(raw)) {
       final streamContent = m.group(1);
@@ -321,7 +341,10 @@ class TextExtractor {
       try {
         final streamBytes = Uint8List.fromList(streamContent.codeUnits);
         // Try decompressing via zlib/flate
-        final decompressed = ZLibDecoder().decodeBytes(streamBytes, verify: false);
+        final decompressed = ZLibDecoder().decodeBytes(
+          streamBytes,
+          verify: false,
+        );
         final decodedStr = latin1.decode(decompressed);
 
         if (decodedStr.contains('BT') && decodedStr.contains('ET')) {
@@ -336,7 +359,10 @@ class TextExtractor {
     }
   }
 
-  static List<String> _splitIntoSections(String text, {int sectionSize = 1500}) {
+  static List<String> _splitIntoSections(
+    String text, {
+    int sectionSize = 1500,
+  }) {
     if (text.length <= sectionSize) return [text];
     final sections = <String>[];
     int start = 0;
@@ -348,7 +374,9 @@ class TextExtractor {
       }
       // Break on paragraph or space
       final nextNewline = text.indexOf('\n', end - 200);
-      if (nextNewline != -1 && nextNewline < end + 200 && nextNewline < text.length) {
+      if (nextNewline != -1 &&
+          nextNewline < end + 200 &&
+          nextNewline < text.length) {
         end = nextNewline;
       }
       sections.add(text.substring(start, end).trim());

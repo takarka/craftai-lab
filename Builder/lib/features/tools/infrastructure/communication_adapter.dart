@@ -58,7 +58,8 @@ class CommunicationAdapter {
         recipientName: recipientName?.trim(),
         messageBody: messageBody.trim(),
         status: 'draft_prepared',
-        userMessage: 'Подготовлен черновик SMS для ${recipientName ?? cleanedNumber}. '
+        userMessage:
+            'Подготовлен черновик SMS для ${recipientName ?? cleanedNumber}. '
             'Для отправки откройте системное приложение сообщений (автоматическая отправка отключена в целях безопасности).',
       );
     } else {
@@ -67,7 +68,8 @@ class CommunicationAdapter {
         phoneNumber: cleanedNumber,
         recipientName: recipientName?.trim(),
         status: 'dialer_ready',
-        userMessage: 'Подготовлен номер $cleanedNumber (${recipientName ?? "Контакт"}). '
+        userMessage:
+            'Подготовлен номер $cleanedNumber (${recipientName ?? "Контакт"}). '
             'Номер будет передан в приложение «Телефон» для ручного звонка (ассистент не звонит самостоятельно).',
       );
     }

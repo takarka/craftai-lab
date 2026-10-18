@@ -4,7 +4,10 @@ import '../domain/tool_definition.dart';
 class ToolExecutionException implements Exception {
   final String message;
   final OsPermissionStatus status;
-  const ToolExecutionException(this.message, {this.status = OsPermissionStatus.denied});
+  const ToolExecutionException(
+    this.message, {
+    this.status = OsPermissionStatus.denied,
+  });
   @override
   String toString() => 'ToolExecutionException: $message ($status)';
 }
@@ -47,8 +50,12 @@ class CalendarAdapter {
   bool hasPermission;
   final List<CalendarEvent> _events = [];
 
-  CalendarAdapter({bool hasPermission = true, OsPermissionStatus? permissionStatus})
-      : hasPermission = permissionStatus != null ? permissionStatus == OsPermissionStatus.granted : hasPermission {
+  CalendarAdapter({
+    bool hasPermission = true,
+    OsPermissionStatus? permissionStatus,
+  }) : hasPermission = permissionStatus != null
+           ? permissionStatus == OsPermissionStatus.granted
+           : hasPermission {
     // Seed test calendar with initial educational events (F14-13)
     final now = DateTime.now().toUtc();
     _events.addAll([
@@ -96,7 +103,9 @@ class CalendarAdapter {
     String? notes,
   }) async {
     if (!hasPermission) {
-      throw StateError('PERMISSION_DENIED: Доступ к календарю запрещён в настройках устройства');
+      throw StateError(
+        'PERMISSION_DENIED: Доступ к календарю запрещён в настройках устройства',
+      );
     }
 
     final id = 'evt_${DateTime.now().millisecondsSinceEpoch}';

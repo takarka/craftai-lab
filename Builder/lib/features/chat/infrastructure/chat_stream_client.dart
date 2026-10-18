@@ -63,7 +63,9 @@ class ChatStreamClient {
 
     final token = session?.accessToken;
     if (token == null || token.isEmpty) {
-      throw const CraftAiAuthException('Требуется авторизация для отправки сообщения.');
+      throw const CraftAiAuthException(
+        'Требуется авторизация для отправки сообщения.',
+      );
     }
 
     final uri = Uri.parse('$baseUrl/builder/chat/completions');
@@ -85,9 +87,13 @@ class ChatStreamClient {
     try {
       response = await _client.send(request);
     } on SocketException catch (e) {
-      throw CraftAiNetworkException('Нет подключения к сети. Проверьте интернет: ${e.message}');
+      throw CraftAiNetworkException(
+        'Нет подключения к сети. Проверьте интернет: ${e.message}',
+      );
     } on http.ClientException catch (e) {
-      throw CraftAiNetworkException('Сетевая ошибка при обращении к серверу: ${e.message}');
+      throw CraftAiNetworkException(
+        'Сетевая ошибка при обращении к серверу: ${e.message}',
+      );
     } catch (e) {
       throw CraftAiNetworkException('Не удалось отправить запрос: $e');
     }
@@ -175,7 +181,9 @@ class ChatStreamClient {
       },
       onError: (err) {
         if (!controller.isClosed) {
-          controller.addError(CraftAiNetworkException('Разрыв потока данных: $err'));
+          controller.addError(
+            CraftAiNetworkException('Разрыв потока данных: $err'),
+          );
           controller.close();
         }
       },

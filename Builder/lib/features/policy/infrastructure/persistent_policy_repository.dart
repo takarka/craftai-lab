@@ -56,16 +56,12 @@ final class PersistentPolicyRepository implements PolicyRepository {
 
     final nowUtc = DateTime.now().toUtc().toIso8601String();
 
-    await database.db.insert(
-      StorageSchemaV1.tablePolicyAcknowledgments,
-      {
-        'owner_id': ownerId,
-        'policy_id': policyId,
-        'policy_version': policyVersion,
-        'acknowledged_at_utc': nowUtc,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await database.db.insert(StorageSchemaV1.tablePolicyAcknowledgments, {
+      'owner_id': ownerId,
+      'policy_id': policyId,
+      'policy_version': policyVersion,
+      'acknowledged_at_utc': nowUtc,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 }
 

@@ -2,8 +2,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../domain/auth_tokens.dart';
 
 abstract interface class SecureTokenStorage {
-  Future<void> writeSession({required String ownerId, required AuthTokens tokens});
+  Future<void> writeSession({
+    required String ownerId,
+    required AuthTokens tokens,
+  });
   Future<AuthTokens?> readTokens();
+
   /// Forces one mobile-token rotation. Implementations must coalesce callers.
   Future<AuthTokens?> refreshTokens();
   Future<StoredRefreshSession?> readRefreshSession();
@@ -24,13 +28,15 @@ class StoredRefreshSession {
 }
 
 final class PlatformSecureTokenStorage implements SecureTokenStorage {
-  PlatformSecureTokenStorage({
-    FlutterSecureStorage? storage,
-  }) : _storage = storage ??
-            const FlutterSecureStorage(
-              aOptions: AndroidOptions(resetOnError: true),
-              iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
-            );
+  PlatformSecureTokenStorage({FlutterSecureStorage? storage})
+    : _storage =
+          storage ??
+          const FlutterSecureStorage(
+            aOptions: AndroidOptions(resetOnError: true),
+            iOptions: IOSOptions(
+              accessibility: KeychainAccessibility.first_unlock,
+            ),
+          );
 
   final FlutterSecureStorage _storage;
   AuthTokens? _memoryTokens;
@@ -120,7 +126,8 @@ final class InMemorySecureTokenStorage implements SecureTokenStorage {
     _storage['refresh_token'] = tokens.refreshToken;
     _storage['token_type'] = tokens.tokenType;
     _storage['expires_at'] = tokens.expiresAtUtc.toIso8601String();
-    _storage['refresh_expires_at'] = tokens.refreshExpiresAtUtc.toIso8601String();
+    _storage['refresh_expires_at'] = tokens.refreshExpiresAtUtc
+        .toIso8601String();
   }
 
   AuthTokens? _tokens;
@@ -140,7 +147,11 @@ final class InMemorySecureTokenStorage implements SecureTokenStorage {
     final expiry = _storage['refresh_expires_at'];
     final parsed = expiry == null ? null : DateTime.tryParse(expiry);
     if (ownerId == null || refreshToken == null || parsed == null) return null;
-    return StoredRefreshSession(ownerId: ownerId, refreshToken: refreshToken, refreshExpiresAtUtc: parsed.toUtc());
+    return StoredRefreshSession(
+      ownerId: ownerId,
+      refreshToken: refreshToken,
+      refreshExpiresAtUtc: parsed.toUtc(),
+    );
   }
 
   @override
@@ -155,4 +166,3 @@ final class InMemorySecureTokenStorage implements SecureTokenStorage {
   @override
   Future<bool> hasStoredSession() async => _storage.containsKey('owner_id');
 }
-

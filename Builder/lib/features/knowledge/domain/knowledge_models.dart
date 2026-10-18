@@ -123,13 +123,23 @@ class KnowledgeDocument {
       ownerId: json['owner_id'] as String? ?? '',
       contentHash: json['content_hash'] as String? ?? '',
       fileName: json['file_name'] as String? ?? 'Документ',
-      fileFormat: DocumentFormat.fromExtension(json['file_format'] as String? ?? 'txt') ?? DocumentFormat.txt,
+      fileFormat:
+          DocumentFormat.fromExtension(
+            json['file_format'] as String? ?? 'txt',
+          ) ??
+          DocumentFormat.txt,
       fileSizeBytes: json['file_size_bytes'] as int? ?? 0,
-      isEnabled: (json['is_enabled'] is bool) ? json['is_enabled'] as bool : (json['is_enabled'] as int? ?? 1) == 1,
-      indexStatus: DocumentProcessingStatus.fromDbValue(json['index_status'] as String? ?? 'ready'),
+      isEnabled: (json['is_enabled'] is bool)
+          ? json['is_enabled'] as bool
+          : (json['is_enabled'] as int? ?? 1) == 1,
+      indexStatus: DocumentProcessingStatus.fromDbValue(
+        json['index_status'] as String? ?? 'ready',
+      ),
       errorMessage: json['error_message'] as String?,
       chunksCount: json['chunks_count'] as int? ?? 0,
-      createdAtUtc: DateTime.tryParse(json['created_at_utc'] as String? ?? '') ?? DateTime.now().toUtc(),
+      createdAtUtc:
+          DateTime.tryParse(json['created_at_utc'] as String? ?? '') ??
+          DateTime.now().toUtc(),
     );
   }
 }
@@ -248,6 +258,8 @@ class KnowledgeSearchResult {
     required this.searchDurationMs,
   });
 
-  List<String> get matchedChunkTexts =>
-      matches.where((m) => m.isAboveThreshold).map((m) => m.chunk.chunkText).toList();
+  List<String> get matchedChunkTexts => matches
+      .where((m) => m.isAboveThreshold)
+      .map((m) => m.chunk.chunkText)
+      .toList();
 }

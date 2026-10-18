@@ -28,7 +28,9 @@ final storageDatabaseProvider = Provider<StorageDatabase?>((ref) {
   return StorageDatabase(databasePath: path);
 });
 
-final workspaceStorageServiceProvider = Provider<WorkspaceStorageService?>((ref) {
+final workspaceStorageServiceProvider = Provider<WorkspaceStorageService?>((
+  ref,
+) {
   final db = ref.watch(storageDatabaseProvider);
   if (db == null) return null;
   final keyStorage = ref.watch(secureKeyStorageProvider);
@@ -40,12 +42,13 @@ final workspaceStorageServiceProvider = Provider<WorkspaceStorageService?>((ref)
   );
 });
 
-final persistentInitialWorkspaceRepositoryProvider = Provider<InitialWorkspaceRepository?>((ref) {
-  final db = ref.watch(storageDatabaseProvider);
-  if (db == null) return null;
-  final installationId = ref.watch(installationIdProvider);
-  return PersistentInitialWorkspaceRepository(
-    database: db,
-    installationId: installationId,
-  );
-});
+final persistentInitialWorkspaceRepositoryProvider =
+    Provider<InitialWorkspaceRepository?>((ref) {
+      final db = ref.watch(storageDatabaseProvider);
+      if (db == null) return null;
+      final installationId = ref.watch(installationIdProvider);
+      return PersistentInitialWorkspaceRepository(
+        database: db,
+        installationId: installationId,
+      );
+    });

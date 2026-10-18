@@ -20,11 +20,23 @@ class CoursePage extends ConsumerStatefulWidget {
 }
 
 class _CoursePageState extends ConsumerState<CoursePage> {
-  void _handleOpenLevel(BuildContext context, CourseLevel level, LevelStatus status, LevelProgress? progress) {
+  void _handleOpenLevel(
+    BuildContext context,
+    CourseLevel level,
+    LevelStatus status,
+    LevelProgress? progress,
+  ) {
     final cs = CourseStrings.of(context);
     if (status == LevelStatus.comingSoon) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(cs.t('Этот уровень будет доступен в следующем обновлении', 'Бұл деңгей келесі жаңартуда қолжетімді болады'))),
+        SnackBar(
+          content: Text(
+            cs.t(
+              'Этот уровень будет доступен в следующем обновлении',
+              'Бұл деңгей келесі жаңартуда қолжетімді болады',
+            ),
+          ),
+        ),
       );
       return;
     }
@@ -47,9 +59,18 @@ class _CoursePageState extends ConsumerState<CoursePage> {
         key: const Key('course.theoryPreviewDialog'),
         title: Row(
           children: [
-            const BuilderIcon(BuilderGlyph.lock, size: 20, color: BuilderColors.inkSecondary),
+            const BuilderIcon(
+              BuilderGlyph.lock,
+              size: 20,
+              color: BuilderColors.inkSecondary,
+            ),
             const SizedBox(width: 8),
-            Expanded(child: Text('${cs.levelPrefix(level.id)} · ${cs.t('Превью теории', 'Теорияға шолу')}', style: BuilderType.title)),
+            Expanded(
+              child: Text(
+                '${cs.levelPrefix(level.id)} · ${cs.t('Превью теории', 'Теорияға шолу')}',
+                style: BuilderType.title,
+              ),
+            ),
           ],
         ),
         content: SingleChildScrollView(
@@ -68,7 +89,9 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                     'Откроется после прохождения Уровня ${level.id - 1}. Ниже доступна теория для ознакомления:',
                     '${level.id - 1}-деңгейді аяқтағаннан кейін ашылады. Төменде танысу үшін теория қолжетімді:',
                   ),
-                  style: BuilderType.small.copyWith(color: BuilderColors.primary),
+                  style: BuilderType.small.copyWith(
+                    color: BuilderColors.primary,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -76,7 +99,12 @@ class _CoursePageState extends ConsumerState<CoursePage> {
               const SizedBox(height: 6),
               Text(level.ideaText, style: BuilderType.body),
               const SizedBox(height: 10),
-              Text(level.ideaExampleTemplate, style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary)),
+              Text(
+                level.ideaExampleTemplate,
+                style: BuilderType.small.copyWith(
+                  color: BuilderColors.inkSecondary,
+                ),
+              ),
             ],
           ),
         ),
@@ -96,8 +124,12 @@ class _CoursePageState extends ConsumerState<CoursePage> {
     final cs = CourseStrings.of(context);
     final locale = Localizations.localeOf(context).languageCode;
     final levels = CourseCatalog.getLevels(locale: locale);
-    final overallAsync = ref.watch(overallCourseProgressProvider(widget.ownerId));
-    final progressListAsync = ref.watch(courseProgressListProvider(widget.ownerId));
+    final overallAsync = ref.watch(
+      overallCourseProgressProvider(widget.ownerId),
+    );
+    final progressListAsync = ref.watch(
+      courseProgressListProvider(widget.ownerId),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -116,9 +148,16 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                 value: 'reset',
                 child: Row(
                   children: [
-                    const BuilderIcon(BuilderGlyph.reset, size: 18, color: BuilderColors.warning),
+                    const BuilderIcon(
+                      BuilderGlyph.reset,
+                      size: 18,
+                      color: BuilderColors.warning,
+                    ),
                     const SizedBox(width: 8),
-                    Text(cs.resetCourseProgress, style: const TextStyle(color: BuilderColors.warning)),
+                    Text(
+                      cs.resetCourseProgress,
+                      style: const TextStyle(color: BuilderColors.warning),
+                    ),
                   ],
                 ),
               ),
@@ -147,7 +186,9 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                   activeLevelId: overall.activeLevelId,
                   activeStep: overall.activeStep,
                   onResume: overall.activeLevelId != null
-                      ? () => context.push('/course/lesson/${overall.activeLevelId}')
+                      ? () => context.push(
+                          '/course/lesson/${overall.activeLevelId}',
+                        )
                       : null,
                 ),
               ),
@@ -159,11 +200,17 @@ class _CoursePageState extends ConsumerState<CoursePage> {
 
               // 3. 9 Levels List (F10-02, F10-V01)
               progressListAsync.when(
-                loading: () => const Center(child: Padding(
-                  padding: EdgeInsets.all(32),
-                  child: CircularProgressIndicator(),
-                )),
-                error: (err, _) => Center(child: Text('${cs.t('Ошибка загрузки курса', 'Курсты жүктеу қатесі')}: $err')),
+                loading: () => const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
+                error: (err, _) => Center(
+                  child: Text(
+                    '${cs.t('Ошибка загрузки курса', 'Курсты жүктеу қатесі')}: $err',
+                  ),
+                ),
                 data: (progressList) {
                   return Column(
                     children: levels.map((lvl) {
@@ -200,7 +247,8 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                           level: lvl,
                           progress: p,
                           status: status,
-                          onTap: () => _handleOpenLevel(context, lvl, status, p),
+                          onTap: () =>
+                              _handleOpenLevel(context, lvl, status, p),
                         ),
                       );
                     }).toList(),
@@ -222,11 +270,20 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const BuilderIcon(BuilderGlyph.doc, size: 24, color: BuilderColors.primary),
+                          const BuilderIcon(
+                            BuilderGlyph.doc,
+                            size: 24,
+                            color: BuilderColors.primary,
+                          ),
                           const SizedBox(height: 8),
                           Text('Словарь ИИ', style: BuilderType.title),
                           const SizedBox(height: 4),
-                          Text('Термины и понятия', style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary)),
+                          Text(
+                            'Термины и понятия',
+                            style: BuilderType.small.copyWith(
+                              color: BuilderColors.inkSecondary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -237,24 +294,42 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                       key: const Key('course.achievementsTile'),
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Достижения будут доступны после завершения MVP')),
+                          const SnackBar(
+                            content: Text(
+                              'Достижения будут доступны после завершения MVP',
+                            ),
+                          ),
                         );
                       },
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const BuilderIcon(BuilderGlyph.robot, size: 24, color: BuilderColors.inkSecondary),
+                          const BuilderIcon(
+                            BuilderGlyph.robot,
+                            size: 24,
+                            color: BuilderColors.inkSecondary,
+                          ),
                           const SizedBox(height: 8),
                           Wrap(
                             spacing: 4,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Text('Награды', style: BuilderType.title),
-                              Text('Скоро', style: BuilderType.small.copyWith(color: BuilderColors.inkDisabled)),
+                              Text(
+                                'Скоро',
+                                style: BuilderType.small.copyWith(
+                                  color: BuilderColors.inkDisabled,
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 4),
-                          Text('Бейджи за уровни', style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary)),
+                          Text(
+                            'Бейджи за уровни',
+                            style: BuilderType.small.copyWith(
+                              color: BuilderColors.inkSecondary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -304,27 +379,41 @@ class _CourseProgressHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isAllCompleted ? cs.t('Курс успешно завершён!', 'Курс сәтті аяқталды!') : cs.t('Прогресс курса', 'Курс прогресі'),
+                      isAllCompleted
+                          ? cs.t(
+                              'Курс успешно завершён!',
+                              'Курс сәтті аяқталды!',
+                            )
+                          : cs.t('Прогресс курса', 'Курс прогресі'),
                       style: BuilderType.title,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       cs.levelsCompleted(completedCount, totalCount),
-                      style: BuilderType.body.copyWith(color: BuilderColors.inkSecondary),
+                      style: BuilderType.body.copyWith(
+                        color: BuilderColors.inkSecondary,
+                      ),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: isAllCompleted ? BuilderColors.primaryTint : BuilderColors.surfaceDisabled,
+                  color: isAllCompleted
+                      ? BuilderColors.primaryTint
+                      : BuilderColors.surfaceDisabled,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
                   '${(progressRatio * 100).toInt()}%',
                   style: BuilderType.title.copyWith(
-                    color: isAllCompleted ? BuilderColors.primary : BuilderColors.ink,
+                    color: isAllCompleted
+                        ? BuilderColors.primary
+                        : BuilderColors.ink,
                   ),
                 ),
               ),
@@ -337,7 +426,9 @@ class _CourseProgressHeader extends StatelessWidget {
               value: progressRatio,
               minHeight: 8,
               backgroundColor: BuilderColors.surfaceDisabled,
-              valueColor: const AlwaysStoppedAnimation<Color>(BuilderColors.primary),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                BuilderColors.primary,
+              ),
             ),
           ),
           if (activeLevelId != null && !isAllCompleted && onResume != null) ...[
@@ -350,9 +441,17 @@ class _CourseProgressHeader extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(cs.t('Текущий шаг', 'Ағымдағы қадам'), style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary)),
+                      Text(
+                        cs.t('Текущий шаг', 'Ағымдағы қадам'),
+                        style: BuilderType.small.copyWith(
+                          color: BuilderColors.inkSecondary,
+                        ),
+                      ),
                       const SizedBox(height: 2),
-                      Text('${cs.levelPrefix(activeLevelId!)} · ${activeStep.localizedTitle(cs.kk)}', style: BuilderType.title),
+                      Text(
+                        '${cs.levelPrefix(activeLevelId!)} · ${activeStep.localizedTitle(cs.kk)}',
+                        style: BuilderType.title,
+                      ),
                     ],
                   ),
                 ),
@@ -415,7 +514,10 @@ class _LevelCard extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: _statusBgColor(status),
                         borderRadius: BorderRadius.circular(8),
@@ -435,14 +537,19 @@ class _LevelCard extends StatelessWidget {
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
-                          child: _StatusBadge(status: status, step: progress.currentStep),
+                          child: _StatusBadge(
+                            status: status,
+                            step: progress.currentStep,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
                     Text(
                       cs.minutesSuffix(level.estimatedMinutes),
-                      style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
+                      style: BuilderType.small.copyWith(
+                        color: BuilderColors.inkSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -451,13 +558,19 @@ class _LevelCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   level.subtitle,
-                  style: BuilderType.body.copyWith(color: BuilderColors.inkSecondary),
+                  style: BuilderType.body.copyWith(
+                    color: BuilderColors.inkSecondary,
+                  ),
                 ),
                 if (level.targetSkillName != null) ...[
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const BuilderIcon(BuilderGlyph.bolt, size: 14, color: BuilderColors.primary),
+                      const BuilderIcon(
+                        BuilderGlyph.bolt,
+                        size: 14,
+                        color: BuilderColors.primary,
+                      ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
@@ -529,11 +642,18 @@ class _StatusBadge extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const BuilderIcon(BuilderGlyph.check, size: 14, color: BuilderColors.primary),
+              const BuilderIcon(
+                BuilderGlyph.check,
+                size: 14,
+                color: BuilderColors.primary,
+              ),
               const SizedBox(width: 4),
               Text(
                 cs.completed,
-                style: BuilderType.small.copyWith(color: BuilderColors.primary, fontWeight: FontWeight.w600),
+                style: BuilderType.small.copyWith(
+                  color: BuilderColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -547,7 +667,10 @@ class _StatusBadge extends StatelessWidget {
           ),
           child: Text(
             cs.t('Шаг $step из 5', '5 қадамның $step-қадамы'),
-            style: BuilderType.small.copyWith(color: BuilderColors.warning, fontWeight: FontWeight.w600),
+            style: BuilderType.small.copyWith(
+              color: BuilderColors.warning,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         );
       case LevelStatus.available:
@@ -559,7 +682,10 @@ class _StatusBadge extends StatelessWidget {
           ),
           child: Text(
             cs.available,
-            style: BuilderType.small.copyWith(color: BuilderColors.ink, fontWeight: FontWeight.w600),
+            style: BuilderType.small.copyWith(
+              color: BuilderColors.ink,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         );
       case LevelStatus.locked:
@@ -572,14 +698,20 @@ class _StatusBadge extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const BuilderIcon(BuilderGlyph.lock, size: 14, color: BuilderColors.inkSecondary),
+              const BuilderIcon(
+                BuilderGlyph.lock,
+                size: 14,
+                color: BuilderColors.inkSecondary,
+              ),
               const SizedBox(width: 4),
               Flexible(
                 child: Text(
                   cs.locked,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
+                  style: BuilderType.small.copyWith(
+                    color: BuilderColors.inkSecondary,
+                  ),
                 ),
               ),
             ],
@@ -594,7 +726,9 @@ class _StatusBadge extends StatelessWidget {
           ),
           child: Text(
             cs.t('После MVP · скоро', 'MVP-ден кейін · жуықта'),
-            style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
+            style: BuilderType.small.copyWith(
+              color: BuilderColors.inkSecondary,
+            ),
           ),
         );
     }

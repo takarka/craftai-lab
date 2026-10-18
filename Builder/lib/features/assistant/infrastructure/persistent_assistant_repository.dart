@@ -40,8 +40,10 @@ class PersistentAssistantRepository implements AssistantRepository {
   AssistantConfig _parseConfig(Map<String, dynamic> row) {
     final catName = row['selected_category'] as String?;
     final cat = catName != null ? ModelCategory.fromString(catName) : null;
-    final skillsRaw = jsonDecode(row['enabled_skills_json'] as String) as List<dynamic>;
-    final rulesRaw = jsonDecode(row['system_rules_json'] as String) as List<dynamic>;
+    final skillsRaw =
+        jsonDecode(row['enabled_skills_json'] as String) as List<dynamic>;
+    final rulesRaw =
+        jsonDecode(row['system_rules_json'] as String) as List<dynamic>;
 
     return AssistantConfig(
       ownerId: row['owner_id'] as String,
@@ -95,15 +97,20 @@ class PersistentAssistantRepository implements AssistantRepository {
       }
     }
 
-    final latestVersionNumber = rows.isNotEmpty ? (rows.first['version_number'] as int) : 1;
+    final latestVersionNumber = rows.isNotEmpty
+        ? (rows.first['version_number'] as int)
+        : 1;
 
     return rows.map((row) {
       final vNum = row['version_number'] as int;
-      final snapshotJson = jsonDecode(row['snapshot_json'] as String) as Map<String, dynamic>;
+      final snapshotJson =
+          jsonDecode(row['snapshot_json'] as String) as Map<String, dynamic>;
       final snapshot = AssistantSnapshot.fromJson(snapshotJson);
 
       // Identify referenced documents that are permanently deleted
-      final missingDocs = snapshot.documentIds.where((id) => !activeDocIds.contains(id)).toList();
+      final missingDocs = snapshot.documentIds
+          .where((id) => !activeDocIds.contains(id))
+          .toList();
 
       return AssistantVersion(
         versionNumber: vNum,
@@ -137,7 +144,9 @@ class PersistentAssistantRepository implements AssistantRepository {
         whereArgs: [ownerId],
       );
 
-      final nextRevision = configRows.isNotEmpty ? (configRows.first['state_revision'] as int) + 1 : 1;
+      final nextRevision = configRows.isNotEmpty
+          ? (configRows.first['state_revision'] as int) + 1
+          : 1;
 
       // 2. Fetch max version number
       final maxVRow = await txn.rawQuery(
@@ -163,7 +172,14 @@ class PersistentAssistantRepository implements AssistantRepository {
       final docIds = docsRows.map((r) => r['id'] as String).toList();
 
       final nowUtc = DateTime.now().toUtc().toIso8601String();
-      final rules = systemRules ?? (configRows.isNotEmpty ? (jsonDecode(configRows.first['system_rules_json'] as String) as List<dynamic>).map((e) => e.toString()).toList() : <String>[]);
+      final rules =
+          systemRules ??
+          (configRows.isNotEmpty
+              ? (jsonDecode(configRows.first['system_rules_json'] as String)
+                        as List<dynamic>)
+                    .map((e) => e.toString())
+                    .toList()
+              : <String>[]);
 
       final snapshot = AssistantSnapshot(
         name: name,
@@ -176,33 +192,26 @@ class PersistentAssistantRepository implements AssistantRepository {
       );
 
       // 4. Update configuration row
-      await txn.insert(
-        StorageSchemaV1.tableAssistantConfigurations,
-        {
-          'owner_id': ownerId,
-          'name': name,
-          'selected_category': selectedCategory?.name,
-          'enabled_skills_json': jsonEncode(enabledSkills.toList()..sort()),
-          'system_rules_json': jsonEncode(rules),
-          'state_revision': nextRevision,
-          'updated_at_utc': nowUtc,
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      await txn.insert(StorageSchemaV1.tableAssistantConfigurations, {
+        'owner_id': ownerId,
+        'name': name,
+        'selected_category': selectedCategory?.name,
+        'enabled_skills_json': jsonEncode(enabledSkills.toList()..sort()),
+        'system_rules_json': jsonEncode(rules),
+        'state_revision': nextRevision,
+        'updated_at_utc': nowUtc,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       // 5. Insert new version record
-      await txn.insert(
-        StorageSchemaV1.tableAssistantVersions,
-        {
-          'owner_id': ownerId,
-          'version_number': nextVersion,
-          'created_at_utc': nowUtc,
-          'reason': reason,
-          'parent_id': currentMaxV > 0 ? currentMaxV.toString() : null,
-          'schema_version': 1,
-          'snapshot_json': jsonEncode(snapshot.toJson()),
-        },
-      );
+      await txn.insert(StorageSchemaV1.tableAssistantVersions, {
+        'owner_id': ownerId,
+        'version_number': nextVersion,
+        'created_at_utc': nowUtc,
+        'reason': reason,
+        'parent_id': currentMaxV > 0 ? currentMaxV.toString() : null,
+        'schema_version': 1,
+        'snapshot_json': jsonEncode(snapshot.toJson()),
+      });
 
       return AssistantVersion(
         versionNumber: nextVersion,
@@ -234,11 +243,15 @@ class PersistentAssistantRepository implements AssistantRepository {
       throw ArgumentError('Версия $targetVersionNumber не найдена');
     }
 
-    final snapshotJson = jsonDecode(versionRows.first['snapshot_json'] as String) as Map<String, dynamic>;
+    final snapshotJson =
+        jsonDecode(versionRows.first['snapshot_json'] as String)
+            as Map<String, dynamic>;
     final snapshot = AssistantSnapshot.fromJson(snapshotJson);
 
     // Filter skills by course progress permissions (F09-08 and ADR-01)
-    final safeSkills = snapshot.enabledSkills.where((s) => allowedSkills.contains(s)).toSet();
+    final safeSkills = snapshot.enabledSkills
+        .where((s) => allowedSkills.contains(s))
+        .toSet();
 
     await commitChange(
       ownerId: ownerId,
@@ -313,10 +326,7 @@ class PersistentAssistantRepository implements AssistantRepository {
     final nowUtc = DateTime.now().toUtc().toIso8601String();
     await database.db.update(
       StorageSchemaV1.tableTeacherPreferences,
-      {
-        'storage_retention_days': days,
-        'updated_at_utc': nowUtc,
-      },
+      {'storage_retention_days': days, 'updated_at_utc': nowUtc},
       where: 'owner_id = ?',
       whereArgs: [ownerId],
     );
@@ -331,20 +341,76 @@ class PersistentAssistantRepository implements AssistantRepository {
 
     // 2. Perform atomic deletion in transaction
     await database.transaction((txn) async {
-      await txn.delete(StorageSchemaV1.tableAssistantVersions, where: 'owner_id = ?', whereArgs: [ownerId]);
-      await txn.delete(StorageSchemaV1.tableConversations, where: 'owner_id = ?', whereArgs: [ownerId]);
-      await txn.delete(StorageSchemaV1.tableMessages, where: 'owner_id = ?', whereArgs: [ownerId]);
-      await txn.delete(StorageSchemaV1.tableRequestTraces, where: 'owner_id = ?', whereArgs: [ownerId]);
-      await txn.delete(StorageSchemaV1.tableKnowledgeDocuments, where: 'owner_id = ?', whereArgs: [ownerId]);
-      await txn.delete(StorageSchemaV1.tableDocumentRevisions, where: 'owner_id = ?', whereArgs: [ownerId]);
-      await txn.delete(StorageSchemaV1.tableKnowledgeChunks, where: 'owner_id = ?', whereArgs: [ownerId]);
-      await txn.delete(StorageSchemaV1.tableMemoryFacts, where: 'owner_id = ?', whereArgs: [ownerId]);
-      await txn.delete(StorageSchemaV1.tableToolGrants, where: 'owner_id = ?', whereArgs: [ownerId]);
-      await txn.delete(StorageSchemaV1.tablePendingActions, where: 'owner_id = ?', whereArgs: [ownerId]);
-      await txn.delete(StorageSchemaV1.tableToolInvocations, where: 'owner_id = ?', whereArgs: [ownerId]);
-      await txn.delete(StorageSchemaV1.tableCourseProgress, where: 'owner_id = ?', whereArgs: [ownerId]);
-      await txn.delete(StorageSchemaV1.tableQuizAttempts, where: 'owner_id = ?', whereArgs: [ownerId]);
-      await txn.delete(StorageSchemaV1.tableFileStagingJournal, where: 'owner_id = ?', whereArgs: [ownerId]);
+      await txn.delete(
+        StorageSchemaV1.tableAssistantVersions,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      await txn.delete(
+        StorageSchemaV1.tableConversations,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      await txn.delete(
+        StorageSchemaV1.tableMessages,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      await txn.delete(
+        StorageSchemaV1.tableRequestTraces,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      await txn.delete(
+        StorageSchemaV1.tableKnowledgeDocuments,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      await txn.delete(
+        StorageSchemaV1.tableDocumentRevisions,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      await txn.delete(
+        StorageSchemaV1.tableKnowledgeChunks,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      await txn.delete(
+        StorageSchemaV1.tableMemoryFacts,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      await txn.delete(
+        StorageSchemaV1.tableToolGrants,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      await txn.delete(
+        StorageSchemaV1.tablePendingActions,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      await txn.delete(
+        StorageSchemaV1.tableToolInvocations,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      await txn.delete(
+        StorageSchemaV1.tableCourseProgress,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      await txn.delete(
+        StorageSchemaV1.tableQuizAttempts,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      await txn.delete(
+        StorageSchemaV1.tableFileStagingJournal,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
 
       // Reset assistant_configurations to initial baseline
       final nowUtc = DateTime.now().toUtc().toIso8601String();

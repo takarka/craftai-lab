@@ -17,8 +17,12 @@ class D02ConsentSheet extends StatelessWidget {
         borderRadius: BorderRadius.only(
           topLeft: const Radius.circular(BuilderRadii.sheet),
           topRight: const Radius.circular(BuilderRadii.sheet),
-          bottomLeft: isDesktop ? const Radius.circular(BuilderRadii.sheet) : Radius.zero,
-          bottomRight: isDesktop ? const Radius.circular(BuilderRadii.sheet) : Radius.zero,
+          bottomLeft: isDesktop
+              ? const Radius.circular(BuilderRadii.sheet)
+              : Radius.zero,
+          bottomRight: isDesktop
+              ? const Radius.circular(BuilderRadii.sheet)
+              : Radius.zero,
         ),
         boxShadow: BuilderShadows.sheet,
       ),
@@ -29,148 +33,139 @@ class D02ConsentSheet extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Grab handle
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: BuilderColors.lineDisabled,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Globe icon tile
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: BuilderIconTile(
-                BuilderGlyph.globe,
-                warm: true,
-                size: 48,
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // Title
-            Text(
-              s.d02Title,
-              style: BuilderType.h1,
-            ),
-            const SizedBox(height: 10),
-
-            // Subtitle
-            Text(
-              s.d02Subtitle,
-              style: const TextStyle(
-                color: BuilderColors.inkSecondary,
-                fontSize: 14,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 14),
-
-            // Data transfer chain: Phone -> CraftAI -> Model
-            Wrap(
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                _ChainChip(
-                  icon: BuilderGlyph.phone,
-                  label: s.d02StepPhone,
-                  warm: false,
-                ),
-                const Icon(
-                  Icons.arrow_forward,
-                  size: 14,
-                  color: BuilderColors.inkSecondary,
-                ),
-                _ChainChip(
-                  icon: BuilderGlyph.cloud,
-                  label: s.d02StepCraftAi,
-                  warm: false,
-                ),
-                const Icon(
-                  Icons.arrow_forward,
-                  size: 14,
-                  color: BuilderColors.inkSecondary,
-                ),
-                _ChainChip(
-                  icon: BuilderGlyph.robot,
-                  label: s.d02StepModel,
-                  warm: true,
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Warning banner: Do not send student data
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: BuilderColors.accent,
-                  width: 1.5,
-                ),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.warning_amber_rounded,
-                    color: BuilderColors.warning,
-                    size: 20,
+            children: [
+              // Grab handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: BuilderColors.lineDisabled,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      s.d02Warning,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: BuilderColors.ink,
-                        height: 1.35,
-                      ),
-                    ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Globe icon tile
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: BuilderIconTile(
+                  BuilderGlyph.globe,
+                  warm: true,
+                  size: 48,
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Title
+              Text(s.d02Title, style: BuilderType.h1),
+              const SizedBox(height: 10),
+
+              // Subtitle
+              Text(
+                s.d02Subtitle,
+                style: const TextStyle(
+                  color: BuilderColors.inkSecondary,
+                  fontSize: 14,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Data transfer chain: Phone -> CraftAI -> Model
+              Wrap(
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  _ChainChip(
+                    icon: BuilderGlyph.phone,
+                    label: s.d02StepPhone,
+                    warm: false,
+                  ),
+                  const Icon(
+                    Icons.arrow_forward,
+                    size: 14,
+                    color: BuilderColors.inkSecondary,
+                  ),
+                  _ChainChip(
+                    icon: BuilderGlyph.cloud,
+                    label: s.d02StepCraftAi,
+                    warm: false,
+                  ),
+                  const Icon(
+                    Icons.arrow_forward,
+                    size: 14,
+                    color: BuilderColors.inkSecondary,
+                  ),
+                  _ChainChip(
+                    icon: BuilderGlyph.robot,
+                    label: s.d02StepModel,
+                    warm: true,
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-            // Primary action: Understand ("Понятно")
-            BuilderButton(
-              key: const Key('d02.understand'),
-              label: s.d02Understand,
-              onPressed: () => Navigator.of(context).pop(true),
-            ),
-            const SizedBox(height: 10),
+              // Warning banner: Do not send student data
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: BuilderColors.accent, width: 1.5),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: BuilderColors.warning,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        s.d02Warning,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: BuilderColors.ink,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
 
-            // Secondary action: Not now ("Не сейчас")
-            BuilderButton(
-              key: const Key('d02.notNow'),
-              label: s.d02NotNow,
-              variant: BuilderButtonVariant.secondary,
-              onPressed: () => Navigator.of(context).pop(false),
-            ),
-          ],
+              // Primary action: Understand ("Понятно")
+              BuilderButton(
+                key: const Key('d02.understand'),
+                label: s.d02Understand,
+                onPressed: () => Navigator.of(context).pop(true),
+              ),
+              const SizedBox(height: 10),
+
+              // Secondary action: Not now ("Не сейчас")
+              BuilderButton(
+                key: const Key('d02.notNow'),
+                label: s.d02NotNow,
+                variant: BuilderButtonVariant.secondary,
+                onPressed: () => Navigator.of(context).pop(false),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
     );
 
     if (isDesktop) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Material(
-            color: Colors.transparent,
-            child: content,
-          ),
+          child: Material(color: Colors.transparent, child: content),
         ),
       );
     }

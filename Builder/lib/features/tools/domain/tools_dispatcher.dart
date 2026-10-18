@@ -32,11 +32,7 @@ class ToolExecutionResult {
     required String toolName,
     required Map<String, dynamic> data,
   }) {
-    return ToolExecutionResult(
-      success: true,
-      toolName: toolName,
-      data: data,
-    );
+    return ToolExecutionResult(success: true, toolName: toolName, data: data);
   }
 
   factory ToolExecutionResult.needsConfirmation({
@@ -81,11 +77,12 @@ class ToolsDispatcher {
     CommunicationAdapter? communicationAdapter,
     SearchAdapter? searchAdapter,
     PendingActionStateMachine? stateMachine,
-  })  : calendarAdapter = calendarAdapter ?? CalendarAdapter(),
-        notesAdapter = notesAdapter ?? NotesAdapter(),
-        communicationAdapter = communicationAdapter ?? const CommunicationAdapter(),
-        searchAdapter = searchAdapter ?? const SearchAdapter(),
-        stateMachine = stateMachine ?? const PendingActionStateMachine();
+  }) : calendarAdapter = calendarAdapter ?? CalendarAdapter(),
+       notesAdapter = notesAdapter ?? NotesAdapter(),
+       communicationAdapter =
+           communicationAdapter ?? const CommunicationAdapter(),
+       searchAdapter = searchAdapter ?? const SearchAdapter(),
+       stateMachine = stateMachine ?? const PendingActionStateMachine();
 
   /// Dispatches a tool call from LLM or UI.
   Future<ToolExecutionResult> dispatch({
@@ -109,7 +106,8 @@ class ToolsDispatcher {
     if (validationErrors.isNotEmpty) {
       return ToolExecutionResult.failure(
         toolName: toolName,
-        errorMessage: 'Ошибка валидации параметров: ${validationErrors.join(', ')}',
+        errorMessage:
+            'Ошибка валидации параметров: ${validationErrors.join(', ')}',
         errorCode: 'INVALID_ARGUMENTS',
       );
     }
@@ -119,7 +117,8 @@ class ToolsDispatcher {
     if (grant == null || !grant.isEnabled) {
       return ToolExecutionResult.failure(
         toolName: toolName,
-        errorMessage: 'Инструмент «${tool.displayName}» отключён в настройках ассистента',
+        errorMessage:
+            'Инструмент «${tool.displayName}» отключён в настройках ассистента',
         errorCode: 'TOOL_DISABLED',
       );
     }
@@ -129,7 +128,8 @@ class ToolsDispatcher {
     if (osPerm == OsPermissionStatus.denied) {
       return ToolExecutionResult.failure(
         toolName: toolName,
-        errorMessage: 'Отсутствует системное разрешение устройства для «${tool.displayName}»',
+        errorMessage:
+            'Отсутствует системное разрешение устройства для «${tool.displayName}»',
         errorCode: 'PERMISSION_DENIED',
       );
     }
@@ -137,7 +137,8 @@ class ToolsDispatcher {
     // 4. Confirmation requirement check (F14-05)
     if (tool.requiresConfirmation) {
       final now = DateTime.now().toUtc();
-      final invocationId = 'act_${now.millisecondsSinceEpoch}_${toolName.hashCode.abs() % 1000}';
+      final invocationId =
+          'act_${now.millisecondsSinceEpoch}_${toolName.hashCode.abs() % 1000}';
       final paramsHash = PendingAction.computeParamsHash(args);
 
       final action = PendingAction(
@@ -220,7 +221,11 @@ class ToolsDispatcher {
       );
 
       final startTime = DateTime.now().toUtc();
-      final data = await _executeToolImplementation(ownerId, action.actionName, action.params);
+      final data = await _executeToolImplementation(
+        ownerId,
+        action.actionName,
+        action.params,
+      );
       final completedTime = DateTime.now().toUtc();
 
       final executed = stateMachine.markExecuted(approved);
@@ -280,7 +285,10 @@ class ToolsDispatcher {
       case ToolsRegistry.readCalendar:
         final start = DateTime.parse(args['start_date'] as String);
         final end = DateTime.parse(args['end_date'] as String);
-        final events = await calendarAdapter.readEvents(startDate: start, endDate: end);
+        final events = await calendarAdapter.readEvents(
+          startDate: start,
+          endDate: end,
+        );
         return {
           'events': events.map((e) => e.toMap()).toList(),
           'count': events.length,
@@ -329,11 +337,11 @@ class ToolsDispatcher {
 
       case ToolsRegistry.deleteNote:
         final noteId = args['note_id'] as String;
-        final deleted = await notesAdapter.deleteNote(ownerId: ownerId, noteId: noteId);
-        return {
-          'deleted': deleted,
-          'note_id': noteId,
-        };
+        final deleted = await notesAdapter.deleteNote(
+          ownerId: ownerId,
+          noteId: noteId,
+        );
+        return {'deleted': deleted, 'note_id': noteId};
 
       case ToolsRegistry.prepareCall:
         final phone = args['phone_number'] as String;

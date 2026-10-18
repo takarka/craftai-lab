@@ -86,186 +86,216 @@ void main() {
     });
   });
 
-  group('F10: PersistentCourseRepository (F10-02, F10-04, F10-07, F10-08, F10-09, F10-11)', () {
-    late Directory tempDir;
-    late StorageDatabase db;
-    late WorkspaceStorageService wsService;
-    late PersistentAssistantRepository assistantRepo;
-    late PersistentCourseRepository courseRepo;
-    const testOwner = 'test_owner_course_f10';
+  group(
+    'F10: PersistentCourseRepository (F10-02, F10-04, F10-07, F10-08, F10-09, F10-11)',
+    () {
+      late Directory tempDir;
+      late StorageDatabase db;
+      late WorkspaceStorageService wsService;
+      late PersistentAssistantRepository assistantRepo;
+      late PersistentCourseRepository courseRepo;
+      const testOwner = 'test_owner_course_f10';
 
-    setUp(() async {
-      tempDir = await Directory.systemTemp.createTemp('course_f10_test_');
-      final dbPath = p.join(tempDir.path, 'course_f10.db');
-      db = StorageDatabase(
-        databasePath: dbPath,
-        databaseFactory: databaseFactoryFfi,
-      );
-      await db.open();
+      setUp(() async {
+        tempDir = await Directory.systemTemp.createTemp('course_f10_test_');
+        final dbPath = p.join(tempDir.path, 'course_f10.db');
+        db = StorageDatabase(
+          databasePath: dbPath,
+          databaseFactory: databaseFactoryFfi,
+        );
+        await db.open();
 
-      wsService = WorkspaceStorageService(
-        database: db,
-        keyStorage: InMemorySecureKeyStorage(),
-        installationId: 'test_inst_course',
-      );
-      await wsService.openWorkspace(ownerId: testOwner);
+        wsService = WorkspaceStorageService(
+          database: db,
+          keyStorage: InMemorySecureKeyStorage(),
+          installationId: 'test_inst_course',
+        );
+        await wsService.openWorkspace(ownerId: testOwner);
 
-      assistantRepo = PersistentAssistantRepository(
-        database: db,
-        workspaceService: wsService,
-      );
+        assistantRepo = PersistentAssistantRepository(
+          database: db,
+          workspaceService: wsService,
+        );
 
-      // Seed assistant config
-      final nowUtc = DateTime.now().toUtc().toIso8601String();
-      await db.db.insert(StorageSchemaV1.tableAssistantConfigurations, {
-        'owner_id': testOwner,
-        'name': 'Сова',
-        'selected_category': 'standard',
-        'enabled_skills_json': '[]',
-        'system_rules_json': '["Отвечать кратко"]',
-        'state_revision': 1,
-        'updated_at_utc': nowUtc,
+        // Seed assistant config
+        final nowUtc = DateTime.now().toUtc().toIso8601String();
+        await db.db.insert(StorageSchemaV1.tableAssistantConfigurations, {
+          'owner_id': testOwner,
+          'name': 'Сова',
+          'selected_category': 'standard',
+          'enabled_skills_json': '[]',
+          'system_rules_json': '["Отвечать кратко"]',
+          'state_revision': 1,
+          'updated_at_utc': nowUtc,
+        });
+
+        await db.db.insert(StorageSchemaV1.tableTeacherPreferences, {
+          'owner_id': testOwner,
+          'subject': 'math',
+          'grades_json': '[5, 6]',
+          'ui_language': 'ru',
+          'assistant_language': 'ru',
+          'reminders_enabled': 0,
+          'storage_retention_days': 30,
+          'updated_at_utc': nowUtc,
+        });
+
+        courseRepo = PersistentCourseRepository(
+          database: db,
+          assistantRepository: assistantRepo,
+        );
       });
 
-      await db.db.insert(StorageSchemaV1.tableTeacherPreferences, {
-        'owner_id': testOwner,
-        'subject': 'math',
-        'grades_json': '[5, 6]',
-        'ui_language': 'ru',
-        'assistant_language': 'ru',
-        'reminders_enabled': 0,
-        'storage_retention_days': 30,
-        'updated_at_utc': nowUtc,
+      tearDown(() async {
+        await db.close();
+        if (tempDir.existsSync()) {
+          tempDir.deleteSync(recursive: true);
+        }
       });
 
-      courseRepo = PersistentCourseRepository(
-        database: db,
-        assistantRepository: assistantRepo,
-      );
-    });
+      test(
+        'Initial statuses: L1 is available, L2..5 are locked, L6..9 are comingSoon',
+        () async {
+          final s1 = await courseRepo.getLevelStatus(testOwner, 1);
+          expect(s1, LevelStatus.available);
 
-    tearDown(() async {
-      await db.close();
-      if (tempDir.existsSync()) {
-        tempDir.deleteSync(recursive: true);
-      }
-    });
+          final s2 = await courseRepo.getLevelStatus(testOwner, 2);
+          expect(s2, LevelStatus.locked);
 
-    test('Initial statuses: L1 is available, L2..5 are locked, L6..9 are comingSoon', () async {
-      final s1 = await courseRepo.getLevelStatus(testOwner, 1);
-      expect(s1, LevelStatus.available);
+          final s6 = await courseRepo.getLevelStatus(testOwner, 6);
+          expect(s6, LevelStatus.comingSoon);
 
-      final s2 = await courseRepo.getLevelStatus(testOwner, 2);
-      expect(s2, LevelStatus.locked);
-
-      final s6 = await courseRepo.getLevelStatus(testOwner, 6);
-      expect(s6, LevelStatus.comingSoon);
-
-      final overall = await courseRepo.getOverallProgress(testOwner);
-      expect(overall.completedLevelsCount, 0);
-      expect(overall.totalActiveLevels, 5);
-      expect(overall.activeLevelId, 1);
-      expect(overall.isAllCompleted, isFalse);
-    });
-
-    test('Save checkpoint updates active step and practiceEvidenceMet (F10-04, F10-07)', () async {
-      await courseRepo.saveCheckpoint(
-        ownerId: testOwner,
-        levelId: 1,
-        step: 2,
-        practiceEvidenceMet: true,
+          final overall = await courseRepo.getOverallProgress(testOwner);
+          expect(overall.completedLevelsCount, 0);
+          expect(overall.totalActiveLevels, 5);
+          expect(overall.activeLevelId, 1);
+          expect(overall.isAllCompleted, isFalse);
+        },
       );
 
-      final progress = await courseRepo.getLevelProgress(testOwner, 1);
-      expect(progress, isNotNull);
-      expect(progress!.currentStep, 2);
-      expect(progress.practiceEvidenceMet, isTrue);
-      expect(progress.isCompleted, isFalse);
+      test(
+        'Save checkpoint updates active step and practiceEvidenceMet (F10-04, F10-07)',
+        () async {
+          await courseRepo.saveCheckpoint(
+            ownerId: testOwner,
+            levelId: 1,
+            step: 2,
+            practiceEvidenceMet: true,
+          );
 
-      final status = await courseRepo.getLevelStatus(testOwner, 1);
-      expect(status, LevelStatus.inProgress);
-    });
+          final progress = await courseRepo.getLevelProgress(testOwner, 1);
+          expect(progress, isNotNull);
+          expect(progress!.currentStep, 2);
+          expect(progress.practiceEvidenceMet, isTrue);
+          expect(progress.isCompleted, isFalse);
 
-    test('Quiz evaluation: records attempts and enforces pass threshold (F10-08)', () async {
-      // Wrong answers -> fails threshold
-      final failResult = await courseRepo.recordQuizAttempt(
-        ownerId: testOwner,
-        levelId: 1,
-        selectedAnswers: [0, 0, 0], // Level 1 correct answers are [1, 1, 1]
-        threshold: 0.66,
-      );
-      expect(failResult, isFalse);
-
-      final progressAfterFail = await courseRepo.getLevelProgress(testOwner, 1);
-      expect(progressAfterFail?.attemptsCount, 1);
-
-      // Level 1 questions: correct indices are [1, 1, 1]
-      final passResult = await courseRepo.recordQuizAttempt(
-        ownerId: testOwner,
-        levelId: 1,
-        selectedAnswers: [1, 1, 1],
-        threshold: 0.66,
-      );
-      expect(passResult, isTrue);
-
-      final progressAfterPass = await courseRepo.getLevelProgress(testOwner, 1);
-      expect(progressAfterPass?.attemptsCount, 2);
-
-      // Check quiz attempts table in DB
-      final attemptRows = await db.db.query(StorageSchemaV1.tableQuizAttempts);
-      expect(attemptRows.length, 2);
-      expect(attemptRows.last['score'], 1.0);
-    });
-
-    test('Atomic level completion: grants target skill and creates assistant version (F10-09)', () async {
-      // Complete Level 2 (which targets AssistantSkillId.instructions)
-      await courseRepo.completeLevel(
-        ownerId: testOwner,
-        levelId: 2,
+          final status = await courseRepo.getLevelStatus(testOwner, 1);
+          expect(status, LevelStatus.inProgress);
+        },
       );
 
-      // Verify level 2 is completed
-      final status2 = await courseRepo.getLevelStatus(testOwner, 2);
-      expect(status2, LevelStatus.completed);
+      test(
+        'Quiz evaluation: records attempts and enforces pass threshold (F10-08)',
+        () async {
+          // Wrong answers -> fails threshold
+          final failResult = await courseRepo.recordQuizAttempt(
+            ownerId: testOwner,
+            levelId: 1,
+            selectedAnswers: [0, 0, 0], // Level 1 correct answers are [1, 1, 1]
+            threshold: 0.66,
+          );
+          expect(failResult, isFalse);
 
-      // Verify assistant configuration has instructions skill enabled
-      final updatedConfig = await assistantRepo.getConfiguration(testOwner);
-      expect(updatedConfig, isNotNull);
-      expect(updatedConfig!.enabledSkills, contains('instructions'));
+          final progressAfterFail = await courseRepo.getLevelProgress(
+            testOwner,
+            1,
+          );
+          expect(progressAfterFail?.attemptsCount, 1);
 
-      // Verify version history has commit
-      final versions = await assistantRepo.getVersions(testOwner);
-      expect(versions.length, 1);
-      expect(versions.first.reason, contains('2: Инструкции'));
-    });
+          // Level 1 questions: correct indices are [1, 1, 1]
+          final passResult = await courseRepo.recordQuizAttempt(
+            ownerId: testOwner,
+            levelId: 1,
+            selectedAnswers: [1, 1, 1],
+            threshold: 0.66,
+          );
+          expect(passResult, isTrue);
 
-    test('Idempotent re-completion: does not duplicate skill or create extra versions (F10-11)', () async {
-      // First completion of level 2
-      await courseRepo.completeLevel(ownerId: testOwner, levelId: 2);
-      final versionsAfterFirst = await assistantRepo.getVersions(testOwner);
-      expect(versionsAfterFirst.length, 1);
+          final progressAfterPass = await courseRepo.getLevelProgress(
+            testOwner,
+            1,
+          );
+          expect(progressAfterPass?.attemptsCount, 2);
 
-      // Second completion of same level
-      await courseRepo.completeLevel(ownerId: testOwner, levelId: 2);
-      final versionsAfterSecond = await assistantRepo.getVersions(testOwner);
-      expect(versionsAfterSecond.length, 1); // No duplicate version!
+          // Check quiz attempts table in DB
+          final attemptRows = await db.db.query(
+            StorageSchemaV1.tableQuizAttempts,
+          );
+          expect(attemptRows.length, 2);
+          expect(attemptRows.last['score'], 1.0);
+        },
+      );
 
-      final config = await assistantRepo.getConfiguration(testOwner);
-      final skillCount = config!.enabledSkills.where((s) => s == 'instructions').length;
-      expect(skillCount, 1);
-    });
+      test(
+        'Atomic level completion: grants target skill and creates assistant version (F10-09)',
+        () async {
+          // Complete Level 2 (which targets AssistantSkillId.instructions)
+          await courseRepo.completeLevel(ownerId: testOwner, levelId: 2);
 
-    test('Completing all 5 levels updates overall progress to isAllCompleted (F10-02, F10-10)', () async {
-      for (int i = 1; i <= 5; i++) {
-        await courseRepo.completeLevel(ownerId: testOwner, levelId: i);
-      }
+          // Verify level 2 is completed
+          final status2 = await courseRepo.getLevelStatus(testOwner, 2);
+          expect(status2, LevelStatus.completed);
 
-      final overall = await courseRepo.getOverallProgress(testOwner);
-      expect(overall.completedLevelsCount, 5);
-      expect(overall.isAllCompleted, isTrue);
-      expect(overall.activeLevelId, isNull);
-    });
-  });
+          // Verify assistant configuration has instructions skill enabled
+          final updatedConfig = await assistantRepo.getConfiguration(testOwner);
+          expect(updatedConfig, isNotNull);
+          expect(updatedConfig!.enabledSkills, contains('instructions'));
+
+          // Verify version history has commit
+          final versions = await assistantRepo.getVersions(testOwner);
+          expect(versions.length, 1);
+          expect(versions.first.reason, contains('2: Инструкции'));
+        },
+      );
+
+      test(
+        'Idempotent re-completion: does not duplicate skill or create extra versions (F10-11)',
+        () async {
+          // First completion of level 2
+          await courseRepo.completeLevel(ownerId: testOwner, levelId: 2);
+          final versionsAfterFirst = await assistantRepo.getVersions(testOwner);
+          expect(versionsAfterFirst.length, 1);
+
+          // Second completion of same level
+          await courseRepo.completeLevel(ownerId: testOwner, levelId: 2);
+          final versionsAfterSecond = await assistantRepo.getVersions(
+            testOwner,
+          );
+          expect(versionsAfterSecond.length, 1); // No duplicate version!
+
+          final config = await assistantRepo.getConfiguration(testOwner);
+          final skillCount = config!.enabledSkills
+              .where((s) => s == 'instructions')
+              .length;
+          expect(skillCount, 1);
+        },
+      );
+
+      test(
+        'Completing all 5 levels updates overall progress to isAllCompleted (F10-02, F10-10)',
+        () async {
+          for (int i = 1; i <= 5; i++) {
+            await courseRepo.completeLevel(ownerId: testOwner, levelId: i);
+          }
+
+          final overall = await courseRepo.getOverallProgress(testOwner);
+          expect(overall.completedLevelsCount, 5);
+          expect(overall.isAllCompleted, isTrue);
+          expect(overall.activeLevelId, isNull);
+        },
+      );
+    },
+  );
 
   group('F10: Presentation & Navigation Widgets', () {
     late Directory tempDir;
@@ -341,7 +371,9 @@ void main() {
           assistantRepositoryProvider.overrideWithValue(assistantRepo),
           courseRepositoryProvider.overrideWithValue(courseRepo),
           chatRepositoryProvider.overrideWithValue(inMemoryChatRepo),
-          chatSessionProvider(testOwner).overrideWith(() => MockChatSessionNotifier(testOwner)),
+          chatSessionProvider(
+            testOwner,
+          ).overrideWith(() => MockChatSessionNotifier(testOwner)),
         ],
         child: MaterialApp(
           localizationsDelegates: const [
@@ -356,93 +388,125 @@ void main() {
       );
     }
 
-    testWidgets('S20 CoursePage displays 9 levels and locked level shows theory preview (F10-02, F10-13)', (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.0;
-      addTearDown(() => tester.view.resetPhysicalSize());
+    testWidgets(
+      'S20 CoursePage displays 9 levels and locked level shows theory preview (F10-02, F10-13)',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 2.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
 
-      await tester.pumpWidget(createTestApp(const CoursePage(ownerId: testOwner)));
-      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 300)));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          createTestApp(const CoursePage(ownerId: testOwner)),
+        );
+        await tester.runAsync(
+          () => Future.delayed(const Duration(milliseconds: 300)),
+        );
+        await tester.pumpAndSettle();
 
-      // Check section header
-      expect(find.text('Учебный путь'), findsOneWidget);
+        // Check section header
+        expect(find.text('Учебный путь'), findsOneWidget);
 
-      // Check level 1 and level 2 cards
-      expect(find.byKey(const Key('course.levelCard.1')), findsOneWidget);
-      expect(find.byKey(const Key('course.levelCard.2')), findsOneWidget);
+        // Check level 1 and level 2 cards
+        expect(find.byKey(const Key('course.levelCard.1')), findsOneWidget);
+        expect(find.byKey(const Key('course.levelCard.2')), findsOneWidget);
 
-      // Tap locked Level 2 -> should open theory preview dialog (F10-13)
-      await tester.tap(find.byKey(const Key('course.levelCard.2')));
-      await tester.pumpAndSettle();
+        // Tap locked Level 2 -> should open theory preview dialog (F10-13)
+        await tester.tap(find.byKey(const Key('course.levelCard.2')));
+        await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('course.theoryPreviewDialog')), findsOneWidget);
-      expect(find.textContaining('Превью теории'), findsOneWidget);
+        expect(
+          find.byKey(const Key('course.theoryPreviewDialog')),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Превью теории'), findsOneWidget);
 
-      // Close dialog
-      await tester.tap(find.text('Понятно'));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('course.theoryPreviewDialog')), findsNothing);
+        // Close dialog
+        await tester.tap(find.text('Понятно'));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('course.theoryPreviewDialog')),
+          findsNothing,
+        );
 
-      // Scroll to bottom tiles
-      await tester.scrollUntilVisible(find.byKey(const Key('course.glossaryTile')), 300);
-      expect(find.byKey(const Key('course.glossaryTile')), findsOneWidget);
-      expect(find.byKey(const Key('course.achievementsTile')), findsOneWidget);
-    });
+        // Scroll to bottom tiles
+        await tester.scrollUntilVisible(
+          find.byKey(const Key('course.glossaryTile')),
+          300,
+        );
+        expect(find.byKey(const Key('course.glossaryTile')), findsOneWidget);
+        expect(
+          find.byKey(const Key('course.achievementsTile')),
+          findsOneWidget,
+        );
+      },
+    );
 
-    testWidgets('S21 LessonPlayerPage flows through steps S22 -> S23 -> S24 -> S25 (F10-03, F10-05, F10-06, F10-12)', (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.0;
-      addTearDown(() => tester.view.resetPhysicalSize());
+    testWidgets(
+      'S21 LessonPlayerPage flows through steps S22 -> S23 -> S24 -> S25 (F10-03, F10-05, F10-06, F10-12)',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 2.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
 
-      await tester.pumpWidget(createTestApp(const LessonPlayerPage(ownerId: testOwner, levelId: 1)));
-      await tester.pump();
-      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 300)));
-      await tester.pump();
+        await tester.pumpWidget(
+          createTestApp(const LessonPlayerPage(ownerId: testOwner, levelId: 1)),
+        );
+        await tester.pump();
+        await tester.runAsync(
+          () => Future.delayed(const Duration(milliseconds: 300)),
+        );
+        await tester.pump();
 
-      // Step 1: Idea (S22)
-      expect(find.byKey(const Key('lesson.step.1')), findsOneWidget);
-      expect(find.byKey(const Key('lesson.ideaProceedBtn')), findsOneWidget);
+        // Step 1: Idea (S22)
+        expect(find.byKey(const Key('lesson.step.1')), findsOneWidget);
+        expect(find.byKey(const Key('lesson.ideaProceedBtn')), findsOneWidget);
 
-      // Advance to Step 2: Practice (S23)
-      await tester.tap(find.byKey(const Key('lesson.ideaProceedBtn')));
-      await tester.pump();
-      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 300)));
-      await tester.pump();
+        // Advance to Step 2: Practice (S23)
+        await tester.tap(find.byKey(const Key('lesson.ideaProceedBtn')));
+        await tester.pump();
+        await tester.runAsync(
+          () => Future.delayed(const Duration(milliseconds: 300)),
+        );
+        await tester.pump();
 
-      expect(find.byKey(const Key('lesson.step.2')), findsOneWidget);
-      expect(find.byKey(const Key('practice.applyBtn')), findsOneWidget);
+        expect(find.byKey(const Key('lesson.step.2')), findsOneWidget);
+        expect(find.byKey(const Key('practice.applyBtn')), findsOneWidget);
 
-      // Tap apply test prompt (F10-06)
-      await tester.tap(find.byKey(const Key('practice.applyBtn')));
-      await tester.pump();
-      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 300)));
-      await tester.pump();
+        // Tap apply test prompt (F10-06)
+        await tester.tap(find.byKey(const Key('practice.applyBtn')));
+        await tester.pump();
+        await tester.runAsync(
+          () => Future.delayed(const Duration(milliseconds: 300)),
+        );
+        await tester.pump();
 
-      // Advance to Step 3: Under the Hood (S24)
-      await tester.tap(find.byKey(const Key('lesson.practiceProceedBtn')));
-      await tester.pump();
-      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 300)));
-      await tester.pump();
+        // Advance to Step 3: Under the Hood (S24)
+        await tester.tap(find.byKey(const Key('lesson.practiceProceedBtn')));
+        await tester.pump();
+        await tester.runAsync(
+          () => Future.delayed(const Duration(milliseconds: 300)),
+        );
+        await tester.pump();
 
-      expect(find.byKey(const Key('lesson.step.3')), findsOneWidget);
+        expect(find.byKey(const Key('lesson.step.3')), findsOneWidget);
 
-      // Close button '×' saves checkpoint (F10-12)
-      await tester.tap(find.byKey(const Key('lesson.closeBtn')));
-      await tester.pump();
-      await tester.runAsync(() async {
-        await Future.delayed(const Duration(milliseconds: 300));
-      });
-      await tester.pump(const Duration(seconds: 3));
+        // Close button '×' saves checkpoint (F10-12)
+        await tester.tap(find.byKey(const Key('lesson.closeBtn')));
+        await tester.pump();
+        await tester.runAsync(() async {
+          await Future.delayed(const Duration(milliseconds: 300));
+        });
+        await tester.pump(const Duration(seconds: 3));
 
-      // Verify checkpoint saved in repo
-      LevelProgress? progress;
-      await tester.runAsync(() async {
-        progress = await courseRepo.getLevelProgress(testOwner, 1);
-      });
-      expect(progress?.currentStep, 3);
-      expect(progress?.practiceEvidenceMet, isTrue);
-    });
+        // Verify checkpoint saved in repo
+        LevelProgress? progress;
+        await tester.runAsync(() async {
+          progress = await courseRepo.getLevelProgress(testOwner, 1);
+        });
+        expect(progress?.currentStep, 3);
+        expect(progress?.practiceEvidenceMet, isTrue);
+      },
+    );
 
     testWidgets('S27 GlossaryPage displays search and items', (tester) async {
       await tester.pumpWidget(createTestApp(const GlossaryPage()));
@@ -452,45 +516,66 @@ void main() {
       expect(find.byKey(const Key('glossary.searchField')), findsOneWidget);
 
       // Enter search query
-      await tester.enterText(find.byKey(const Key('glossary.searchField')), 'RAG');
+      await tester.enterText(
+        find.byKey(const Key('glossary.searchField')),
+        'RAG',
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('RAG (Retrieval-Augmented Generation)'), findsOneWidget);
     });
 
-    testWidgets('S10 AssistantPage shows resume banner and hides when course is completed (F10-10)', (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2.0;
-      addTearDown(() => tester.view.resetPhysicalSize());
+    testWidgets(
+      'S10 AssistantPage shows resume banner and hides when course is completed (F10-10)',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 2.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
 
-      // Initial state: Level 1 in progress / available -> banner must be visible
-      await tester.pumpWidget(createTestApp(const AssistantPage(ownerId: testOwner)));
-      await tester.pump();
-      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 300)));
-      await tester.pump();
+        // Initial state: Level 1 in progress / available -> banner must be visible
+        await tester.pumpWidget(
+          createTestApp(const AssistantPage(ownerId: testOwner)),
+        );
+        await tester.pump();
+        await tester.runAsync(
+          () => Future.delayed(const Duration(milliseconds: 300)),
+        );
+        await tester.pump();
 
-      expect(find.byKey(const Key('assistant.resumeLessonBanner')), findsOneWidget);
-      expect(find.text('Продолжить урок'), findsOneWidget);
+        expect(
+          find.byKey(const Key('assistant.resumeLessonBanner')),
+          findsOneWidget,
+        );
+        expect(find.text('Продолжить урок'), findsOneWidget);
 
-      // Mark all 5 levels complete
-      await tester.runAsync(() async {
-        for (int i = 1; i <= 5; i++) {
-          await courseRepo.completeLevel(ownerId: testOwner, levelId: i);
-        }
-      });
+        // Mark all 5 levels complete
+        await tester.runAsync(() async {
+          for (int i = 1; i <= 5; i++) {
+            await courseRepo.completeLevel(ownerId: testOwner, levelId: i);
+          }
+        });
 
-      // Invalidate cached provider state
-      ProviderScope.containerOf(tester.element(find.byType(AssistantPage)))
-          .invalidate(overallCourseProgressProvider(testOwner));
+        // Invalidate cached provider state
+        ProviderScope.containerOf(
+          tester.element(find.byType(AssistantPage)),
+        ).invalidate(overallCourseProgressProvider(testOwner));
 
-      // Re-render
-      await tester.pumpWidget(createTestApp(const AssistantPage(ownerId: testOwner)));
-      await tester.pump();
-      await tester.runAsync(() => Future.delayed(const Duration(milliseconds: 300)));
-      await tester.pump();
+        // Re-render
+        await tester.pumpWidget(
+          createTestApp(const AssistantPage(ownerId: testOwner)),
+        );
+        await tester.pump();
+        await tester.runAsync(
+          () => Future.delayed(const Duration(milliseconds: 300)),
+        );
+        await tester.pump();
 
-      // Banner should now be gone!
-      expect(find.byKey(const Key('assistant.resumeLessonBanner')), findsNothing);
-    });
+        // Banner should now be gone!
+        expect(
+          find.byKey(const Key('assistant.resumeLessonBanner')),
+          findsNothing,
+        );
+      },
+    );
   });
 }

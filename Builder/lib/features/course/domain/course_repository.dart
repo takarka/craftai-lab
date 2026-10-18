@@ -31,10 +31,7 @@ abstract interface class CourseRepository {
   });
 
   /// Atomically completes [levelId], unblocks next level, grants skills and commits version.
-  Future<void> completeLevel({
-    required String ownerId,
-    required int levelId,
-  });
+  Future<void> completeLevel({required String ownerId, required int levelId});
 
   /// Resets all course progress and quiz attempts for [ownerId].
   Future<void> resetCourseProgress(String ownerId);

@@ -42,7 +42,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(knowledgeControllerProvider(widget.ownerId));
-    final controller = ref.read(knowledgeControllerProvider(widget.ownerId).notifier);
+    final controller = ref.read(
+      knowledgeControllerProvider(widget.ownerId).notifier,
+    );
 
     return Scaffold(
       backgroundColor: BuilderColors.background,
@@ -58,11 +60,15 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
           children: [
             Text(
               'База знаний',
-              style: BuilderTypography.titleMedium.copyWith(color: BuilderColors.ink),
+              style: BuilderTypography.titleMedium.copyWith(
+                color: BuilderColors.ink,
+              ),
             ),
             Text(
               'Уровень 3 · Локальный RAG',
-              style: BuilderTypography.labelSmall.copyWith(color: BuilderColors.inkSecondary),
+              style: BuilderTypography.labelSmall.copyWith(
+                color: BuilderColors.inkSecondary,
+              ),
             ),
           ],
         ),
@@ -118,7 +124,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
                     if (state.documents.isEmpty)
                       _buildEmptyDocumentsCard(context)
                     else
-                      ...state.documents.map((doc) => _buildDocumentCard(context, doc)),
+                      ...state.documents.map(
+                        (doc) => _buildDocumentCard(context, doc),
+                      ),
 
                     const SizedBox(height: BuilderSpace.lg),
                     const Divider(color: BuilderColors.line),
@@ -146,7 +154,11 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
         children: [
           Row(
             children: [
-              const BuilderIcon(BuilderGlyph.course, size: 22, color: BuilderColors.accent),
+              const BuilderIcon(
+                BuilderGlyph.course,
+                size: 22,
+                color: BuilderColors.accent,
+              ),
               const SizedBox(width: BuilderSpace.xs),
               Text(
                 'Практика: Уровень 3 — Знания и RAG',
@@ -162,7 +174,10 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
             '1. Добавьте учебный документ в базу знаний.\n'
             '2. Проверьте вопрос по теме документа — найдутся точные фрагменты.\n'
             '3. Проверьте посторонний вопрос — убедитесь, что ассистент не выдумывает ответ при отсутствии совпадений.',
-            style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.ink, height: 1.4),
+            style: BuilderTypography.bodySmall.copyWith(
+              color: BuilderColors.ink,
+              height: 1.4,
+            ),
           ),
           if (_testedFound && _testedNotFound) ...[
             const SizedBox(height: BuilderSpace.sm),
@@ -203,11 +218,17 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
             decoration: BoxDecoration(
               color: BuilderColors.primaryTint,
               borderRadius: BorderRadius.circular(BuilderRadii.chip),
-              border: Border.all(color: BuilderColors.primary.withValues(alpha: 0.2)),
+              border: Border.all(
+                color: BuilderColors.primary.withValues(alpha: 0.2),
+              ),
             ),
             child: Row(
               children: [
-                const BuilderIcon(BuilderGlyph.phone, size: 16, color: BuilderColors.primary),
+                const BuilderIcon(
+                  BuilderGlyph.phone,
+                  size: 16,
+                  color: BuilderColors.primary,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -229,11 +250,17 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
             decoration: BoxDecoration(
               color: BuilderColors.warningTint,
               borderRadius: BorderRadius.circular(BuilderRadii.chip),
-              border: Border.all(color: BuilderColors.warning.withValues(alpha: 0.2)),
+              border: Border.all(
+                color: BuilderColors.warning.withValues(alpha: 0.2),
+              ),
             ),
             child: Row(
               children: [
-                const BuilderIcon(BuilderGlyph.cloud, size: 16, color: BuilderColors.warning),
+                const BuilderIcon(
+                  BuilderGlyph.cloud,
+                  size: 16,
+                  color: BuilderColors.warning,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -276,17 +303,25 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
       ),
       child: Column(
         children: [
-          const BuilderIcon(BuilderGlyph.doc, size: 40, color: BuilderColors.inkDisabled),
+          const BuilderIcon(
+            BuilderGlyph.doc,
+            size: 40,
+            color: BuilderColors.inkDisabled,
+          ),
           const SizedBox(height: BuilderSpace.sm),
           Text(
             'Нет подключенных документов',
-            style: BuilderTypography.titleSmall.copyWith(color: BuilderColors.ink),
+            style: BuilderTypography.titleSmall.copyWith(
+              color: BuilderColors.ink,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             'Добавьте рабочую программу, расписание уроков или памятку, чтобы ассистент отвечал на их основе.',
             textAlign: TextAlign.center,
-            style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.inkSecondary),
+            style: BuilderTypography.bodySmall.copyWith(
+              color: BuilderColors.inkSecondary,
+            ),
           ),
           const SizedBox(height: BuilderSpace.md),
           BuilderButton(
@@ -300,7 +335,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
   }
 
   Widget _buildDocumentCard(BuildContext context, KnowledgeDocument doc) {
-    final controller = ref.read(knowledgeControllerProvider(widget.ownerId).notifier);
+    final controller = ref.read(
+      knowledgeControllerProvider(widget.ownerId).notifier,
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: BuilderSpace.xs),
@@ -322,7 +359,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
                   doc.fileName,
                   style: BuilderTypography.bodyMedium.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: doc.isEnabled ? BuilderColors.ink : BuilderColors.inkDisabled,
+                    color: doc.isEnabled
+                        ? BuilderColors.ink
+                        : BuilderColors.inkDisabled,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -330,7 +369,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
                 const SizedBox(height: 2),
                 Text(
                   '${doc.formattedSize} · ${doc.chunksCount} фрагментов',
-                  style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.inkSecondary),
+                  style: BuilderTypography.bodySmall.copyWith(
+                    color: BuilderColors.inkSecondary,
+                  ),
                 ),
               ],
             ),
@@ -339,11 +380,16 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
           Switch(
             value: doc.isEnabled,
             activeTrackColor: BuilderColors.primary,
-            onChanged: (val) => controller.toggleDocument(docId: doc.id, isEnabled: val),
+            onChanged: (val) =>
+                controller.toggleDocument(docId: doc.id, isEnabled: val),
           ),
           // Delete button (F12-12)
           IconButton(
-            icon: const Icon(Icons.delete_outline, color: BuilderColors.inkSecondary, size: 20),
+            icon: const Icon(
+              Icons.delete_outline,
+              color: BuilderColors.inkSecondary,
+              size: 20,
+            ),
             onPressed: () => _confirmDelete(context, doc),
           ),
         ],
@@ -386,13 +432,20 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
     );
   }
 
-  Widget _buildTestSearchSection(KnowledgeState state, KnowledgeNotifier controller) {
+  Widget _buildTestSearchSection(
+    KnowledgeState state,
+    KnowledgeNotifier controller,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
-            const BuilderIcon(BuilderGlyph.search, size: 20, color: BuilderColors.primary),
+            const BuilderIcon(
+              BuilderGlyph.search,
+              size: 20,
+              color: BuilderColors.primary,
+            ),
             const SizedBox(width: BuilderSpace.xs),
             Text(
               'Проверить поиск по знаниям',
@@ -406,7 +459,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
         const SizedBox(height: 4),
         Text(
           'Протестируйте локальный поиск на телефоне. При релевантности ниже порога (35%) ассистент откажется от фантазий.',
-          style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.inkSecondary),
+          style: BuilderTypography.bodySmall.copyWith(
+            color: BuilderColors.inkSecondary,
+          ),
         ),
         const SizedBox(height: BuilderSpace.sm),
 
@@ -415,13 +470,22 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
           scrollDirection: Axis.horizontal,
           child: Row(
             children: [
-              _buildSuggestionChip('Расписание уроков в понедельник', isMatch: true),
+              _buildSuggestionChip(
+                'Расписание уроков в понедельник',
+                isMatch: true,
+              ),
               const SizedBox(width: BuilderSpace.xs),
               _buildSuggestionChip('Лабораторная по биологии', isMatch: true),
               const SizedBox(width: BuilderSpace.xs),
-              _buildSuggestionChip('Правила техники безопасности', isMatch: true),
+              _buildSuggestionChip(
+                'Правила техники безопасности',
+                isMatch: true,
+              ),
               const SizedBox(width: BuilderSpace.xs),
-              _buildSuggestionChip('Какая температура на Марсе?', isMatch: false),
+              _buildSuggestionChip(
+                'Какая температура на Марсе?',
+                isMatch: false,
+              ),
             ],
           ),
         ),
@@ -434,7 +498,10 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
             hintText: 'Введите тестовый вопрос...',
             filled: true,
             fillColor: BuilderColors.surface,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(BuilderRadii.control),
               borderSide: const BorderSide(color: BuilderColors.line),
@@ -453,7 +520,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
 
         // Submit Button
         BuilderButton(
-          label: state.isSearching ? 'Поиск и генерация...' : 'Найти и ответить',
+          label: state.isSearching
+              ? 'Поиск и генерация...'
+              : 'Найти и ответить',
           icon: BuilderGlyph.search,
           loading: state.isSearching,
           onPressed: () => _handleSearch(controller),
@@ -476,9 +545,13 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
           color: isMatch ? BuilderColors.primary : BuilderColors.warning,
         ),
       ),
-      backgroundColor: isMatch ? BuilderColors.primaryTint : BuilderColors.warningTint,
+      backgroundColor: isMatch
+          ? BuilderColors.primaryTint
+          : BuilderColors.warningTint,
       side: BorderSide(
-        color: isMatch ? BuilderColors.primary.withValues(alpha: 0.3) : BuilderColors.warning.withValues(alpha: 0.3),
+        color: isMatch
+            ? BuilderColors.primary.withValues(alpha: 0.3)
+            : BuilderColors.warning.withValues(alpha: 0.3),
       ),
       onPressed: () {
         _queryController.text = query;
@@ -496,7 +569,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
         color: BuilderColors.surface,
         borderRadius: BorderRadius.circular(BuilderRadii.card),
         border: Border.all(
-          color: result.hasRelevantMatches ? BuilderColors.primary.withValues(alpha: 0.4) : BuilderColors.warning,
+          color: result.hasRelevantMatches
+              ? BuilderColors.primary.withValues(alpha: 0.4)
+              : BuilderColors.warning,
         ),
       ),
       child: Column(
@@ -508,11 +583,15 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
             children: [
               Text(
                 'Результат поиска',
-                style: BuilderTypography.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                style: BuilderTypography.labelLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
                 '$matchedCount найдено из ${result.totalScannedChunks} (${result.searchDurationMs} мс)',
-                style: BuilderTypography.labelSmall.copyWith(color: BuilderColors.inkSecondary),
+                style: BuilderTypography.labelSmall.copyWith(
+                  color: BuilderColors.inkSecondary,
+                ),
               ),
             ],
           ),
@@ -522,7 +601,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
             // Matched Chunks list
             Text(
               'Найденные фрагменты на устройстве:',
-              style: BuilderTypography.labelSmall.copyWith(color: BuilderColors.inkSecondary),
+              style: BuilderTypography.labelSmall.copyWith(
+                color: BuilderColors.inkSecondary,
+              ),
             ),
             const SizedBox(height: 6),
             ...result.matches.where((m) => m.isAboveThreshold).map((match) {
@@ -542,13 +623,20 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
                       children: [
                         Text(
                           '${match.chunk.documentName} · стр. ${match.chunk.pageNumber}',
-                          style: BuilderTypography.labelSmall.copyWith(fontWeight: FontWeight.w600),
+                          style: BuilderTypography.labelSmall.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.green.shade100,
-                            borderRadius: BorderRadius.circular(BuilderRadii.chip),
+                            borderRadius: BorderRadius.circular(
+                              BuilderRadii.chip,
+                            ),
                           ),
                           child: Text(
                             match.scorePercentage,
@@ -564,7 +652,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
                     const SizedBox(height: 4),
                     Text(
                       match.chunk.chunkText,
-                      style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.ink),
+                      style: BuilderTypography.bodySmall.copyWith(
+                        color: BuilderColors.ink,
+                      ),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -578,7 +668,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
             if (state.generatedAnswer != null) ...[
               Text(
                 'Ответ ассистента:',
-                style: BuilderTypography.labelSmall.copyWith(color: BuilderColors.inkSecondary),
+                style: BuilderTypography.labelSmall.copyWith(
+                  color: BuilderColors.inkSecondary,
+                ),
               ),
               const SizedBox(height: 4),
               Container(
@@ -589,7 +681,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
                 ),
                 child: Text(
                   state.generatedAnswer!,
-                  style: BuilderTypography.bodyMedium.copyWith(color: BuilderColors.ink),
+                  style: BuilderTypography.bodyMedium.copyWith(
+                    color: BuilderColors.ink,
+                  ),
                 ),
               ),
             ],
@@ -606,7 +700,11 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.warning_amber_rounded, color: BuilderColors.warning, size: 20),
+                      const Icon(
+                        Icons.warning_amber_rounded,
+                        color: BuilderColors.warning,
+                        size: 20,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         'Ответа в документах нет',
@@ -620,7 +718,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
                   const SizedBox(height: 4),
                   Text(
                     'Все фрагменты имеют релевантность ниже порога (35%). Ассистент не фантазирует и честно сообщает об отсутствии информации.',
-                    style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.ink),
+                    style: BuilderTypography.bodySmall.copyWith(
+                      color: BuilderColors.ink,
+                    ),
                   ),
                   if (state.generatedAnswer != null) ...[
                     const SizedBox(height: 6),
@@ -659,7 +759,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
 
     controller.testQueryAndGenerateAnswer(query).then((_) {
       if (mounted) {
-        final result = ref.read(knowledgeControllerProvider(widget.ownerId)).searchResult;
+        final result = ref
+            .read(knowledgeControllerProvider(widget.ownerId))
+            .searchResult;
         if (result != null) {
           setState(() {
             if (result.hasRelevantMatches) {
@@ -669,7 +771,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
             }
           });
 
-          if (_testedFound && _testedNotFound && widget.onLearningCompleted != null) {
+          if (_testedFound &&
+              _testedNotFound &&
+              widget.onLearningCompleted != null) {
             widget.onLearningCompleted!();
           }
         }
@@ -698,7 +802,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
             child: const Text('Удалить', style: TextStyle(color: Colors.red)),
             onPressed: () {
               Navigator.of(ctx).pop();
-              ref.read(knowledgeControllerProvider(widget.ownerId).notifier).deleteDocument(doc.id);
+              ref
+                  .read(knowledgeControllerProvider(widget.ownerId).notifier)
+                  .deleteDocument(doc.id);
             },
           ),
         ],

@@ -79,7 +79,10 @@ void main() {
                   .add(const Duration(minutes: 15))
                   .toUtc()
                   .toIso8601String(),
-              'refreshExpiresAtUtc': DateTime.now().add(const Duration(days: 30)).toUtc().toIso8601String(),
+              'refreshExpiresAtUtc': DateTime.now()
+                  .add(const Duration(days: 30))
+                  .toUtc()
+                  .toIso8601String(),
               'userId': '00000000-0000-0000-0000-0000000000d1',
               'email': 'teacher1@craftai.kz',
               'fullName': 'Марат Ахметов',
@@ -175,7 +178,10 @@ void main() {
                   .add(const Duration(minutes: 15))
                   .toUtc()
                   .toIso8601String(),
-              'refreshExpiresAtUtc': DateTime.now().add(const Duration(days: 30)).toUtc().toIso8601String(),
+              'refreshExpiresAtUtc': DateTime.now()
+                  .add(const Duration(days: 30))
+                  .toUtc()
+                  .toIso8601String(),
               'userId': '11111111-1111-1111-1111-111111111111',
             }),
             200,
@@ -199,71 +205,83 @@ void main() {
         privacyRevision: '2026.1-ru',
       );
 
-      expect(await tokenStorage.readOwnerId(), '11111111-1111-1111-1111-111111111111');
+      expect(
+        await tokenStorage.readOwnerId(),
+        '11111111-1111-1111-1111-111111111111',
+      );
       expect((await tokenStorage.readTokens())?.accessToken, 'jwt_reg_token');
     });
 
-    test('register maps AUTH_WEAK_PASSWORD to weakPassword AppFailure', () async {
-      final mockClient = MockClient((request) async {
-        return http.Response(
-          jsonEncode({
-            'code': 'AUTH_WEAK_PASSWORD',
-            'message': 'Password does not meet policy.',
-          }),
-          400,
-          headers: {'content-type': 'application/json'},
+    test(
+      'register maps AUTH_WEAK_PASSWORD to weakPassword AppFailure',
+      () async {
+        final mockClient = MockClient((request) async {
+          return http.Response(
+            jsonEncode({
+              'code': 'AUTH_WEAK_PASSWORD',
+              'message': 'Password does not meet policy.',
+            }),
+            400,
+            headers: {'content-type': 'application/json'},
+          );
+        });
+
+        final gateway = CraftAiAuthGateway(
+          baseUri: baseUri,
+          httpClient: mockClient,
         );
-      });
 
-      final gateway = CraftAiAuthGateway(
-        baseUri: baseUri,
-        httpClient: mockClient,
-      );
-
-      expect(
-        () => gateway.register(
-          name: 'User',
-          email: 'u@m.kz',
-          password: '123',
-          termsRevision: '1',
-          privacyRevision: '1',
-        ),
-        throwsA(
-          isA<AppFailure>().having(
-            (f) => f.code,
-            'code',
-            AppFailureCode.weakPassword,
+        expect(
+          () => gateway.register(
+            name: 'User',
+            email: 'u@m.kz',
+            password: '123',
+            termsRevision: '1',
+            privacyRevision: '1',
           ),
-        ),
-      );
-    });
+          throwsA(
+            isA<AppFailure>().having(
+              (f) => f.code,
+              'code',
+              AppFailureCode.weakPassword,
+            ),
+          ),
+        );
+      },
+    );
 
-    test('password recovery and reset requests call backend endpoints', () async {
-      var forgotCalled = false;
-      var resetCalled = false;
+    test(
+      'password recovery and reset requests call backend endpoints',
+      () async {
+        var forgotCalled = false;
+        var resetCalled = false;
 
-      final mockClient = MockClient((request) async {
-        if (request.url.path == '/mobile/auth/forgot-password') {
-          forgotCalled = true;
-          return http.Response('', 200);
-        }
-        if (request.url.path == '/mobile/auth/reset-password') {
-          resetCalled = true;
-          return http.Response('', 204);
-        }
-        return http.Response('Not Found', 404);
-      });
+        final mockClient = MockClient((request) async {
+          if (request.url.path == '/mobile/auth/forgot-password') {
+            forgotCalled = true;
+            return http.Response('', 200);
+          }
+          if (request.url.path == '/mobile/auth/reset-password') {
+            resetCalled = true;
+            return http.Response('', 204);
+          }
+          return http.Response('Not Found', 404);
+        });
 
-      final gateway = CraftAiAuthGateway(
-        baseUri: baseUri,
-        httpClient: mockClient,
-      );
+        final gateway = CraftAiAuthGateway(
+          baseUri: baseUri,
+          httpClient: mockClient,
+        );
 
-      await gateway.requestPasswordReset(email: 'user@mail.kz');
-      expect(forgotCalled, isTrue);
+        await gateway.requestPasswordReset(email: 'user@mail.kz');
+        expect(forgotCalled, isTrue);
 
-      await gateway.resetPassword(token: 'reset-token', newPassword: 'NewPassword123!');
-      expect(resetCalled, isTrue);
-    });
+        await gateway.resetPassword(
+          token: 'reset-token',
+          newPassword: 'NewPassword123!',
+        );
+        expect(resetCalled, isTrue);
+      },
+    );
   });
 }

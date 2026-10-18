@@ -8,12 +8,10 @@ import 'environment/app_config.dart';
 
 final appConfigProvider = Provider<AppConfig?>((ref) => null);
 
-final sessionRepositoryProvider = Provider<SessionRepository>(
-  (ref) {
-    final persistent = ref.watch(persistentSessionRepositoryProvider);
-    return persistent ?? const NotConnectedSessionRepository();
-  },
-);
+final sessionRepositoryProvider = Provider<SessionRepository>((ref) {
+  final persistent = ref.watch(persistentSessionRepositoryProvider);
+  return persistent ?? const NotConnectedSessionRepository();
+});
 
 final sessionProvider = StreamProvider<SessionSnapshot>(
   (ref) => ref.watch(sessionRepositoryProvider).watchSession(),

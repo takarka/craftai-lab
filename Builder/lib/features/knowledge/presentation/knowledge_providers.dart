@@ -17,10 +17,14 @@ final knowledgeRepositoryProvider = Provider<KnowledgeRepository>((ref) {
   return PersistentKnowledgeRepository(database: db);
 });
 
-final knowledgeDocumentsProvider = FutureProvider.family<List<KnowledgeDocument>, String>((ref, ownerId) async {
-  final repo = ref.watch(knowledgeRepositoryProvider);
-  return repo.getDocuments(ownerId);
-});
+final knowledgeDocumentsProvider =
+    FutureProvider.family<List<KnowledgeDocument>, String>((
+      ref,
+      ownerId,
+    ) async {
+      final repo = ref.watch(knowledgeRepositoryProvider);
+      return repo.getDocuments(ownerId);
+    });
 
 class KnowledgeState {
   final List<KnowledgeDocument> documents;
@@ -65,9 +69,13 @@ class KnowledgeState {
       isLoading: isLoading ?? this.isLoading,
       isImporting: isImporting ?? this.isImporting,
       isSearching: isSearching ?? this.isSearching,
-      searchResult: clearSearchResult ? null : (searchResult ?? this.searchResult),
+      searchResult: clearSearchResult
+          ? null
+          : (searchResult ?? this.searchResult),
       testQuery: testQuery ?? this.testQuery,
-      generatedAnswer: clearGeneratedAnswer ? null : (generatedAnswer ?? this.generatedAnswer),
+      generatedAnswer: clearGeneratedAnswer
+          ? null
+          : (generatedAnswer ?? this.generatedAnswer),
       lastTrace: clearLastTrace ? null : (lastTrace ?? this.lastTrace),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );
@@ -118,18 +126,12 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
         format: format,
       );
       final updatedDocs = await repository.getDocuments(ownerId);
-      state = state.copyWith(
-        documents: updatedDocs,
-        isImporting: false,
-      );
+      state = state.copyWith(documents: updatedDocs, isImporting: false);
       // Invalidate future provider so dependent views refresh
       ref.invalidate(knowledgeDocumentsProvider(ownerId));
       return doc;
     } on DocumentProcessingException catch (e) {
-      state = state.copyWith(
-        isImporting: false,
-        errorMessage: e.message,
-      );
+      state = state.copyWith(isImporting: false, errorMessage: e.message);
       return null;
     } catch (e) {
       state = state.copyWith(
@@ -160,10 +162,7 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
 
   Future<void> deleteDocument(String docId) async {
     try {
-      await repository.deleteDocument(
-        ownerId: ownerId,
-        docId: docId,
-      );
+      await repository.deleteDocument(ownerId: ownerId, docId: docId);
       final updatedDocs = await repository.getDocuments(ownerId);
       state = state.copyWith(documents: updatedDocs);
       ref.invalidate(knowledgeDocumentsProvider(ownerId));
@@ -172,7 +171,10 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
     }
   }
 
-  Future<KnowledgeSearchResult> search(String query, {double? threshold}) async {
+  Future<KnowledgeSearchResult> search(
+    String query, {
+    double? threshold,
+  }) async {
     state = state.copyWith(isSearching: true, clearError: true);
     try {
       final result = await repository.searchKnowledge(
@@ -220,7 +222,8 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
 
     if (!result.hasRelevantMatches) {
       // Explicit fallback per F12-07 / F12-08 (no hallucination)
-      final answer = 'Ответа в документах нет. В подключенных базах знаний отсутствует релевантная информация по данному вопросу.';
+      final answer =
+          'Ответа в документах нет. В подключенных базах знаний отсутствует релевантная информация по данному вопросу.';
 
       final trace = RequestTrace(
         requestId: reqId,
@@ -232,7 +235,8 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
           const TraceLayer(
             type: TraceLayerType.retrieval,
             title: '3 · Найдено в документах',
-            contentSnippet: 'Совпадений выше порога релевантности (0.35) не найдено.',
+            contentSnippet:
+                'Совпадений выше порога релевантности (0.35) не найдено.',
             tokenCount: 0,
             location: LocationTag.onDevice,
             extraChip: 'на телефоне',
@@ -256,7 +260,8 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
           const TraceStep(
             stepIndex: 1,
             title: 'Локальный RAG-поиск',
-            description: 'Поиск по векторному индексу на телефоне (ниже порога)',
+            description:
+                'Поиск по векторному индексу на телефоне (ниже порога)',
             location: LocationTag.onDevice,
           ),
         ],
@@ -285,11 +290,16 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
     // Has relevant matches
     final topChunk = result.matches.firstWhere((m) => m.isAboveThreshold);
     final buffer = StringBuffer();
-    buffer.writeln('На основе документа «${topChunk.chunk.documentName}» (стр. ${topChunk.chunk.pageNumber}):\n');
+    buffer.writeln(
+      'На основе документа «${topChunk.chunk.documentName}» (стр. ${topChunk.chunk.pageNumber}):\n',
+    );
     buffer.writeln(topChunk.chunk.chunkText);
 
     final answer = buffer.toString().trim();
-    final chunkSnippet = result.matchedChunkTexts.take(2).map((c) => '[Фрагмент]: $c').join('\n\n');
+    final chunkSnippet = result.matchedChunkTexts
+        .take(2)
+        .map((c) => '[Фрагмент]: $c')
+        .join('\n\n');
     final chunkTokens = (chunkSnippet.length / 3.5).ceil();
 
     final trace = RequestTrace(
@@ -326,7 +336,8 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
         TraceStep(
           stepIndex: 1,
           title: 'Локальный RAG-поиск',
-          description: 'Найдено ${result.matches.where((m) => m.isAboveThreshold).length} совпадений на устройстве (${result.searchDurationMs} мс)',
+          description:
+              'Найдено ${result.matches.where((m) => m.isAboveThreshold).length} совпадений на устройстве (${result.searchDurationMs} мс)',
           location: LocationTag.onDevice,
         ),
         const TraceStep(
@@ -339,7 +350,8 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
       usage: TraceUsage(
         promptTokens: chunkTokens + (trimmed.length / 3.5).ceil(),
         completionTokens: (answer.length / 3.5).ceil(),
-        totalTokens: chunkTokens + ((trimmed.length + answer.length) / 3.5).ceil(),
+        totalTokens:
+            chunkTokens + ((trimmed.length + answer.length) / 3.5).ceil(),
         durationMs: result.searchDurationMs + 250,
         isServerReported: false,
       ),
@@ -360,5 +372,5 @@ class KnowledgeNotifier extends Notifier<KnowledgeState> {
 
 final knowledgeControllerProvider =
     NotifierProvider.family<KnowledgeNotifier, KnowledgeState, String>(
-  KnowledgeNotifier.new,
-);
+      KnowledgeNotifier.new,
+    );

@@ -42,7 +42,9 @@ final class WorkspaceStorageService {
   /// In-memory cache accessible only for active owner.
   Map<String, dynamic> get inMemoryCache {
     if (_activeOwnerId == null) {
-      throw StateError('Cannot access in-memory cache without an active workspace.');
+      throw StateError(
+        'Cannot access in-memory cache without an active workspace.',
+      );
     }
     return _inMemoryCache;
   }
@@ -81,17 +83,14 @@ final class WorkspaceStorageService {
       epoch = 1;
       schemaVer = StorageSchemaV1.version;
       final nowUtc = DateTime.now().toUtc().toIso8601String();
-      await database.db.insert(
-        StorageSchemaV1.tableWorkspaces,
-        {
-          'owner_id': ownerId,
-          'installation_id': installationId,
-          'schema_version': schemaVer,
-          'workspace_epoch': epoch,
-          'created_at_utc': nowUtc,
-          'updated_at_utc': nowUtc,
-        },
-      );
+      await database.db.insert(StorageSchemaV1.tableWorkspaces, {
+        'owner_id': ownerId,
+        'installation_id': installationId,
+        'schema_version': schemaVer,
+        'workspace_epoch': epoch,
+        'created_at_utc': nowUtc,
+        'updated_at_utc': nowUtc,
+      });
     } else {
       epoch = rows.first['workspace_epoch'] as int;
       schemaVer = rows.first['schema_version'] as int;
@@ -127,10 +126,7 @@ final class WorkspaceStorageService {
 
     await database.db.update(
       StorageSchemaV1.tableWorkspaces,
-      {
-        'workspace_epoch': newEpoch,
-        'updated_at_utc': nowUtc,
-      },
+      {'workspace_epoch': newEpoch, 'updated_at_utc': nowUtc},
       where: 'owner_id = ?',
       whereArgs: [ownerId],
     );
@@ -140,7 +136,10 @@ final class WorkspaceStorageService {
   }
 
   /// Completely purges all stored data for [ownerId] (for account deletion or full reset).
-  Future<void> purgeOwnerData({required String ownerId, String? ownerFilesDir}) async {
+  Future<void> purgeOwnerData({
+    required String ownerId,
+    String? ownerFilesDir,
+  }) async {
     if (ownerId.trim().isEmpty) return;
 
     if (_activeOwnerId == ownerId) {

@@ -35,7 +35,10 @@ class MockTestAuthGateway implements AuthGateway {
   AuthLegalDocuments? documentsFor(String languageCode) => null;
 
   @override
-  Future<void> signIn({required String email, required String password}) async {}
+  Future<void> signIn({
+    required String email,
+    required String password,
+  }) async {}
 
   @override
   Future<void> register({
@@ -166,7 +169,9 @@ void main() {
       final noToken = Uri.parse('https://craftai.kz/reset-password');
       expect(validator.validate(noToken), isA<InvalidResetLink>());
 
-      final shortToken = Uri.parse('https://craftai.kz/reset-password?token=short');
+      final shortToken = Uri.parse(
+        'https://craftai.kz/reset-password?token=short',
+      );
       expect(validator.validate(shortToken), isA<InvalidResetLink>());
     });
   });
@@ -257,163 +262,196 @@ void main() {
       expect(sessionRepo.currentSnapshot, isA<SignedOut>());
     });
 
-    test('saves session, opens workspace, and determines onboarding complete status', () async {
-      final tokens = AuthTokens(
-        accessToken: 'acc_1',
-        refreshToken: 'ref_1',
-        expiresAtUtc: DateTime.now().toUtc().add(const Duration(hours: 1)),
-      );
-
-      // 1. Initial login: no assistant in DB yet -> onboardingComplete == false
-      await sessionRepo.saveSession(ownerId: 'teacher_10', tokens: tokens);
-      expect(sessionRepo.currentSnapshot, isA<AuthenticatedSession>());
-      final s1 = sessionRepo.currentSnapshot as AuthenticatedSession;
-      expect(s1.ownerId, equals('teacher_10'));
-      expect(s1.onboardingComplete, isFalse);
-      expect(workspaceService.activeOwnerId, equals('teacher_10'));
-
-      // 2. Insert assistant configuration in DB
-      final nowUtc = DateTime.now().toUtc().toIso8601String();
-      await storageDb.db.insert(StorageSchemaV1.tableAssistantConfigurations, {
-        'owner_id': 'teacher_10',
-        'name': 'Бот Учителя',
-        'enabled_skills_json': '[]',
-        'system_rules_json': '[]',
-        'state_revision': 1,
-        'updated_at_utc': nowUtc,
-      });
-
-      // 3. Restart app: restoreSession should find assistant and set onboardingComplete == true
-      final s2 = await sessionRepo.restoreSession();
-      expect(s2, isA<AuthenticatedSession>());
-      expect((s2 as AuthenticatedSession).onboardingComplete, isTrue);
-    });
-
-    test('single-flight refresh prevents concurrent duplicate token refresh calls', () async {
-      await tokenStorage.writeSession(
-        ownerId: 'teacher_refresh',
-        tokens: AuthTokens(
-          accessToken: 'expired_acc',
-          refreshToken: 'valid_refresh',
-          expiresAtUtc: DateTime.utc(2020, 1, 1),
-        ),
-      );
-
-      // Trigger 3 concurrent refreshes
-      final futures = await Future.wait([
-        sessionRepo.refreshTokens(),
-        sessionRepo.refreshTokens(),
-        sessionRepo.refreshTokens(),
-      ]);
-
-      expect(refreshCallsCount, equals(1));
-      expect(futures[0].accessToken, equals(futures[1].accessToken));
-      expect(futures[1].accessToken, equals(futures[2].accessToken));
-    });
-
-    test('signOut wipes memory, closes active workspace and clears token storage', () async {
-      await sessionRepo.saveSession(
-        ownerId: 'teacher_logout',
-        tokens: AuthTokens(
-          accessToken: 'acc_out',
-          refreshToken: 'ref_out',
+    test(
+      'saves session, opens workspace, and determines onboarding complete status',
+      () async {
+        final tokens = AuthTokens(
+          accessToken: 'acc_1',
+          refreshToken: 'ref_1',
           expiresAtUtc: DateTime.now().toUtc().add(const Duration(hours: 1)),
-        ),
-      );
-      expect(sessionRepo.currentSnapshot, isA<AuthenticatedSession>());
-      expect(workspaceService.hasActiveWorkspace, isTrue);
+        );
 
-      await sessionRepo.signOut();
+        // 1. Initial login: no assistant in DB yet -> onboardingComplete == false
+        await sessionRepo.saveSession(ownerId: 'teacher_10', tokens: tokens);
+        expect(sessionRepo.currentSnapshot, isA<AuthenticatedSession>());
+        final s1 = sessionRepo.currentSnapshot as AuthenticatedSession;
+        expect(s1.ownerId, equals('teacher_10'));
+        expect(s1.onboardingComplete, isFalse);
+        expect(workspaceService.activeOwnerId, equals('teacher_10'));
 
-      expect(sessionRepo.currentSnapshot, isA<SignedOut>());
-      expect(workspaceService.hasActiveWorkspace, isFalse);
-      expect(await tokenStorage.hasStoredSession(), isFalse);
-    });
+        // 2. Insert assistant configuration in DB
+        final nowUtc = DateTime.now().toUtc().toIso8601String();
+        await storageDb.db
+            .insert(StorageSchemaV1.tableAssistantConfigurations, {
+              'owner_id': 'teacher_10',
+              'name': 'Бот Учителя',
+              'enabled_skills_json': '[]',
+              'system_rules_json': '[]',
+              'state_revision': 1,
+              'updated_at_utc': nowUtc,
+            });
+
+        // 3. Restart app: restoreSession should find assistant and set onboardingComplete == true
+        final s2 = await sessionRepo.restoreSession();
+        expect(s2, isA<AuthenticatedSession>());
+        expect((s2 as AuthenticatedSession).onboardingComplete, isTrue);
+      },
+    );
+
+    test(
+      'single-flight refresh prevents concurrent duplicate token refresh calls',
+      () async {
+        await tokenStorage.writeSession(
+          ownerId: 'teacher_refresh',
+          tokens: AuthTokens(
+            accessToken: 'expired_acc',
+            refreshToken: 'valid_refresh',
+            expiresAtUtc: DateTime.utc(2020, 1, 1),
+          ),
+        );
+
+        // Trigger 3 concurrent refreshes
+        final futures = await Future.wait([
+          sessionRepo.refreshTokens(),
+          sessionRepo.refreshTokens(),
+          sessionRepo.refreshTokens(),
+        ]);
+
+        expect(refreshCallsCount, equals(1));
+        expect(futures[0].accessToken, equals(futures[1].accessToken));
+        expect(futures[1].accessToken, equals(futures[2].accessToken));
+      },
+    );
+
+    test(
+      'signOut wipes memory, closes active workspace and clears token storage',
+      () async {
+        await sessionRepo.saveSession(
+          ownerId: 'teacher_logout',
+          tokens: AuthTokens(
+            accessToken: 'acc_out',
+            refreshToken: 'ref_out',
+            expiresAtUtc: DateTime.now().toUtc().add(const Duration(hours: 1)),
+          ),
+        );
+        expect(sessionRepo.currentSnapshot, isA<AuthenticatedSession>());
+        expect(workspaceService.hasActiveWorkspace, isTrue);
+
+        await sessionRepo.signOut();
+
+        expect(sessionRepo.currentSnapshot, isA<SignedOut>());
+        expect(workspaceService.hasActiveWorkspace, isFalse);
+        expect(await tokenStorage.hasStoredSession(), isFalse);
+      },
+    );
   });
 
   group('Password Reset Route & Form UI', () {
-    testWidgets('renders reset password form with valid token and submits new password', (tester) async {
-      final mockGateway = MockTestAuthGateway();
-      final container = ProviderContainer(
-        overrides: [
-          appConfigProvider.overrideWithValue(
-            const AppConfig(environment: AppEnvironment.development),
+    testWidgets(
+      'renders reset password form with valid token and submits new password',
+      (tester) async {
+        final mockGateway = MockTestAuthGateway();
+        final container = ProviderContainer(
+          overrides: [
+            appConfigProvider.overrideWithValue(
+              const AppConfig(environment: AppEnvironment.development),
+            ),
+            authGatewayProvider.overrideWithValue(mockGateway),
+            sessionRepositoryProvider.overrideWithValue(
+              const NotConnectedSessionRepository(),
+            ),
+          ],
+        );
+        container.read(appLocaleProvider.notifier).select(const Locale('ru'));
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const BuilderApp(),
           ),
-          authGatewayProvider.overrideWithValue(mockGateway),
-          sessionRepositoryProvider.overrideWithValue(
-            const NotConnectedSessionRepository(),
+        );
+        await tester.pumpAndSettle();
+
+        container
+            .read(appRouterProvider)
+            .go('/reset-password?token=valid_test_token_123456');
+        await tester.pumpAndSettle();
+
+        // Form header and password inputs must be present
+        expect(find.byKey(const Key('auth.password')), findsOneWidget);
+        expect(find.byKey(const Key('auth.confirmPassword')), findsOneWidget);
+
+        // Enter matching passwords
+        await tester.enterText(
+          find.byKey(const Key('auth.password')),
+          'SuperSecretPassword123',
+        );
+        await tester.enterText(
+          find.byKey(const Key('auth.confirmPassword')),
+          'SuperSecretPassword123',
+        );
+        await tester.pump();
+
+        // Tap submit button
+        final submitButton = find.text('Сохранить пароль');
+        expect(submitButton, findsOneWidget);
+        await tester.tap(submitButton);
+        await tester.pumpAndSettle();
+
+        expect(
+          mockGateway.resetPasswordToken,
+          equals('valid_test_token_123456'),
+        );
+        expect(
+          mockGateway.resetPasswordNewValue,
+          equals('SuperSecretPassword123'),
+        );
+
+        // Success message displayed
+        expect(
+          find.text('Пароль успешно изменён. Теперь вы можете войти.'),
+          findsOneWidget,
+        );
+        expect(find.text('Вернуться ко входу'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'shows invalid link message when reset-password is opened without a token',
+      (tester) async {
+        final container = ProviderContainer(
+          overrides: [
+            appConfigProvider.overrideWithValue(
+              const AppConfig(environment: AppEnvironment.development),
+            ),
+            sessionRepositoryProvider.overrideWithValue(
+              const NotConnectedSessionRepository(),
+            ),
+          ],
+        );
+        container.read(appLocaleProvider.notifier).select(const Locale('ru'));
+        addTearDown(container.dispose);
+
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const BuilderApp(),
           ),
-        ],
-      );
-      container.read(appLocaleProvider.notifier).select(const Locale('ru'));
-      addTearDown(container.dispose);
+        );
+        await tester.pumpAndSettle();
 
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const BuilderApp(),
-        ),
-      );
-      await tester.pumpAndSettle();
+        container.read(appRouterProvider).go('/reset-password');
+        await tester.pumpAndSettle();
 
-      container
-          .read(appRouterProvider)
-          .go('/reset-password?token=valid_test_token_123456');
-      await tester.pumpAndSettle();
-
-      // Form header and password inputs must be present
-      expect(find.byKey(const Key('auth.password')), findsOneWidget);
-      expect(find.byKey(const Key('auth.confirmPassword')), findsOneWidget);
-
-      // Enter matching passwords
-      await tester.enterText(find.byKey(const Key('auth.password')), 'SuperSecretPassword123');
-      await tester.enterText(find.byKey(const Key('auth.confirmPassword')), 'SuperSecretPassword123');
-      await tester.pump();
-
-      // Tap submit button
-      final submitButton = find.text('Сохранить пароль');
-      expect(submitButton, findsOneWidget);
-      await tester.tap(submitButton);
-      await tester.pumpAndSettle();
-
-      expect(mockGateway.resetPasswordToken, equals('valid_test_token_123456'));
-      expect(mockGateway.resetPasswordNewValue, equals('SuperSecretPassword123'));
-
-      // Success message displayed
-      expect(find.text('Пароль успешно изменён. Теперь вы можете войти.'), findsOneWidget);
-      expect(find.text('Вернуться ко входу'), findsOneWidget);
-    });
-
-    testWidgets('shows invalid link message when reset-password is opened without a token', (tester) async {
-      final container = ProviderContainer(
-        overrides: [
-          appConfigProvider.overrideWithValue(
-            const AppConfig(environment: AppEnvironment.development),
+        expect(
+          find.text(
+            'Ссылка для смены пароля недействительна или устарела. Запросите новую ссылку.',
           ),
-          sessionRepositoryProvider.overrideWithValue(
-            const NotConnectedSessionRepository(),
-          ),
-        ],
-      );
-      container.read(appLocaleProvider.notifier).select(const Locale('ru'));
-      addTearDown(container.dispose);
-
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const BuilderApp(),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      container.read(appRouterProvider).go('/reset-password');
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text('Ссылка для смены пароля недействительна или устарела. Запросите новую ссылку.'),
-        findsOneWidget,
-      );
-      expect(find.text('Вернуться ко входу'), findsOneWidget);
-    });
+          findsOneWidget,
+        );
+        expect(find.text('Вернуться ко входу'), findsOneWidget);
+      },
+    );
   });
 }

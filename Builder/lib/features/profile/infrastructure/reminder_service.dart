@@ -95,14 +95,17 @@ class ReminderNotifier extends Notifier<ReminderState> {
 
   /// Updates OS permission status.
   void setPermissionStatus(OsPermissionStatus status) {
-    if (status != OsPermissionStatus.granted && state.frequency != ReminderFrequency.disabled) {
+    if (status != OsPermissionStatus.granted &&
+        state.frequency != ReminderFrequency.disabled) {
       cancelAll();
       state = state.copyWith(permissionStatus: status);
       return;
     }
     state = state.copyWith(permissionStatus: status);
     if (state.hasPermission && state.frequency != ReminderFrequency.disabled) {
-      state = state.copyWith(scheduledReminders: _buildReminders(state.frequency));
+      state = state.copyWith(
+        scheduledReminders: _buildReminders(state.frequency),
+      );
     }
   }
 
@@ -114,7 +117,9 @@ class ReminderNotifier extends Notifier<ReminderState> {
       return;
     }
 
-    final reminders = state.hasPermission ? _buildReminders(newFrequency) : <ScheduledReminder>[];
+    final reminders = state.hasPermission
+        ? _buildReminders(newFrequency)
+        : <ScheduledReminder>[];
     state = state.copyWith(
       frequency: newFrequency,
       scheduledReminders: reminders,
@@ -138,7 +143,8 @@ class ReminderNotifier extends Notifier<ReminderState> {
           ScheduledReminder(
             id: 'rem_daily_course',
             title: 'Курс CraftAI: Время для нового модуля',
-            body: 'Уделите 10 минут практике с ассистентом, чтобы закрепить материал.',
+            body:
+                'Уделите 10 минут практике с ассистентом, чтобы закрепить материал.',
             scheduledTime: '18:00 ежедневно',
           ),
         ];
@@ -147,7 +153,8 @@ class ReminderNotifier extends Notifier<ReminderState> {
           ScheduledReminder(
             id: 'rem_weekdays_prep',
             title: 'Подготовка к урокам',
-            body: 'Составьте план урока и проверочные карточки вместе с ассистентом.',
+            body:
+                'Составьте план урока и проверочные карточки вместе с ассистентом.',
             scheduledTime: '17:30 Пн–Пт',
           ),
         ];
@@ -156,7 +163,8 @@ class ReminderNotifier extends Notifier<ReminderState> {
           ScheduledReminder(
             id: 'rem_weekly_review',
             title: 'Недельный дайджест курса',
-            body: 'Повторите изученные термины и пополните базу документов ассистента.',
+            body:
+                'Повторите изученные термины и пополните базу документов ассистента.',
             scheduledTime: '11:00 Суббота',
           ),
         ];

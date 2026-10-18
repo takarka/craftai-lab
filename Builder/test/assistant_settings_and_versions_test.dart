@@ -365,29 +365,33 @@ void main() {
       AssistantConfig? initialConfig,
       List<AssistantVersion>? versions,
     }) {
-      final config = initialConfig ?? AssistantConfig(
-        ownerId: testOwner,
-        name: 'Арлан',
-        selectedCategory: ModelCategory.standard,
-        enabledSkills: const {'instructions'},
-        systemRules: const [],
-        stateRevision: 1,
-        updatedAtUtc: DateTime.now().toUtc(),
-      );
-
-      final versionItems = versions ?? [
-        AssistantVersion(
-          versionNumber: 1,
-          createdAtUtc: DateTime.now().toUtc(),
-          reason: 'Создание ассистента',
-          snapshot: const AssistantSnapshot(
+      final config =
+          initialConfig ??
+          AssistantConfig(
+            ownerId: testOwner,
             name: 'Арлан',
             selectedCategory: ModelCategory.standard,
-            enabledSkills: {'instructions'},
-          ),
-          isCurrent: true,
-        ),
-      ];
+            enabledSkills: const {'instructions'},
+            systemRules: const [],
+            stateRevision: 1,
+            updatedAtUtc: DateTime.now().toUtc(),
+          );
+
+      final versionItems =
+          versions ??
+          [
+            AssistantVersion(
+              versionNumber: 1,
+              createdAtUtc: DateTime.now().toUtc(),
+              reason: 'Создание ассистента',
+              snapshot: const AssistantSnapshot(
+                name: 'Арлан',
+                selectedCategory: ModelCategory.standard,
+                enabledSkills: {'instructions'},
+              ),
+              isCurrent: true,
+            ),
+          ];
 
       return ProviderScope(
         overrides: [
@@ -395,16 +399,20 @@ void main() {
           workspaceStorageServiceProvider.overrideWithValue(wsService),
           assistantRepositoryProvider.overrideWithValue(repo),
           assistantConfigProvider(testOwner).overrideWith((ref) => config),
-          assistantVersionsProvider(testOwner).overrideWith((ref) => versionItems),
-          localDataSummaryProvider(testOwner).overrideWith((ref) => const LocalDataSummary(
-            conversationsCount: 1,
-            messagesCount: 2,
-            memoryFactsCount: 3,
-            documentsCount: 4,
-            chunksCount: 12,
-            tracesCount: 5,
-            versionsCount: 1,
-          )),
+          assistantVersionsProvider(
+            testOwner,
+          ).overrideWith((ref) => versionItems),
+          localDataSummaryProvider(testOwner).overrideWith(
+            (ref) => const LocalDataSummary(
+              conversationsCount: 1,
+              messagesCount: 2,
+              memoryFactsCount: 3,
+              documentsCount: 4,
+              chunksCount: 12,
+              tracesCount: 5,
+              versionsCount: 1,
+            ),
+          ),
           completedCourseLevelsProvider(testOwner).overrideWith((ref) => {1}),
         ],
         child: MaterialApp(
@@ -474,21 +482,38 @@ void main() {
         await tester.pump(const Duration(milliseconds: 100));
         await tester.pumpAndSettle();
 
-        final languageRow = find.byKey(const Key('assistantSettings.languageRow'));
+        final languageRow = find.byKey(
+          const Key('assistantSettings.languageRow'),
+        );
         expect(languageRow, findsOneWidget);
         expect(find.textContaining('Язык ответов ассистента'), findsOneWidget);
 
         await tester.tap(languageRow);
         await tester.pumpAndSettle();
 
-        expect(find.byKey(const Key('assistantLanguage.radio.russian')), findsOneWidget);
-        expect(find.byKey(const Key('assistantLanguage.radio.kazakh')), findsOneWidget);
-        expect(find.byKey(const Key('assistantLanguage.radio.bilingual')), findsOneWidget);
-        expect(find.byKey(const Key('assistantLanguage.saveBtn')), findsOneWidget);
+        expect(
+          find.byKey(const Key('assistantLanguage.radio.russian')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('assistantLanguage.radio.kazakh')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('assistantLanguage.radio.bilingual')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('assistantLanguage.saveBtn')),
+          findsOneWidget,
+        );
 
         await tester.tap(find.byKey(const Key('assistantLanguage.cancelBtn')));
         await tester.pumpAndSettle();
-        expect(find.byKey(const Key('assistantLanguage.saveBtn')), findsNothing);
+        expect(
+          find.byKey(const Key('assistantLanguage.saveBtn')),
+          findsNothing,
+        );
       },
     );
 
@@ -533,7 +558,9 @@ void main() {
         await tester.pump();
 
         // Check repository committed change
-        final config = await tester.runAsync(() => repo.getConfiguration(testOwner));
+        final config = await tester.runAsync(
+          () => repo.getConfiguration(testOwner),
+        );
         expect(config?.name, equals('Новый Ментор'));
       },
     );
@@ -566,7 +593,9 @@ void main() {
           ),
           AssistantVersion(
             versionNumber: 1,
-            createdAtUtc: DateTime.now().toUtc().subtract(const Duration(hours: 1)),
+            createdAtUtc: DateTime.now().toUtc().subtract(
+              const Duration(hours: 1),
+            ),
             reason: 'Создание ассистента',
             snapshot: const AssistantSnapshot(
               name: 'Арлан',
@@ -613,7 +642,9 @@ void main() {
         await tester.pump(const Duration(milliseconds: 300));
 
         // Configuration rolled back to name "Арлан"
-        final config = await tester.runAsync(() => repo.getConfiguration(testOwner));
+        final config = await tester.runAsync(
+          () => repo.getConfiguration(testOwner),
+        );
         expect(config?.name, equals('Арлан'));
       },
     );

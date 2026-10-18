@@ -366,83 +366,131 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  test('F16-05: ReminderNotifier schedules, switches frequency and cancels properly', () {
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
+  test(
+    'F16-05: ReminderNotifier schedules, switches frequency and cancels properly',
+    () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
 
-    final notifier = container.read(reminderServiceProvider.notifier);
-    expect(container.read(reminderServiceProvider).frequency, ReminderFrequency.disabled);
+      final notifier = container.read(reminderServiceProvider.notifier);
+      expect(
+        container.read(reminderServiceProvider).frequency,
+        ReminderFrequency.disabled,
+      );
 
-    notifier.setFrequency(ReminderFrequency.daily);
-    expect(container.read(reminderServiceProvider).frequency, ReminderFrequency.daily);
-    expect(container.read(reminderServiceProvider).scheduledReminders, isEmpty);
+      notifier.setFrequency(ReminderFrequency.daily);
+      expect(
+        container.read(reminderServiceProvider).frequency,
+        ReminderFrequency.daily,
+      );
+      expect(
+        container.read(reminderServiceProvider).scheduledReminders,
+        isEmpty,
+      );
 
-    notifier.setPermissionStatus(OsPermissionStatus.granted);
-    expect(container.read(reminderServiceProvider).scheduledReminders.length, 1);
-    expect(container.read(reminderServiceProvider).scheduledReminders.first.id, 'rem_daily_course');
+      notifier.setPermissionStatus(OsPermissionStatus.granted);
+      expect(
+        container.read(reminderServiceProvider).scheduledReminders.length,
+        1,
+      );
+      expect(
+        container.read(reminderServiceProvider).scheduledReminders.first.id,
+        'rem_daily_course',
+      );
 
-    notifier.setFrequency(ReminderFrequency.weekdays);
-    expect(container.read(reminderServiceProvider).scheduledReminders.first.id, 'rem_weekdays_prep');
+      notifier.setFrequency(ReminderFrequency.weekdays);
+      expect(
+        container.read(reminderServiceProvider).scheduledReminders.first.id,
+        'rem_weekdays_prep',
+      );
 
-    notifier.cancelAll();
-    expect(container.read(reminderServiceProvider).frequency, ReminderFrequency.disabled);
-    expect(container.read(reminderServiceProvider).scheduledReminders, isEmpty);
-  });
+      notifier.cancelAll();
+      expect(
+        container.read(reminderServiceProvider).frequency,
+        ReminderFrequency.disabled,
+      );
+      expect(
+        container.read(reminderServiceProvider).scheduledReminders,
+        isEmpty,
+      );
+    },
+  );
 
   testWidgets('F16-05: S54 displays reminders dropdown', (tester) async {
     await pumpProfile(tester, const ProfileSettingsPage(ownerId: 'teacher'));
-    await tester.scrollUntilVisible(find.byKey(const Key('profile.remindersDropdown')), 200);
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('profile.remindersDropdown')),
+      200,
+    );
     expect(find.text('Напоминания о курсе'), findsWidgets);
     expect(find.byKey(const Key('profile.remindersDropdown')), findsOneWidget);
-    expect(find.byKey(const Key('profile.cancelAllRemindersBtn')), findsNothing);
+    expect(
+      find.byKey(const Key('profile.cancelAllRemindersBtn')),
+      findsNothing,
+    );
   });
 
-  testWidgets('F16-07: S55 confirms and executes account deletion when gateway is available', (tester) async {
-    var deletedOwner = '';
-    final gateway = _AccountGateway(
-      (id) async => throw StateError(''),
-      available: true,
-      onDelete: (id) async {
-        deletedOwner = id;
-      },
-    );
+  testWidgets(
+    'F16-07: S55 confirms and executes account deletion when gateway is available',
+    (tester) async {
+      var deletedOwner = '';
+      final gateway = _AccountGateway(
+        (id) async => throw StateError(''),
+        available: true,
+        onDelete: (id) async {
+          deletedOwner = id;
+        },
+      );
 
-    await pumpProfile(
-      tester,
-      const ProfilePrivacyPage(ownerId: 'teacher'),
-      accountGateway: gateway,
-    );
+      await pumpProfile(
+        tester,
+        const ProfilePrivacyPage(ownerId: 'teacher'),
+        accountGateway: gateway,
+      );
 
-    await tester.scrollUntilVisible(find.byKey(const Key('profile.deleteAccountBtn')), 200);
-    await tester.ensureVisible(find.byKey(const Key('profile.deleteAccountBtn')));
-    await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('profile.deleteAccountBtn')),
+        200,
+      );
+      await tester.ensureVisible(
+        find.byKey(const Key('profile.deleteAccountBtn')),
+      );
+      await tester.pumpAndSettle();
 
-    final deleteBtn = find.byKey(const Key('profile.deleteAccountBtn'));
-    expect(deleteBtn, findsOneWidget);
+      final deleteBtn = find.byKey(const Key('profile.deleteAccountBtn'));
+      expect(deleteBtn, findsOneWidget);
 
-    await tester.tap(deleteBtn);
-    await tester.pumpAndSettle();
+      await tester.tap(deleteBtn);
+      await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('profile.deleteAccountDialog')), findsOneWidget);
-    expect(find.text('Удалить аккаунт CraftAI?'), findsOneWidget);
+      expect(
+        find.byKey(const Key('profile.deleteAccountDialog')),
+        findsOneWidget,
+      );
+      expect(find.text('Удалить аккаунт CraftAI?'), findsOneWidget);
 
-    final confirmBtn = find.byKey(const Key('profile.confirmDeleteAccount'));
-    expect(confirmBtn, findsOneWidget);
+      final confirmBtn = find.byKey(const Key('profile.confirmDeleteAccount'));
+      expect(confirmBtn, findsOneWidget);
 
-    await tester.tap(confirmBtn);
-    await tester.pumpAndSettle();
+      await tester.tap(confirmBtn);
+      await tester.pumpAndSettle();
 
-    expect(deletedOwner, 'teacher');
-  });
+      expect(deletedOwner, 'teacher');
+    },
+  );
 
-  testWidgets('F16-09: S56 opens support sheet and submits contact form', (tester) async {
+  testWidgets('F16-09: S56 opens support sheet and submits contact form', (
+    tester,
+  ) async {
     await pumpProfile(tester, const ProfileHelpPage());
     await tester.scrollUntilVisible(
       find.byKey(const Key('profile.contactSupportBtn')),
       200,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.ensureVisible(find.byKey(const Key('profile.contactSupportBtn')));
+    await tester.ensureVisible(
+      find.byKey(const Key('profile.contactSupportBtn')),
+    );
     await tester.pumpAndSettle();
 
     final contactBtn = find.byKey(const Key('profile.contactSupportBtn'));
@@ -455,8 +503,14 @@ void main() {
     expect(find.byKey(const Key('profile.supportSubject')), findsOneWidget);
     expect(find.byKey(const Key('profile.supportMessage')), findsOneWidget);
 
-    await tester.enterText(find.byKey(const Key('profile.supportSubject')), 'Вопрос по уроку 3');
-    await tester.enterText(find.byKey(const Key('profile.supportMessage')), 'Как правильно настроить RAG?');
+    await tester.enterText(
+      find.byKey(const Key('profile.supportSubject')),
+      'Вопрос по уроку 3',
+    );
+    await tester.enterText(
+      find.byKey(const Key('profile.supportMessage')),
+      'Как правильно настроить RAG?',
+    );
     await tester.pumpAndSettle();
 
     final sendBtn = find.byKey(const Key('profile.sendSupportBtn'));
@@ -465,32 +519,35 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('profile.supportSheet')), findsOneWidget);
-    expect(find.textContaining('Отправка обращений из приложения пока недоступна'), findsOneWidget);
-  });
-
-  testWidgets('F16-10: S27 GlossaryPage displays AI terms, search, level badges and return banner', (tester) async {
-    await pumpProfile(
-      tester,
-      const GlossaryPage(
-        fromLessonId: 'L3.2',
-        initialQuery: 'RAG',
-      ),
+    expect(
+      find.textContaining('Отправка обращений из приложения пока недоступна'),
+      findsOneWidget,
     );
-
-    expect(find.text('Вернуться к уроку L3.2'), findsOneWidget);
-    expect(find.byKey(const Key('glossary.returnBtn')), findsOneWidget);
-
-    expect(find.byKey(const Key('glossary.searchField')), findsOneWidget);
-    expect(find.textContaining('RAG'), findsWidgets);
-    expect(find.text('Уровень 3'), findsOneWidget);
-
-    final clearIcon = find.byIcon(Icons.clear);
-    expect(clearIcon, findsOneWidget);
-    await tester.tap(clearIcon);
-    await tester.pumpAndSettle();
-
-    expect(find.text('Модель (LLM)'), findsOneWidget);
   });
+
+  testWidgets(
+    'F16-10: S27 GlossaryPage displays AI terms, search, level badges and return banner',
+    (tester) async {
+      await pumpProfile(
+        tester,
+        const GlossaryPage(fromLessonId: 'L3.2', initialQuery: 'RAG'),
+      );
+
+      expect(find.text('Вернуться к уроку L3.2'), findsOneWidget);
+      expect(find.byKey(const Key('glossary.returnBtn')), findsOneWidget);
+
+      expect(find.byKey(const Key('glossary.searchField')), findsOneWidget);
+      expect(find.textContaining('RAG'), findsWidgets);
+      expect(find.text('Уровень 3'), findsOneWidget);
+
+      final clearIcon = find.byIcon(Icons.clear);
+      expect(clearIcon, findsOneWidget);
+      await tester.tap(clearIcon);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Модель (LLM)'), findsOneWidget);
+    },
+  );
 
   testWidgets('F16-10: S27 GlossaryPage localized in Kazakh', (tester) async {
     await pumpProfile(
