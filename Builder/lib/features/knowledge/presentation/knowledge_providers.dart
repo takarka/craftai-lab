@@ -12,7 +12,7 @@ import '../infrastructure/persistent_knowledge_repository.dart';
 final knowledgeRepositoryProvider = Provider<KnowledgeRepository>((ref) {
   final db = ref.watch(storageDatabaseProvider);
   if (db == null) {
-    throw StateError('StorageDatabase is not initialized');
+    return InMemoryKnowledgeRepository();
   }
   return PersistentKnowledgeRepository(database: db);
 });

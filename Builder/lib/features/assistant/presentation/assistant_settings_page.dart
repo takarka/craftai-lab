@@ -21,21 +21,19 @@ class AssistantSettingsPage extends ConsumerWidget {
     final s = AppLocalizations.of(context);
     final configAsync = ref.watch(assistantConfigProvider(ownerId));
     final versionsAsync = ref.watch(assistantVersionsProvider(ownerId));
-    final summaryAsync = ref.watch(localDataSummaryProvider(ownerId));
     final completedLevelsAsync = ref.watch(
       completedCourseLevelsProvider(ownerId),
     );
 
     final config = configAsync.asData?.value;
     final versions = versionsAsync.asData?.value ?? [];
-    final summary = summaryAsync.asData?.value;
-    final completedLevels = completedLevelsAsync.asData?.value ?? {1};
+    final completedLevels = completedLevelsAsync.asData?.value ?? const {};
 
     final currentVersionNumber = versions.isNotEmpty
         ? versions.first.versionNumber
         : 1;
     final highestLevel = completedLevels.fold<int>(
-      1,
+      0,
       (max, lvl) => lvl > max ? lvl : max,
     );
     final preferences = ref
@@ -64,7 +62,11 @@ class AssistantSettingsPage extends ConsumerWidget {
               BuilderCard(
                 child: Row(
                   children: [
-                    const BuilderCharacter(size: 56, compact: true),
+                    BuilderCharacter(
+                      level: highestLevel,
+                      size: 56,
+                      compact: true,
+                    ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -125,141 +127,14 @@ class AssistantSettingsPage extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
 
-              // 3. Instructions card with Versions link (F09-V01)
-              BuilderCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const BuilderIconTile(BuilderGlyph.doc),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                s.assistantInstructionsCardTitle,
-                                style: BuilderType.title,
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                s.assistantInstructionsCardSubtitle,
-                                style: BuilderType.small.copyWith(
-                                  color: BuilderColors.inkSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    InkWell(
-                      key: const Key('assistantSettings.versionsLink'),
-                      onTap: () => context.push('/assistant/settings/versions'),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: BuilderColors.surfaceDisabled,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          children: [
-                            const BuilderIcon(
-                              BuilderGlyph.code,
-                              size: 16,
-                              color: BuilderColors.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                s.assistantVersionsLink(currentVersionNumber),
-                                style: BuilderType.small.copyWith(
-                                  color: BuilderColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            const Icon(
-                              Icons.chevron_right,
-                              size: 18,
-                              color: BuilderColors.inkSecondary,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // 4. Memory card (F09-V01)
-              BuilderCard(
-                child: Row(
-                  children: [
-                    const BuilderIconTile(BuilderGlyph.memory),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            s.assistantMemoryCardTitle,
-                            style: BuilderType.title,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            summary != null
-                                ? '${summary.memoryFactsCount} сохранённых фактов'
-                                : s.assistantMemoryCardSubtitle,
-                            style: BuilderType.small.copyWith(
-                              color: BuilderColors.inkSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // 5. Documents / Knowledge card (F09-V01)
-              BuilderCard(
-                key: const Key('assistantSettings.documentsCard'),
-                onTap: () => context.push('/assistant/knowledge'),
-                child: Row(
-                  children: [
-                    const BuilderIconTile(BuilderGlyph.doc, warm: true),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            s.assistantDocumentsCardTitle,
-                            style: BuilderType.title,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            summary != null
-                                ? '${summary.documentsCount} документов (${summary.chunksCount} фрагментов)'
-                                : s.assistantDocumentsCardSubtitle,
-                            style: BuilderType.small.copyWith(
-                              color: BuilderColors.inkSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              BuilderLinkRow(
+                key: const Key('assistantSettings.versionsLink'),
+                title: s.assistantVersionsLink(currentVersionNumber),
+                subtitle: Localizations.localeOf(context).languageCode == 'kk'
+                    ? 'Өзгерістер тарихы және қалпына келтіру'
+                    : 'История изменений и восстановление',
+                icon: BuilderGlyph.code,
+                onTap: () => context.push('/assistant/settings/versions'),
               ),
               const SizedBox(height: 24),
 
@@ -378,21 +253,27 @@ class AssistantSettingsPage extends ConsumerWidget {
                   .toggleSkill(skill, val);
             }
           : null,
-      onTap: () {
-        if (skill == AssistantSkillId.instructions &&
-            (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
-          context.push('/assistant/instructions');
-        } else if (skill == AssistantSkillId.knowledge &&
-            (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
-          context.push('/assistant/knowledge');
-        } else if (skill == AssistantSkillId.memory &&
-            (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
-          context.push('/assistant/memory');
-        } else if (skill == AssistantSkillId.tools &&
-            (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
-          context.push('/assistant/tools');
-        }
-      },
+      onTap: (status == SkillStatus.enabled || status == SkillStatus.disabled)
+          ? () {
+              if (skill == AssistantSkillId.instructions &&
+                  (status == SkillStatus.enabled ||
+                      status == SkillStatus.disabled)) {
+                context.push('/assistant/instructions');
+              } else if (skill == AssistantSkillId.knowledge &&
+                  (status == SkillStatus.enabled ||
+                      status == SkillStatus.disabled)) {
+                context.push('/assistant/knowledge');
+              } else if (skill == AssistantSkillId.memory &&
+                  (status == SkillStatus.enabled ||
+                      status == SkillStatus.disabled)) {
+                context.push('/assistant/memory');
+              } else if (skill == AssistantSkillId.tools &&
+                  (status == SkillStatus.enabled ||
+                      status == SkillStatus.disabled)) {
+                context.push('/assistant/tools');
+              }
+            }
+          : null,
     );
   }
 

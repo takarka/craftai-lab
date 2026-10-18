@@ -5,12 +5,13 @@ import '../assistant/assistant_providers.dart';
 import 'domain/course_catalog.dart';
 import 'domain/course_models.dart';
 import 'domain/course_repository.dart';
+import 'infrastructure/in_memory_course_repository.dart';
 import 'infrastructure/persistent_course_repository.dart';
 
 final courseRepositoryProvider = Provider<CourseRepository>((ref) {
   final db = ref.watch(storageDatabaseProvider);
   if (db == null) {
-    throw StateError('StorageDatabase is not initialized yet');
+    return InMemoryCourseRepository();
   }
   final assistantRepo = ref.watch(assistantRepositoryProvider);
   return PersistentCourseRepository(

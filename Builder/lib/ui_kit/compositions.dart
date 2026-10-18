@@ -276,7 +276,7 @@ class BuilderSkillCard extends StatelessWidget {
     final hint = switch (status) {
       SkillStatus.enabled => subtitle,
       SkillStatus.disabled => 'Выключено · $subtitle',
-      SkillStatus.locked => 'Откроется на уровне $level',
+      SkillStatus.locked => 'Откроется после прохождения уровня $level',
       SkillStatus.unavailable => 'Недоступно в текущем режиме',
       SkillStatus.comingSoon => 'После MVP · скоро',
     };

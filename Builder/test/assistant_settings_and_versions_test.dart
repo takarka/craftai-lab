@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:builder/app/localization/app_localizations.dart';
+import 'package:builder/ui_kit/ui_kit.dart';
 import 'package:builder/core/storage/database/storage_database.dart';
 import 'package:builder/core/storage/schema/storage_schema_v1.dart';
 import 'package:builder/core/storage/security/secure_key_storage.dart';
@@ -11,6 +12,7 @@ import 'package:builder/features/assistant/assistant_providers.dart';
 import 'package:builder/features/assistant/domain/assistant_config.dart';
 import 'package:builder/features/assistant/infrastructure/persistent_assistant_repository.dart';
 import 'package:builder/features/assistant/presentation/assistant_name_page.dart';
+import 'package:builder/features/assistant/presentation/assistant_page.dart';
 import 'package:builder/features/assistant/presentation/assistant_settings_page.dart';
 import 'package:builder/features/assistant/presentation/assistant_versions_page.dart';
 import 'package:builder/features/assistant/presentation/local_data_settings_page.dart';
@@ -364,6 +366,7 @@ void main() {
       Widget child, {
       AssistantConfig? initialConfig,
       List<AssistantVersion>? versions,
+      Set<int>? completedLevels,
     }) {
       final config =
           initialConfig ??
@@ -413,7 +416,9 @@ void main() {
               versionsCount: 1,
             ),
           ),
-          completedCourseLevelsProvider(testOwner).overrideWith((ref) => {1}),
+          completedCourseLevelsProvider(
+            testOwner,
+          ).overrideWith((ref) => completedLevels ?? {1}),
         ],
         child: MaterialApp(
           localizationsDelegates: const [
@@ -472,6 +477,39 @@ void main() {
       },
     );
 
+    for (var level = 0; level <= 5; level++) {
+      testWidgets('Settings feature buttons respect completed level $level', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          createTestApp(
+            const AssistantSettingsPage(ownerId: testOwner),
+            completedLevels: {for (var n = 1; n <= level; n++) n},
+          ),
+        );
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 100)),
+        );
+        await tester.pumpAndSettle();
+        for (final feature in [
+          AssistantSkillId.instructions,
+          AssistantSkillId.knowledge,
+          AssistantSkillId.memory,
+          AssistantSkillId.tools,
+        ]) {
+          final card = tester.widget<BuilderSkillCard>(
+            find.byKey(Key('skill.card.${feature.id}')),
+          );
+          expect(
+            card.onTap != null,
+            level >= feature.level,
+            reason: '${feature.id} unlocks after ${feature.level}',
+          );
+        }
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+      });
+    }
     testWidgets(
       'F16-04: S11 renders assistant language row and opens language selection sheet',
       (tester) async {
@@ -722,6 +760,120 @@ void main() {
           ),
         );
         expect(confirmBtn.onPressed, isNotNull);
+      },
+    );
+
+    testWidgets(
+      'AssistantPage renders Level 0 baseline state when no levels are completed',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestApp(
+            const AssistantPage(ownerId: testOwner),
+            completedLevels: const {},
+          ),
+        );
+        await tester.pump();
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 150)),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Готов к первым задачам'), findsOneWidget);
+        expect(find.byType(AppBar), findsNothing);
+        expect(
+          find.byKey(const Key('assistant.resumeLessonBanner')),
+          findsNothing,
+        );
+        expect(find.byKey(const Key('assistant.character')), findsOneWidget);
+        expect(
+          tester.getTopLeft(find.byKey(const Key('assistant.character'))).dy,
+          lessThan(
+            tester.getTopLeft(find.byKey(const Key('assistant.stateTitle'))).dy,
+          ),
+        );
+        expect(find.byKey(const Key('assistant.newChatFab')), findsOneWidget);
+        await tester.scrollUntilVisible(
+          find.byKey(const Key('assistant.historyBtn')),
+          200,
+        );
+        expect(find.byKey(const Key('assistant.historyBtn')), findsOneWidget);
+        expect(find.byKey(const Key('assistant.settingsBtn')), findsOneWidget);
+        expect(find.byKey(const Key('assistant.newChatFab')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'AssistantPage renders Level 1 state when Level 1 is completed',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestApp(
+            const AssistantPage(ownerId: testOwner),
+            completedLevels: const {1},
+          ),
+        );
+        await tester.pump();
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 150)),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Учитывает ваши настройки'), findsOneWidget);
+        expect(
+          find.byKey(const Key('assistant.stateDescription')),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+
+    testWidgets(
+      'AssistantPage renders Level 3 state when Levels 1, 2, 3 are completed',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestApp(
+            const AssistantPage(ownerId: testOwner),
+            completedLevels: const {1, 2, 3},
+          ),
+        );
+        await tester.pump();
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 150)),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Работает с вашими материалами'), findsOneWidget);
+        expect(
+          find.byKey(const Key('assistant.stateDescription')),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+
+    testWidgets(
+      'AssistantPage renders course completed state when all 5 levels are completed',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestApp(
+            const AssistantPage(ownerId: testOwner),
+            completedLevels: const {1, 2, 3, 4, 5},
+          ),
+        );
+        await tester.pump();
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 150)),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Помогает переходить к действиям'), findsOneWidget);
+        expect(
+          find.byKey(const Key('assistant.stateDescription')),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
       },
     );
   });

@@ -9,6 +9,9 @@ import 'package:builder/core/storage/workspace/workspace_storage_service.dart';
 import 'package:builder/features/onboarding/domain/assistant_setup.dart';
 import 'package:builder/features/onboarding/domain/initial_workspace_repository.dart';
 import 'package:builder/features/onboarding/infrastructure/persistent_initial_workspace_repository.dart';
+import 'package:builder/features/assistant/infrastructure/persistent_assistant_repository.dart';
+import 'package:builder/features/session/infrastructure/persistent_session_repository.dart';
+import 'package:builder/features/session/infrastructure/secure_token_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -168,6 +171,58 @@ void main() {
       if (await tempDir.exists()) {
         await tempDir.delete(recursive: true);
       }
+    });
+
+    test('recreates assistant after full reset and database reopen', () async {
+      const ownerId = 'reset-owner';
+      final permit = WorkspaceWritePermit(
+        ownerId: ownerId,
+        canCommit: () => true,
+      );
+      final original = AssistantSetup(
+        subject: SchoolSubject.physics,
+        grades: {8},
+        name: 'Первый',
+      );
+      await repository.createIfAbsent(permit: permit, setup: original);
+      final workspace = WorkspaceStorageService(
+        database: storageDb,
+        keyStorage: InMemorySecureKeyStorage(),
+        installationId: 'test_inst_1',
+      );
+      await workspace.openWorkspace(ownerId: ownerId);
+      final session = PersistentSessionRepository(
+        tokenStorage: InMemorySecureTokenStorage(),
+        database: storageDb,
+      );
+      expect(await session.isLocalOnboardingComplete(ownerId), isTrue);
+      await PersistentAssistantRepository(
+        database: storageDb,
+        workspaceService: workspace,
+      ).resetAssistantWorkspace(ownerId);
+      await storageDb.close();
+      await storageDb.open();
+      expect(await session.isLocalOnboardingComplete(ownerId), isFalse);
+      final recreated = await repository.createIfAbsent(
+        permit: permit,
+        setup: original.copyWith(name: 'Новый', grades: {9}),
+      );
+      expect(recreated.setup.name, 'Новый');
+      expect(recreated.setup.grades, {9});
+      expect(recreated.setup.ready, isTrue);
+      expect(await session.isLocalOnboardingComplete(ownerId), isTrue);
+      final duplicate = await repository.createIfAbsent(
+        permit: permit,
+        setup: original,
+      );
+      expect(duplicate.setup.name, 'Новый');
+      final versions = await storageDb.db.query(
+        StorageSchemaV1.tableAssistantVersions,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      expect(versions, hasLength(1));
+      expect(versions.single['version_number'], 1);
     });
 
     test(

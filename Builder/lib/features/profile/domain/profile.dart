@@ -13,6 +13,7 @@ class AccountSnapshot {
     required this.updatedAtUtc,
     this.name,
     this.email,
+    this.role,
     this.usedTokens,
     this.tokenLimit,
     this.periodStartUtc,
@@ -28,6 +29,7 @@ class AccountSnapshot {
   final String ownerId;
   final String? name;
   final String? email;
+  final String? role;
   final int? usedTokens;
   final int? tokenLimit;
   final DateTime? periodStartUtc;
@@ -38,6 +40,7 @@ class AccountSnapshot {
     'ownerId': ownerId,
     'name': name,
     'email': email,
+    'role': role,
     'usedTokens': usedTokens,
     'tokenLimit': tokenLimit,
     'periodStartUtc': periodStartUtc?.toIso8601String(),
@@ -50,6 +53,7 @@ class AccountSnapshot {
         ownerId: json['ownerId'] as String,
         name: json['name'] as String?,
         email: json['email'] as String?,
+        role: json['role'] as String?,
         usedTokens: json['usedTokens'] as int?,
         tokenLimit: json['tokenLimit'] as int?,
         periodStartUtc: DateTime.tryParse(

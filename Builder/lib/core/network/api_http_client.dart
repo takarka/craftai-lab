@@ -9,7 +9,8 @@ import '../../app/environment/app_config.dart';
 /// The local development API uses a self-signed certificate over adb reverse.
 http.Client createApiHttpClient(AppConfig? config) {
   final uri = config?.apiBaseUri;
-  if (kDebugMode &&
+  if (!kIsWeb &&
+      kDebugMode &&
       config?.environment == AppEnvironment.development &&
       uri != null &&
       const ['localhost', '127.0.0.1', '::1'].contains(uri.host)) {

@@ -4,7 +4,7 @@ import '../../../ui_kit/identity.dart';
 enum AssistantSkillId {
   instructions(
     id: 'instructions',
-    level: 1,
+    level: 2,
     title: 'Инструкции',
     subtitle: 'Правила поведения и тон общения',
     glyph: BuilderGlyph.doc,
@@ -12,7 +12,7 @@ enum AssistantSkillId {
   ),
   knowledge(
     id: 'knowledge',
-    level: 2,
+    level: 3,
     title: 'Знания (RAG)',
     subtitle: 'Поиск по вашим учебным материалам',
     glyph: BuilderGlyph.doc,
@@ -20,7 +20,7 @@ enum AssistantSkillId {
   ),
   memory(
     id: 'memory',
-    level: 3,
+    level: 4,
     title: 'Память',
     subtitle: 'Факты о ваших классах и предпочтениях',
     glyph: BuilderGlyph.memory,

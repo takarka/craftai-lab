@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -16,12 +17,14 @@ final installationIdProvider = Provider<String>((ref) {
   return 'default_installation';
 });
 
-final databasePathProvider = FutureProvider<String>((ref) async {
+final databasePathProvider = FutureProvider<String?>((ref) async {
+  if (kIsWeb) return null;
   final dir = await getApplicationSupportDirectory();
   return p.join(dir.path, 'craftai_builder.db');
 });
 
 final storageDatabaseProvider = Provider<StorageDatabase?>((ref) {
+  if (kIsWeb) return null;
   final pathAsync = ref.watch(databasePathProvider);
   final path = pathAsync.asData?.value;
   if (path == null) return null;

@@ -12,7 +12,7 @@ import 'infrastructure/persistent_instructions_repository.dart';
 final instructionsRepositoryProvider = Provider<InstructionsRepository>((ref) {
   final storageDatabase = ref.watch(storageDatabaseProvider);
   if (storageDatabase == null) {
-    throw StateError('StorageDatabase is not initialized');
+    return InMemoryInstructionsRepository();
   }
   return PersistentInstructionsRepository(database: storageDatabase);
 });

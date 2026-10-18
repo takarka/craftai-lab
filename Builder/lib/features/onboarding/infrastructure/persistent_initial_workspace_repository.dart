@@ -98,7 +98,11 @@ final class PersistentInitialWorkspaceRepository
             name: config['name'] as String? ?? '',
           );
 
-          return InitialWorkspace(ownerId: ownerId, setup: existingSetup);
+          // A reset preserves the workspace and preferences but clears the
+          // assistant name. Only a complete setup is an idempotent success.
+          if (existingSetup.ready) {
+            return InitialWorkspace(ownerId: ownerId, setup: existingSetup);
+          }
         }
       }
 

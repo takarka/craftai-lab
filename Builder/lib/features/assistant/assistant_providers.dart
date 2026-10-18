@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/storage/schema/storage_schema_v1.dart';
 import '../../core/storage/storage_providers.dart';
 import '../chat/chat_providers.dart';
+import '../course/course_providers.dart';
 import '../models/model_providers.dart';
 import '../onboarding/application/onboarding_controller.dart';
 import '../onboarding/domain/assistant_setup.dart';
@@ -24,7 +25,15 @@ final completedCourseLevelsProvider = FutureProvider.family<Set<int>, String>((
   ownerId,
 ) async {
   final db = ref.watch(storageDatabaseProvider);
-  if (db == null) return {1};
+  if (db == null) {
+    final progress = await ref
+        .watch(courseRepositoryProvider)
+        .getAllProgress(ownerId);
+    return progress
+        .where((level) => level.isCompleted)
+        .map((level) => level.levelId)
+        .toSet();
+  }
   if (!db.isOpen) await db.open();
 
   final rows = await db.db.query(
@@ -34,7 +43,7 @@ final completedCourseLevelsProvider = FutureProvider.family<Set<int>, String>((
     whereArgs: [ownerId],
   );
 
-  final completed = <int>{1}; // Level 1 is always unlocked
+  final completed = <int>{};
   for (final r in rows) {
     final lvl = int.tryParse(r['level_id'] as String);
     if (lvl != null) completed.add(lvl);

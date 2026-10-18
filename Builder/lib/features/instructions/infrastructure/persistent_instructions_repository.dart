@@ -235,3 +235,50 @@ class PersistentInstructionsRepository implements InstructionsRepository {
     });
   }
 }
+
+final class InMemoryInstructionsRepository implements InstructionsRepository {
+  final Map<String, InstructionConfig> _configs = {};
+
+  @override
+  Future<InstructionConfig> getInstructionConfig(String ownerId) async {
+    return _configs[ownerId] ??
+        InstructionConfig(rules: InstructionPresets.defaultRules);
+  }
+
+  @override
+  Future<void> saveInstructionConfig(
+    String ownerId,
+    InstructionConfig config,
+  ) async {
+    _configs[ownerId] = config;
+  }
+
+  @override
+  Future<void> addCustomRule(String ownerId, InstructionRule rule) async {
+    final current = await getInstructionConfig(ownerId);
+    final updatedRules = [...current.rules, rule];
+    _configs[ownerId] = InstructionConfig(
+      isRawMode: current.isRawMode,
+      rawText: current.rawText,
+      rules: updatedRules,
+    );
+  }
+
+  @override
+  Future<void> deleteCustomRule(String ownerId, String ruleId) async {
+    final current = await getInstructionConfig(ownerId);
+    final updatedRules = current.rules.where((r) => r.id != ruleId).toList();
+    _configs[ownerId] = InstructionConfig(
+      isRawMode: current.isRawMode,
+      rawText: current.rawText,
+      rules: updatedRules,
+    );
+  }
+
+  @override
+  Future<void> resetToDefaults(String ownerId) async {
+    _configs[ownerId] = InstructionConfig(
+      rules: InstructionPresets.defaultRules,
+    );
+  }
+}

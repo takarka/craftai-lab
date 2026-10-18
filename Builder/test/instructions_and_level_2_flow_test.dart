@@ -589,90 +589,114 @@ void main() {
       expect(find.text('После (с инструкциями)'), findsOneWidget);
     });
 
-    testWidgets(
-      'S40 learn mode checks evidence criteria before completion (F11-08)',
-      (tester) async {
-        tester.view.physicalSize = const Size(800, 2000);
-        tester.view.devicePixelRatio = 1.0;
-        addTearDown(() {
-          tester.view.resetPhysicalSize();
-          tester.view.resetDevicePixelRatio();
-        });
+    for (final reflectionFirst in [false, true]) {
+      testWidgets(
+        'S40 learn mode checks current evidence (reflectionFirst: $reflectionFirst)',
+        (tester) async {
+          tester.view.physicalSize = const Size(800, 2000);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(() {
+            tester.view.resetPhysicalSize();
+            tester.view.resetDevicePixelRatio();
+          });
 
-        bool practiceCompletedCalled = false;
+          bool practiceCompletedCalled = false;
 
-        await tester.runAsync(() async {
-          await tester.pumpWidget(
-            createTestWidget(
-              mode: SkillScreenMode.learn,
-              onPracticeCompleted: () {
-                practiceCompletedCalled = true;
-              },
-            ),
-          );
-        });
-        await tester.pumpAndSettle();
-
-        // Verify learning banner is present
-        expect(
-          find.byKey(const Key('instructions.learnBanner')),
-          findsOneWidget,
-        );
-        expect(
-          find.byKey(const Key('instructions.reflectionInput')),
-          findsOneWidget,
-        );
-
-        // Try saving without meeting criteria -> shows snackbar, does not complete
-        await tester.tap(find.byKey(const Key('instructions.saveBtn')));
-        await tester.pumpAndSettle();
-
-        expect(practiceCompletedCalled, false);
-        expect(
-          find.textContaining(
-            'Для завершения практики выберите минимум 3 правила',
-          ),
-          findsOneWidget,
-        );
-
-        // Hide snackbar
-        ScaffoldMessenger.of(
-          tester.element(find.byType(Scaffold)),
-        ).hideCurrentSnackBar();
-        await tester.pumpAndSettle();
-
-        // Enable 3 rules
-        final switches = find.byType(Switch);
-        for (int i = 0; i < 3; i++) {
-          await tester.tap(switches.at(i));
+          await tester.runAsync(() async {
+            await tester.pumpWidget(
+              createTestWidget(
+                mode: SkillScreenMode.learn,
+                onPracticeCompleted: () {
+                  practiceCompletedCalled = true;
+                },
+              ),
+            );
+          });
           await tester.pumpAndSettle();
-        }
 
-        // Run test
-        await tester.runAsync(() async {
-          await tester.tap(
-            find.byKey(const Key('instructions.testBeforeAfterBtn')),
+          // Verify learning banner is present
+          expect(
+            find.byKey(const Key('instructions.learnBanner')),
+            findsOneWidget,
           );
-        });
-        await tester.pumpAndSettle();
+          expect(
+            find.byKey(const Key('instructions.reflectionInput')),
+            findsOneWidget,
+          );
 
-        // Fill in reflection
-        await tester.enterText(
-          find.byKey(const Key('instructions.reflectionInput')),
-          'Ответ стал структурированным и кратким.',
-        );
-        await tester.pumpAndSettle();
-
-        // Now save
-        await tester.runAsync(() async {
+          // Try saving without meeting criteria -> shows snackbar, does not complete
           await tester.tap(find.byKey(const Key('instructions.saveBtn')));
-          await Future<void>.delayed(const Duration(milliseconds: 300));
-        });
-        await tester.pump();
-        await tester.pump(const Duration(milliseconds: 300));
+          await tester.pumpAndSettle();
 
-        expect(practiceCompletedCalled, true);
-      },
-    );
+          expect(practiceCompletedCalled, false);
+          expect(
+            find.textContaining(
+              'Для завершения практики выберите минимум 3 правила',
+            ),
+            findsOneWidget,
+          );
+
+          // Hide snackbar
+          ScaffoldMessenger.of(
+            tester.element(find.byType(Scaffold)),
+          ).hideCurrentSnackBar();
+          await tester.pumpAndSettle();
+
+          if (reflectionFirst) {
+            await tester.enterText(
+              find.byKey(const Key('instructions.reflectionInput')),
+              'Ответ стал структурированным и кратким.',
+            );
+            await tester.pumpAndSettle();
+          }
+
+          // Enable 3 rules
+          final switches = find.byType(Switch);
+          for (int i = 0; i < 3; i++) {
+            await tester.tap(switches.at(i));
+            await tester.pumpAndSettle();
+          }
+
+          // Run test
+          await tester.runAsync(() async {
+            await tester.tap(
+              find.byKey(const Key('instructions.testBeforeAfterBtn')),
+            );
+          });
+          await tester.pumpAndSettle();
+
+          // With rules selected, only the remaining requirements are reported.
+          if (!reflectionFirst) {
+            await tester.tap(find.byKey(const Key('instructions.saveBtn')));
+            await tester.pumpAndSettle();
+            expect(practiceCompletedCalled, false);
+            expect(
+              find.text('Для завершения практики напишите рефлексию.'),
+              findsOneWidget,
+            );
+            ScaffoldMessenger.of(
+              tester.element(find.byType(Scaffold)),
+            ).hideCurrentSnackBar();
+            await tester.pumpAndSettle();
+            // Fill in reflection
+            await tester.enterText(
+              find.byKey(const Key('instructions.reflectionInput')),
+              'Ответ стал структурированным и кратким.',
+            );
+            await tester.pumpAndSettle();
+          }
+
+          // Now save
+          await tester.runAsync(() async {
+            await tester.tap(find.byKey(const Key('instructions.saveBtn')));
+            await Future<void>.delayed(const Duration(milliseconds: 300));
+          });
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 300));
+
+          expect(practiceCompletedCalled, true);
+        },
+      );
+    }
   });
 }

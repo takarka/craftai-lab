@@ -32,7 +32,6 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
 
   bool _isPreviewExpanded = true;
   InstructionGroup _selectedGroupFilter = InstructionGroup.role;
-  bool _practiceEvidenceMet = false;
   bool _isRawTextFocused = false;
 
   @override
@@ -842,9 +841,6 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                         question: question,
                         category: selectedCategory,
                       );
-                      setState(() {
-                        _checkPracticeEvidence(draftState);
-                      });
                     },
             ),
           ),
@@ -966,24 +962,20 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                   'Например: Ответ стал кратким, структурированным по пунктам и в роли помощника учителя биологии.',
               border: OutlineInputBorder(),
             ),
-            onChanged: (val) {
-              setState(() {
-                _checkPracticeEvidence(
-                  ref.read(instructionDraftProvider(widget.ownerId)),
-                );
-              });
-            },
+            onChanged: (_) => setState(() {}),
           ),
         ],
       ),
     );
   }
 
-  void _checkPracticeEvidence(InstructionDraftState draftState) {
-    final rulesMet = draftState.config.enabledRulesCount >= 3;
-    final testMet = draftState.testResult != null;
-    final reflectionMet = _reflectionController.text.trim().isNotEmpty;
-    _practiceEvidenceMet = rulesMet && testMet && reflectionMet;
+  List<String> _missingPracticeRequirements(InstructionDraftState draftState) {
+    return [
+      if (draftState.config.enabledRulesCount < 3)
+        'выберите минимум 3 правила (сейчас ${draftState.config.enabledRulesCount})',
+      if (draftState.testResult == null) 'запустите тест «До / после»',
+      if (_reflectionController.text.trim().isEmpty) 'напишите рефлексию',
+    ];
   }
 
   // --------------------------------------------------------------------------
@@ -1054,14 +1046,22 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
               onPressed: draftState.isSaving
                   ? null
                   : () async {
-                      if (isLearnMode && !_practiceEvidenceMet) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Для завершения практики выберите минимум 3 правила, запустите тест и напишите рефлексию.',
+                      final currentDraft = ref.read(
+                        instructionDraftProvider(widget.ownerId),
+                      );
+                      final missing = _missingPracticeRequirements(
+                        currentDraft,
+                      );
+                      if (isLearnMode && missing.isNotEmpty) {
+                        ScaffoldMessenger.of(context)
+                          ..hideCurrentSnackBar()
+                          ..showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Для завершения практики ${missing.join(', ')}.',
+                              ),
                             ),
-                          ),
-                        );
+                          );
                         return;
                       }
 

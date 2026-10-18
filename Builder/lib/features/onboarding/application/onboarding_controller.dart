@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/storage/storage_providers.dart';
+import '../../assistant/assistant_providers.dart';
+import '../../profile/profile_providers.dart';
 import '../../session/infrastructure/persistent_session_repository.dart';
 import '../../session/session_repository.dart';
 import '../domain/assistant_setup.dart';
@@ -152,6 +154,9 @@ class OnboardingController extends Notifier<OnboardingState> {
         );
         return;
       }
+      ref.invalidate(assistantConfigProvider(ownerId));
+      ref.invalidate(assistantVersionsProvider(ownerId));
+      ref.invalidate(teacherPreferencesProvider(ownerId));
       final sessionRepo = ref.read(sessionRepositoryProvider);
       if (sessionRepo is PersistentSessionRepository) {
         sessionRepo.markOnboardingComplete(ownerId);

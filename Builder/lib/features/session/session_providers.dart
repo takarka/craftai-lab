@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../core/network/api_http_client.dart';
@@ -25,7 +26,7 @@ final persistentSessionRepositoryProvider =
       final db = ref.watch(storageDatabaseProvider);
       final wsService = ref.watch(workspaceStorageServiceProvider);
 
-      if (db == null || wsService == null) return null;
+      if (!kIsWeb && (db == null || wsService == null)) return null;
 
       return PersistentSessionRepository(
         tokenStorage: tokenStorage,

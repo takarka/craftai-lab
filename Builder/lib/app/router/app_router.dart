@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/session/session_repository.dart';
 import '../../features/assistant/presentation/assistant_page.dart';
+import '../../features/assistant/presentation/assistant_feature_gate.dart';
+import '../../features/assistant/domain/assistant_config.dart';
+import '../../features/assistant/presentation/assistant_chat_page.dart';
 import '../../features/assistant/presentation/assistant_settings_page.dart';
 import '../../features/assistant/presentation/assistant_name_page.dart';
 import '../../features/assistant/presentation/assistant_versions_page.dart';
@@ -34,8 +37,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return session is AuthenticatedSession ? session.ownerId : null;
     }),
   );
+  final rootNavigatorKey = GlobalKey<NavigatorState>();
   final router = GoRouter(
-    navigatorKey: GlobalKey<NavigatorState>(),
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/assistant',
     redirect: (context, state) {
       final session = ref.read(sessionProvider);
@@ -158,6 +162,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/onboarding/assistant',
         builder: (context, state) => OnboardingAssistantPage(ownerId: ownerId!),
       ),
+      GoRoute(
+        path: '/chat',
+        builder: (context, state) => AssistantChatPage(ownerId: ownerId!),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => BuilderShell(shell: shell),
         branches: [
@@ -169,48 +177,76 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'models',
+                    parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) =>
                         ModelSelectionPage(ownerId: ownerId!),
                   ),
                   GoRoute(
                     path: 'instructions',
-                    builder: (context, state) =>
-                        InstructionsPage(ownerId: ownerId!),
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) => AssistantFeatureGate(
+                      ownerId: ownerId!,
+                      skill: AssistantSkillId.instructions,
+                      builder: (_) => InstructionsPage(ownerId: ownerId),
+                    ),
                   ),
                   GoRoute(
                     path: 'knowledge',
-                    builder: (context, state) =>
-                        KnowledgePage(ownerId: ownerId!),
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) => AssistantFeatureGate(
+                      ownerId: ownerId!,
+                      skill: AssistantSkillId.knowledge,
+                      builder: (_) => KnowledgePage(ownerId: ownerId),
+                    ),
                   ),
                   GoRoute(
                     path: 'memory',
-                    builder: (context, state) => MemoryPage(ownerId: ownerId!),
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) => AssistantFeatureGate(
+                      ownerId: ownerId!,
+                      skill: AssistantSkillId.memory,
+                      builder: (_) => MemoryPage(ownerId: ownerId),
+                    ),
                   ),
                   GoRoute(
                     path: 'tools',
-                    builder: (context, state) => ToolsPage(ownerId: ownerId!),
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) => AssistantFeatureGate(
+                      ownerId: ownerId!,
+                      skill: AssistantSkillId.tools,
+                      builder: (_) => ToolsPage(ownerId: ownerId),
+                    ),
                   ),
                   GoRoute(
                     path: 'mcp',
-                    builder: (context, state) => McpPage(ownerId: ownerId!),
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) => AssistantFeatureGate(
+                      ownerId: ownerId!,
+                      skill: AssistantSkillId.tools,
+                      builder: (_) => McpPage(ownerId: ownerId),
+                    ),
                   ),
                   GoRoute(
                     path: 'settings',
+                    parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) =>
                         AssistantSettingsPage(ownerId: ownerId!),
                     routes: [
                       GoRoute(
                         path: 'name',
+                        parentNavigatorKey: rootNavigatorKey,
                         builder: (context, state) =>
                             AssistantNamePage(ownerId: ownerId!),
                       ),
                       GoRoute(
                         path: 'versions',
+                        parentNavigatorKey: rootNavigatorKey,
                         builder: (context, state) =>
                             AssistantVersionsPage(ownerId: ownerId!),
                       ),
                       GoRoute(
                         path: 'data',
+                        parentNavigatorKey: rootNavigatorKey,
                         builder: (context, state) =>
                             LocalDataSettingsPage(ownerId: ownerId!),
                       ),
@@ -299,27 +335,38 @@ class BuilderShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final strings = AppLocalizations.of(context);
+    // Only the three tab roots own the persistent navigation. Lesson, settings
+    // and other detail routes deliberately use their own app header instead.
+    final showTabBar = const {
+      '/assistant',
+      '/course',
+      '/profile',
+    }.contains(GoRouterState.of(context).uri.path);
     return Scaffold(
       body: shell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: shell.currentIndex,
-        onDestinationSelected: (index) =>
-            shell.goBranch(index, initialLocation: index == shell.currentIndex),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.smart_toy_outlined),
-            label: strings.assistantTab,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.school_outlined),
-            label: strings.courseTab,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.person_outline),
-            label: strings.profileTab,
-          ),
-        ],
-      ),
+      bottomNavigationBar: showTabBar
+          ? NavigationBar(
+              selectedIndex: shell.currentIndex,
+              onDestinationSelected: (index) => shell.goBranch(
+                index,
+                initialLocation: index == shell.currentIndex,
+              ),
+              destinations: [
+                NavigationDestination(
+                  icon: const Icon(Icons.smart_toy_outlined),
+                  label: strings.assistantTab,
+                ),
+                NavigationDestination(
+                  icon: const Icon(Icons.school_outlined),
+                  label: strings.courseTab,
+                ),
+                NavigationDestination(
+                  icon: const Icon(Icons.person_outline),
+                  label: strings.profileTab,
+                ),
+              ],
+            )
+          : null,
     );
   }
 }

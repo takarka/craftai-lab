@@ -508,6 +508,120 @@ void main() {
       },
     );
 
+    testWidgets(
+      'S25 Quiz displays question progress, navigation chips and auto-scrolls on answer and submission',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 2.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
+
+        // Pre-set progress to step 4 (Quiz)
+        await tester.runAsync(() async {
+          await courseRepo.saveCheckpoint(
+            ownerId: testOwner,
+            levelId: 1,
+            step: 4,
+            practiceEvidenceMet: true,
+          );
+        });
+
+        await tester.pumpWidget(
+          createTestApp(const LessonPlayerPage(ownerId: testOwner, levelId: 1)),
+        );
+        await tester.pump();
+        await tester.runAsync(
+          () => Future.delayed(const Duration(milliseconds: 300)),
+        );
+        await tester.pump();
+
+        // Question navigation chips
+        expect(find.byKey(const Key('quiz.chip.0')), findsOneWidget);
+        expect(find.byKey(const Key('quiz.chip.1')), findsOneWidget);
+        expect(find.byKey(const Key('quiz.chip.2')), findsOneWidget);
+
+        // Submit button shows unanswered count initially
+        expect(find.text('Проверить ответы (0 из 3)'), findsOneWidget);
+
+        // Tap chip 1 to jump to question 2, verifying chip tap works
+        await tester.tap(find.byKey(const Key('quiz.chip.1')));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Scroll back to and answer question 0
+        await tester.scrollUntilVisible(
+          find.byKey(const Key('quiz.q0.opt1')),
+          -200,
+        );
+        await tester.tap(find.byKey(const Key('quiz.q0.opt1')));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Scroll to and answer question 1
+        await tester.scrollUntilVisible(
+          find.byKey(const Key('quiz.q1.opt0')),
+          200,
+        );
+        await tester.tap(find.byKey(const Key('quiz.q1.opt0')));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Scroll to and answer question 2
+        await tester.scrollUntilVisible(
+          find.byKey(const Key('quiz.q2.opt1')),
+          200,
+        );
+        await tester.tap(find.byKey(const Key('quiz.q2.opt1')));
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Now button shows ready state
+        expect(find.byKey(const Key('lesson.quizSubmitBtn')), findsOneWidget);
+        expect(find.text('Проверить ответы'), findsOneWidget);
+
+        // Submit quiz
+        await tester.tap(find.byKey(const Key('lesson.quizSubmitBtn')));
+        await tester.pump();
+        await tester.runAsync(() async {
+          await Future.delayed(const Duration(milliseconds: 300));
+        });
+        await tester.pump(const Duration(milliseconds: 300));
+
+        // Result banner is visible
+        expect(find.byKey(const Key('quiz.resultBanner')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'S26 Summary displays test in chat card and button',
+      (tester) async {
+        tester.view.physicalSize = const Size(1080, 2400);
+        tester.view.devicePixelRatio = 2.0;
+        addTearDown(() => tester.view.resetPhysicalSize());
+
+        // Pre-set progress to step 5 (Summary)
+        await tester.runAsync(() async {
+          await courseRepo.saveCheckpoint(
+            ownerId: testOwner,
+            levelId: 1,
+            step: 5,
+            practiceEvidenceMet: true,
+          );
+        });
+
+        await tester.pumpWidget(
+          createTestApp(const LessonPlayerPage(ownerId: testOwner, levelId: 1)),
+        );
+        await tester.pump();
+        await tester.runAsync(
+          () => Future.delayed(const Duration(milliseconds: 300)),
+        );
+        await tester.pump();
+
+        // Verify Test in Chat card and buttons
+        expect(find.byKey(const Key('lesson.testInChatCard')), findsOneWidget);
+        expect(find.byKey(const Key('lesson.testInChatBtn')), findsOneWidget);
+        expect(find.byKey(const Key('lesson.summaryChatBtn')), findsOneWidget);
+        expect(find.byKey(const Key('lesson.summaryFinishBtn')), findsOneWidget);
+        expect(find.text('Протестировать в чате'), findsWidgets);
+      },
+    );
+
     testWidgets('S27 GlossaryPage displays search and items', (tester) async {
       await tester.pumpWidget(createTestApp(const GlossaryPage()));
       await tester.pumpAndSettle();
@@ -526,13 +640,13 @@ void main() {
     });
 
     testWidgets(
-      'S10 AssistantPage shows resume banner and hides when course is completed (F10-10)',
+      'S10 AssistantPage keeps course banners off the assistant home',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 2.0;
         addTearDown(() => tester.view.resetPhysicalSize());
 
-        // Initial state: Level 1 in progress / available -> banner must be visible
+        // Course progress belongs on the course screen.
         await tester.pumpWidget(
           createTestApp(const AssistantPage(ownerId: testOwner)),
         );
@@ -544,9 +658,9 @@ void main() {
 
         expect(
           find.byKey(const Key('assistant.resumeLessonBanner')),
-          findsOneWidget,
+          findsNothing,
         );
-        expect(find.text('Продолжить урок'), findsOneWidget);
+        expect(find.text('Продолжить урок'), findsNothing);
 
         // Mark all 5 levels complete
         await tester.runAsync(() async {

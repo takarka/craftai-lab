@@ -3,11 +3,15 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/providers.dart';
+import '../../core/network/api_http_client.dart';
 import '../../core/storage/storage_providers.dart';
 import '../onboarding/domain/initial_workspace_repository.dart';
 import '../session/session_repository.dart';
+import '../session/session_providers.dart';
+import '../models/infrastructure/craft_ai_client.dart';
 import 'domain/profile.dart';
 import 'infrastructure/profile_store.dart';
+import 'infrastructure/craft_ai_profile_account_gateway.dart';
 import 'infrastructure/reminder_service.dart';
 
 final reminderServiceProvider =
@@ -22,7 +26,20 @@ final profileStoreProvider = Provider<ProfileStore?>((ref) {
 });
 
 final profileAccountGatewayProvider = Provider<ProfileAccountGateway>(
-  (ref) => const UnavailableProfileAccountGateway(),
+  (ref) {
+    final config = ref.watch(appConfigProvider);
+    final uri = config?.apiBaseUri;
+    if (uri == null) return const UnavailableProfileAccountGateway();
+    final httpClient = createApiHttpClient(config);
+    ref.onDispose(httpClient.close);
+    return CraftAiProfileAccountGateway(
+      CraftAiClient(
+        baseUri: uri,
+        httpClient: httpClient,
+        tokenStorage: ref.watch(secureTokenStorageProvider),
+      ),
+    );
+  },
 );
 
 bool isProfileOwner(SessionSnapshot? session, String ownerId) {

@@ -48,6 +48,8 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   bool _quizSubmitted = false;
   bool _quizPassed = false;
   double _quizScore = 0.0;
+  final ScrollController _scrollController = ScrollController();
+  final Map<int, GlobalKey> _questionKeys = {};
 
   @override
   void initState() {
@@ -60,6 +62,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _practiceInputController.dispose();
     super.dispose();
   }
@@ -105,9 +108,37 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
     }
   }
 
+  void _scrollToQuestion(int index) {
+    final key = _questionKeys[index];
+    if (key?.currentContext != null) {
+      Scrollable.ensureVisible(
+        key!.currentContext!,
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeInOutCubic,
+        alignment: 0.1,
+      );
+    }
+  }
+
+  void _scrollToResult() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
   Future<void> _moveToStep(LessonStep step) async {
     setState(() {
       _currentStep = step;
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(0);
+      }
     });
 
     if (!widget.readOnly) {
@@ -124,9 +155,18 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   Future<void> _submitQuiz(CourseLevel level) async {
     final cs = CourseStrings.of(context);
     if (_selectedQuizAnswers.length < level.quizQuestions.length) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(cs.answerAllQuestions)));
+      for (int i = 0; i < level.quizQuestions.length; i++) {
+        if (!_selectedQuizAnswers.containsKey(i)) {
+          _scrollToQuestion(i);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(cs.quizAnswerSpecific(i + 1)),
+              duration: const Duration(seconds: 2),
+            ),
+          );
+          return;
+        }
+      }
       return;
     }
 
@@ -149,6 +189,10 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
       _quizSubmitted = true;
       _quizScore = score;
       _quizPassed = passed;
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollToResult();
     });
 
     if (!widget.readOnly) {
@@ -177,6 +221,17 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
         // Course finished! Return to course page
         context.go('/course');
       }
+    }
+  }
+
+  Future<void> _openChat(BuildContext context) async {
+    if (!widget.readOnly) {
+      await ref
+          .read(courseControllerProvider(widget.ownerId))
+          .completeLevel(widget.levelId);
+    }
+    if (context.mounted) {
+      await context.push('/chat');
     }
   }
 
@@ -246,6 +301,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           children: [
             Expanded(
               child: SingleChildScrollView(
+                controller: _scrollController,
                 padding: const EdgeInsets.all(16),
                 child: _buildStepContent(level, cs),
               ),
@@ -436,6 +492,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                                 _practiceEvidenceMet = true;
                                 _showComparison = true;
                               });
+                              Navigator.of(context).pop();
                             },
                           ),
                         ),
@@ -899,6 +956,10 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   // S25: Проверка
   // --------------------------------------------------------------------------
   Widget _buildStepQuiz(CourseLevel level, CourseStrings cs) {
+    final totalQuestions = level.quizQuestions.length;
+    final answeredCount = _selectedQuizAnswers.length;
+    final allAnswered = answeredCount == totalQuestions;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -925,20 +986,189 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
         ),
         const SizedBox(height: 16),
 
-        ...List.generate(level.quizQuestions.length, (qIndex) {
+        // Quiz Progress & Question Tracker Card
+        BuilderCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  BuilderIcon(
+                    _quizSubmitted
+                        ? (_quizPassed ? BuilderGlyph.check : BuilderGlyph.info)
+                        : (allAnswered
+                              ? BuilderGlyph.check
+                              : BuilderGlyph.bolt),
+                    size: 18,
+                    color: _quizSubmitted
+                        ? (_quizPassed
+                              ? BuilderColors.primary
+                              : BuilderColors.warning)
+                        : BuilderColors.primary,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _quizSubmitted
+                          ? (_quizPassed
+                                ? cs.quizPassedTitle
+                                : cs.quizFailedTitle)
+                          : cs.quizProgress(answeredCount, totalQuestions),
+                      style: BuilderType.title,
+                    ),
+                  ),
+                  BuilderBadge(
+                    _quizSubmitted
+                        ? '${(_quizScore * 100).toInt()}%'
+                        : (allAnswered
+                              ? cs.quizAllAnswered
+                              : '$answeredCount/$totalQuestions'),
+                    icon: (allAnswered || (_quizSubmitted && _quizPassed))
+                        ? BuilderGlyph.check
+                        : null,
+                    neutral: !allAnswered && !_quizSubmitted,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              BuilderProgress(completed: answeredCount, total: totalQuestions),
+              const SizedBox(height: 12),
+              // Question quick jump chips
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: List.generate(totalQuestions, (idx) {
+                  final isAnswered = _selectedQuizAnswers.containsKey(idx);
+                  final isCurrentUnanswered =
+                      !isAnswered &&
+                      (idx == 0 || _selectedQuizAnswers.containsKey(idx - 1));
+
+                  return InkWell(
+                    key: Key('quiz.chip.$idx'),
+                    onTap: () => _scrollToQuestion(idx),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isAnswered
+                            ? BuilderColors.primaryTint
+                            : (isCurrentUnanswered
+                                  ? BuilderColors.background
+                                  : BuilderColors.surfaceDisabled),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: isAnswered
+                              ? BuilderColors.primary
+                              : (isCurrentUnanswered
+                                    ? BuilderColors.primary
+                                    : BuilderColors.line),
+                          width: isCurrentUnanswered ? 1.5 : 1.0,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isAnswered)
+                            const Padding(
+                              padding: EdgeInsets.only(right: 4),
+                              child: BuilderIcon(
+                                BuilderGlyph.check,
+                                size: 14,
+                                color: BuilderColors.primary,
+                              ),
+                            ),
+                          Text(
+                            '${cs.t('Вопрос', 'Сұрақ')} ${idx + 1}',
+                            style: BuilderType.small.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: isAnswered
+                                  ? BuilderColors.primary
+                                  : BuilderColors.ink,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            isAnswered
+                                ? '(${cs.quizAnsweredBadge})'
+                                : '(${cs.quizPendingBadge})',
+                            style: BuilderType.small.copyWith(
+                              fontSize: 11,
+                              color: isAnswered
+                                  ? BuilderColors.primary
+                                  : BuilderColors.inkSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        ...List.generate(totalQuestions, (qIndex) {
           final q = level.quizQuestions[qIndex];
           final selectedOption = _selectedQuizAnswers[qIndex];
+          final isAnswered = selectedOption != null;
 
           return Padding(
+            key: _questionKeys.putIfAbsent(qIndex, () => GlobalKey()),
             padding: const EdgeInsets.only(bottom: 16),
             child: BuilderCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '${qIndex + 1}. ${q.question}',
-                    style: BuilderType.title,
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isAnswered
+                              ? BuilderColors.primaryTint
+                              : BuilderColors.surfaceDisabled,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          cs.quizQuestionHeader(qIndex + 1, totalQuestions),
+                          style: BuilderType.small.copyWith(
+                            color: isAnswered
+                                ? BuilderColors.primary
+                                : BuilderColors.inkSecondary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      const Spacer(),
+                      if (_quizSubmitted)
+                        BuilderBadge(
+                          selectedOption == q.correctIndex
+                              ? cs.t('Верно', 'Дұрыс')
+                              : cs.t('Ошибка', 'Қате'),
+                          icon: selectedOption == q.correctIndex
+                              ? BuilderGlyph.check
+                              : null,
+                          neutral: selectedOption != q.correctIndex,
+                        )
+                      else if (isAnswered)
+                        BuilderBadge(
+                          cs.quizAnsweredBadge,
+                          icon: BuilderGlyph.check,
+                        )
+                      else
+                        BuilderBadge(cs.quizPendingBadge, neutral: true),
+                    ],
                   ),
+                  const SizedBox(height: 10),
+                  Text(q.question, style: BuilderType.title),
                   const SizedBox(height: 12),
                   ...List.generate(q.options.length, (optIndex) {
                     final opt = q.options[optIndex];
@@ -980,11 +1210,37 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                                   setState(() {
                                     _selectedQuizAnswers[qIndex] = val;
                                   });
+                                  // Auto scroll to next unanswered question smoothly
+                                  if (qIndex + 1 < totalQuestions &&
+                                      !_selectedQuizAnswers.containsKey(
+                                        qIndex + 1,
+                                      )) {
+                                    WidgetsBinding.instance
+                                        .addPostFrameCallback((_) {
+                                          if (mounted) {
+                                            _scrollToQuestion(qIndex + 1);
+                                          }
+                                        });
+                                  }
                                 }
                               },
                       ),
                     );
                   }),
+                  if (!_quizSubmitted &&
+                      qIndex + 1 < totalQuestions &&
+                      !_selectedQuizAnswers.containsKey(qIndex + 1))
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: () => _scrollToQuestion(qIndex + 1),
+                        icon: const Icon(Icons.arrow_downward, size: 14),
+                        label: Text(
+                          cs.quizNextQuestion,
+                          style: BuilderType.small,
+                        ),
+                      ),
+                    ),
                   if (_quizSubmitted) ...[
                     const SizedBox(height: 8),
                     Container(
@@ -1010,12 +1266,19 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
         // Quiz Result Banner
         if (_quizSubmitted) ...[
           Container(
+            key: const Key('quiz.resultBanner'),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: _quizPassed
                   ? BuilderColors.primaryTint
                   : BuilderColors.warningTint,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _quizPassed
+                    ? BuilderColors.primary
+                    : BuilderColors.warning,
+                width: 1.5,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1153,6 +1416,52 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             ],
           ),
         ),
+        const SizedBox(height: 16),
+
+        // Test in Chat Card (S26 / Step 5)
+        BuilderCard(
+          key: const Key('lesson.testInChatCard'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const BuilderIconTile(BuilderGlyph.robot),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          cs.testInChatTitle,
+                          style: BuilderType.title,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          cs.testInChatSubtitle,
+                          style: BuilderType.small.copyWith(
+                            color: BuilderColors.inkSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: BuilderButton(
+                  key: const Key('lesson.testInChatBtn'),
+                  label: cs.testInChatBtn,
+                  icon: BuilderGlyph.robot,
+                  variant: BuilderButtonVariant.secondary,
+                  onPressed: () => _openChat(context),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -1161,6 +1470,50 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   // Bottom Navigation Bar
   // --------------------------------------------------------------------------
   Widget _buildBottomBar(CourseLevel level, CourseStrings cs) {
+    if (_currentStep == LessonStep.summary) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: BuilderColors.surfaceDisabled)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: double.infinity,
+              child: BuilderButton(
+                key: const Key('lesson.summaryChatBtn'),
+                label: cs.testInChatBtn,
+                icon: BuilderGlyph.robot,
+                variant: BuilderButtonVariant.secondary,
+                onPressed: () => _openChat(context),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                BuilderButton(
+                  key: const Key('lesson.backBtn'),
+                  label: cs.previousStep,
+                  variant: BuilderButtonVariant.secondary,
+                  onPressed: () => _moveToStep(LessonStep.quiz),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: BuilderButton(
+                    key: const Key('lesson.summaryFinishBtn'),
+                    label: level.id < 5 ? cs.nextLevelBtn : cs.finishCourseBtn,
+                    onPressed: () => _completeLevelAndAdvance(context),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1216,9 +1569,16 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
 
       case LessonStep.quiz:
         if (!_quizSubmitted) {
+          final allAnswered =
+              _selectedQuizAnswers.length == level.quizQuestions.length;
           return BuilderButton(
             key: const Key('lesson.quizSubmitBtn'),
-            label: cs.submitQuiz,
+            label: allAnswered
+                ? cs.submitQuiz
+                : cs.quizSubmitWithCount(
+                    _selectedQuizAnswers.length,
+                    level.quizQuestions.length,
+                  ),
             onPressed: () => _submitQuiz(level),
           );
         }
@@ -1237,6 +1597,15 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             setState(() {
               _quizSubmitted = false;
               _selectedQuizAnswers.clear();
+            });
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (_scrollController.hasClients) {
+                _scrollController.animateTo(
+                  0,
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeOutCubic,
+                );
+              }
             });
           },
         );

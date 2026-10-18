@@ -425,3 +425,74 @@ class KnowledgeFileDeletionException implements Exception {
   String toString() =>
       'Не удалось физически удалить файл. Документ отключён; повторите удаление.';
 }
+
+final class InMemoryKnowledgeRepository implements KnowledgeRepository {
+  final List<KnowledgeDocument> _docs = [];
+
+  @override
+  Future<List<KnowledgeDocument>> getDocuments(String ownerId) async {
+    return _docs.where((d) => d.ownerId == ownerId).toList();
+  }
+
+  @override
+  Future<KnowledgeDocument?> getDocumentById(
+    String ownerId,
+    String docId,
+  ) async {
+    try {
+      return _docs.firstWhere((d) => d.ownerId == ownerId && d.id == docId);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
+  Future<List<KnowledgeChunk>> getChunksForOwner(
+    String ownerId, {
+    bool enabledOnly = true,
+  }) async {
+    return const [];
+  }
+
+  @override
+  Future<KnowledgeDocument> importDocument({
+    required String ownerId,
+    required String fileName,
+    required Uint8List bytes,
+    required DocumentFormat format,
+  }) async {
+    throw UnsupportedError(
+      'Document import is not supported in in-memory mode.',
+    );
+  }
+
+  @override
+  Future<void> toggleDocumentEnabled({
+    required String ownerId,
+    required String docId,
+    required bool isEnabled,
+  }) async {}
+
+  @override
+  Future<void> deleteDocument({
+    required String ownerId,
+    required String docId,
+  }) async {
+    _docs.removeWhere((d) => d.ownerId == ownerId && d.id == docId);
+  }
+
+  @override
+  Future<KnowledgeSearchResult> searchKnowledge({
+    required String ownerId,
+    required String query,
+    double? threshold,
+  }) async {
+    return KnowledgeSearchResult(
+      query: query,
+      matches: const [],
+      hasRelevantMatches: false,
+      totalScannedChunks: 0,
+      searchDurationMs: 0,
+    );
+  }
+}

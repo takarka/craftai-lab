@@ -99,6 +99,27 @@ class CourseStrings {
     'Пожалуйста, ответьте на все вопросы',
     'Барлық сұрақтарға жауап беріңіз',
   );
+  String quizProgress(int answered, int total) => t(
+    'Отвечено: $answered из $total',
+    'Жауап берілді: $total сұрақтың $answered-і',
+  );
+  String quizQuestionHeader(int current, int total) => t(
+    'Вопрос $current из $total',
+    '$total сұрақтың $current-сұрағы',
+  );
+  String get quizAnsweredBadge => t('Отвечено', 'Жауап берілді');
+  String get quizPendingBadge => t('Ожидает ответа', 'Жауап күтілуде');
+  String get quizAllAnswered =>
+      t('Все ответы выбраны', 'Барлық жауаптар таңдалды');
+  String quizAnswerSpecific(int num) => t(
+    'Пожалуйста, ответьте на вопрос $num',
+    '$num-сұраққа жауап беріңіз',
+  );
+  String quizSubmitWithCount(int answered, int total) => t(
+    'Проверить ответы ($answered из $total)',
+    'Жауаптарды тексеру ($answered/$total)',
+  );
+  String get quizNextQuestion => t('К следующему вопросу ↓', 'Келесі сұраққа ↓');
 
   String get summaryTitle => t(
     'Поздравляем с прохождением уровня!',
@@ -121,6 +142,13 @@ class CourseStrings {
     'История версий и чатов сохранена без потерь',
     'Нұсқалар мен чаттар тарихы шығынсыз сақталды',
   );
+  String get testInChatTitle =>
+      t('Проверьте ассистента в деле', 'Ассистентті іс жүзінде тексеріңіз');
+  String get testInChatSubtitle => t(
+    'Откройте чат, задайте вопрос по теме уровня и оцените, как изменились его ответы.',
+    'Чатты ашып, деңгей тақырыбы бойынша сұрақ қойыңыз және жауаптарының қалай өзгергенін бағалаңыз.',
+  );
+  String get testInChatBtn => t('Протестировать в чате', 'Чатта сынап көру');
 
   String get summaryBadge => t('Умение освоено', 'Дағды игерілді');
   String get nextStep => t('Следующий шаг', 'Келесі қадам');

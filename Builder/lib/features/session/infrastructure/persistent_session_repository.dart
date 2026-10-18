@@ -9,16 +9,16 @@ import 'secure_token_storage.dart';
 final class PersistentSessionRepository implements SessionRepository {
   PersistentSessionRepository({
     required this.tokenStorage,
-    required this.database,
-    required this.workspaceStorageService,
+    this.database,
+    this.workspaceStorageService,
     this.tokenRefresher,
   }) {
     _controller = StreamController<SessionSnapshot>.broadcast();
   }
 
   final SecureTokenStorage tokenStorage;
-  final StorageDatabase database;
-  final WorkspaceStorageService workspaceStorageService;
+  final StorageDatabase? database;
+  final WorkspaceStorageService? workspaceStorageService;
   final Future<AuthTokens> Function(String refreshToken)? tokenRefresher;
 
   late final StreamController<SessionSnapshot> _controller;
@@ -66,15 +66,15 @@ final class PersistentSessionRepository implements SessionRepository {
       }
     }
 
-    if (!database.isOpen) {
-      await database.open();
+    if (database != null && !database!.isOpen) {
+      await database!.open();
     }
 
-    // Determine onboarding completion from local database
+    // Determine onboarding completion from local database (default to true on web/no-db)
     final onboardingComplete = await isLocalOnboardingComplete(ownerId);
 
     // Open workspace partition for active owner
-    await workspaceStorageService.openWorkspace(ownerId: ownerId);
+    await workspaceStorageService?.openWorkspace(ownerId: ownerId);
 
     final session = AuthenticatedSession(
       ownerId: ownerId,
@@ -96,12 +96,12 @@ final class PersistentSessionRepository implements SessionRepository {
 
     await tokenStorage.writeSession(ownerId: ownerId, tokens: tokens);
 
-    if (!database.isOpen) {
-      await database.open();
+    if (database != null && !database!.isOpen) {
+      await database!.open();
     }
 
     final onboardingComplete = await isLocalOnboardingComplete(ownerId);
-    await workspaceStorageService.openWorkspace(ownerId: ownerId);
+    await workspaceStorageService?.openWorkspace(ownerId: ownerId);
 
     final session = AuthenticatedSession(
       ownerId: ownerId,
@@ -145,22 +145,26 @@ final class PersistentSessionRepository implements SessionRepository {
 
   /// Signs out, wipes memory caches, closes active workspace and clears token storage.
   Future<void> signOut() async {
-    await workspaceStorageService.closeActiveWorkspace();
+    await workspaceStorageService?.closeActiveWorkspace();
     await tokenStorage.clearSession();
     _emit(const SignedOut());
   }
 
   /// Checks if an assistant has already been created in the local database for [ownerId].
   Future<bool> isLocalOnboardingComplete(String ownerId) async {
-    if (!database.isOpen) {
-      await database.open();
+    final db = database;
+    if (db == null) return true;
+    if (!db.isOpen) {
+      await db.open();
     }
-    final configs = await database.db.query(
+    final configs = await db.db.query(
       StorageSchemaV1.tableAssistantConfigurations,
       where: 'owner_id = ?',
       whereArgs: [ownerId],
     );
-    return configs.isNotEmpty;
+    return configs.any(
+      (config) => (config['name'] as String? ?? '').trim().isNotEmpty,
+    );
   }
 
   /// Updates active session snapshot to reflect that onboarding has completed.

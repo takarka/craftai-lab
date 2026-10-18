@@ -82,130 +82,253 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final account = ref.watch(profileAccountProvider(widget.ownerId));
     final preferences = ref.watch(teacherPreferencesProvider(widget.ownerId));
     final snapshot = account.asData?.value.snapshot;
-    return _ProfileScaffold(
-      title: s.title,
-      children: [
-        BuilderCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const BuilderIconTile(BuilderGlyph.profile, size: 48),
-                  const SizedBox(width: BuilderSpace.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          snapshot?.name?.trim().isNotEmpty == true
-                              ? snapshot!.name!
-                              : s.account,
-                          style: BuilderType.h3,
+    return Scaffold(
+      body: SafeArea(
+        child: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 640),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+              children: [
+                _ProfileHomeTop(
+                  ownerId: widget.ownerId,
+                  name: snapshot?.name?.trim().isNotEmpty == true
+                      ? snapshot!.name!
+                      : s.account,
+                  email: snapshot?.email,
+                  role: snapshot?.role,
+                  preferences: preferences,
+                  editTooltip: s.edit,
+                  onEdit: () => context.push('/profile/settings'),
+                ),
+                const SizedBox(height: 10),
+                BuilderCard(
+                  padding: EdgeInsets.zero,
+                  child: Column(
+                    children: [
+                      _ProfileLink(
+                        key: const Key('profile.settings'),
+                        icon: BuilderGlyph.settings,
+                        title: s.settings,
+                        subtitle: s.t(
+                          'Язык, напоминания, шрифт, предмет и классы',
+                          'Тіл, еске салғыштар, қаріп, пән және сыныптар',
                         ),
-                        if (snapshot?.email?.isNotEmpty == true) ...[
-                          const SizedBox(height: BuilderSpace.xxs),
-                          Text(snapshot!.email!, style: BuilderType.small),
-                        ],
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    key: const Key('profile.edit'),
-                    tooltip: s.edit,
-                    onPressed: () => context.push('/profile/settings'),
-                    icon: const Icon(Icons.edit_outlined, size: 20),
-                  ),
-                ],
-              ),
-              const SizedBox(height: BuilderSpace.md),
-              preferences.when(
-                loading: () => const LinearProgressIndicator(),
-                error: (_, _) =>
-                    Text(s.preferencesError, style: BuilderType.small),
-                data: (value) => value == null
-                    ? Text(s.preferencesMissing, style: BuilderType.small)
-                    : Wrap(
-                        spacing: BuilderSpace.xs,
-                        runSpacing: BuilderSpace.xs,
-                        children: [
-                          BuilderBadge(
-                            setupSubject(
-                              value.setup,
-                              AppLocalizations.of(context),
-                            ),
-                          ),
-                          if (value.setup.grades.isNotEmpty)
-                            BuilderBadge(
-                              '${(value.setup.grades.toList()..sort()).join(', ')} · ${s.grades.toLowerCase()}',
-                              neutral: true,
-                            ),
-                        ],
+                        onTap: () => context.push('/profile/settings'),
                       ),
-              ),
-              if (account.asData?.value.unavailable == true &&
-                  snapshot == null) ...[
-                const SizedBox(height: BuilderSpace.xs),
-                Text(s.accountUnavailable, style: BuilderType.small),
+                      const Divider(height: 1, indent: 72, endIndent: 16),
+                      _ProfileLink(
+                        key: const Key('profile.privacy'),
+                        icon: BuilderGlyph.lock,
+                        title: s.privacy,
+                        subtitle: s.t(
+                          'Что уходит в облако, экспорт и удаление',
+                          'Бұлтқа не кетеді, экспорт және жою',
+                        ),
+                        onTap: () => context.push('/profile/privacy'),
+                      ),
+                      const Divider(height: 1, indent: 72, endIndent: 16),
+                      _ProfileLink(
+                        key: const Key('profile.help'),
+                        icon: BuilderGlyph.info,
+                        title: s.help,
+                        subtitle: s.t(
+                          'Частые вопросы, написать нам',
+                          'Жиі сұрақтар, бізге жазу',
+                        ),
+                        onTap: () => context.push('/profile/help'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Center(
+                  child: TextButton.icon(
+                    key: const Key('profile.logout'),
+                    onPressed: _signingOut ? null : _signOut,
+                    style: TextButton.styleFrom(
+                      foregroundColor: BuilderColors.warning,
+                      minimumSize: const Size(48, 44),
+                    ),
+                    icon: _signingOut
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.logout, size: 18),
+                    label: Text(s.logout),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Craft Builder 0.1 · MVP',
+                  style: BuilderType.mono,
+                  textAlign: TextAlign.center,
+                ),
               ],
-            ],
+            ),
           ),
         ),
-        _UsageCard(ownerId: widget.ownerId),
-        BuilderCard(
-          padding: EdgeInsets.zero,
-          child: Column(
-            children: [
-              _ProfileLink(
-                key: const Key('profile.settings'),
-                icon: BuilderGlyph.settings,
-                title: s.settings,
-                subtitle: s.settingsSubtitle,
-                onTap: () => context.push('/profile/settings'),
-              ),
-              const Divider(height: 1, indent: 72, endIndent: 16),
-              _ProfileLink(
-                key: const Key('profile.privacy'),
-                icon: BuilderGlyph.lock,
-                title: s.privacy,
-                subtitle: s.privacySubtitle,
-                onTap: () => context.push('/profile/privacy'),
-              ),
-              const Divider(height: 1, indent: 72, endIndent: 16),
-              _ProfileLink(
-                key: const Key('profile.help'),
-                icon: BuilderGlyph.info,
-                title: s.help,
-                subtitle: s.helpSubtitle,
-                onTap: () => context.push('/profile/help'),
-              ),
-            ],
-          ),
-        ),
-        TextButton.icon(
-          key: const Key('profile.logout'),
-          onPressed: _signingOut ? null : _signOut,
-          style: TextButton.styleFrom(
-            foregroundColor: BuilderColors.warning,
-            minimumSize: const Size(48, 48),
-          ),
-          icon: _signingOut
-              ? const SizedBox.square(
-                  dimension: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.logout, size: 18),
-          label: Text(s.logout, textAlign: TextAlign.center),
-        ),
-        const Text(
-          'Craft Builder · $profileAppVersion',
-          style: BuilderType.small,
-          textAlign: TextAlign.center,
-        ),
-      ],
+      ),
     );
   }
+}
+
+class _ProfileHomeTop extends StatelessWidget {
+  const _ProfileHomeTop({
+    required this.ownerId,
+    required this.name,
+    required this.email,
+    required this.role,
+    required this.preferences,
+    required this.editTooltip,
+    required this.onEdit,
+  });
+
+  final String ownerId;
+  final String name;
+  final String? email;
+  final String? role;
+  final AsyncValue<TeacherPreferences?> preferences;
+  final String editTooltip;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 126 + MediaQuery.textScalerOf(context).scale(120),
+    child: Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned.fill(
+          bottom: 76,
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(14, 17, 14, 34),
+            decoration: const BoxDecoration(
+              color: BuilderColors.primary,
+              borderRadius: BorderRadius.all(Radius.circular(24)),
+            ),
+            child: _ProfileHero(
+              name: name,
+              email: email,
+              role: role,
+              preferences: preferences,
+              editTooltip: editTooltip,
+              onEdit: onEdit,
+            ),
+          ),
+        ),
+        Positioned(
+          left: 12,
+          right: 12,
+          bottom: 0,
+          child: _UsageCard(ownerId: ownerId),
+        ),
+      ],
+    ),
+  );
+}
+
+class _ProfileHero extends StatelessWidget {
+  const _ProfileHero({
+    required this.name,
+    required this.email,
+    required this.role,
+    required this.preferences,
+    required this.editTooltip,
+    required this.onEdit,
+  });
+
+  final String name;
+  final String? email;
+  final String? role;
+  final AsyncValue<TeacherPreferences?> preferences;
+  final String editTooltip;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Container(
+        width: 56,
+        height: 56,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: BuilderColors.primaryTint,
+          border: Border.all(color: BuilderColors.accent, width: 2),
+          shape: BoxShape.circle,
+        ),
+        child: Text(
+          name.isEmpty ? 'A' : name.characters.first.toUpperCase(),
+          style: BuilderType.h2.copyWith(color: BuilderColors.primary),
+        ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(name, style: BuilderType.h3.copyWith(color: Colors.white)),
+            const SizedBox(height: 2),
+            Text(
+              'Email: ${email?.trim().isNotEmpty == true ? email!.trim() : ProfileStrings.of(context).t('Не указан', 'Көрсетілмеген')}',
+              key: const Key('profile.email'),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: BuilderType.small.copyWith(color: Colors.white),
+            ),
+            const SizedBox(height: 7),
+            preferences.when(
+              loading: () => const SizedBox(height: 16),
+              error: (_, _) => const SizedBox.shrink(),
+              data: (value) => value == null
+                  ? const SizedBox.shrink()
+                  : Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: .18),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        '${setupSubject(value.setup, AppLocalizations.of(context))} · ${(value.setup.grades.toList()..sort()).join(', ')}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: BuilderType.small.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
+      Semantics(
+        button: true,
+        label: editTooltip,
+        child: InkWell(
+          key: const Key('profile.edit'),
+          onTap: onEdit,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: .16),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.edit_outlined,
+              size: 20,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
 }
 
 class _UsageCard extends ConsumerWidget {
@@ -215,27 +338,27 @@ class _UsageCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final s = ProfileStrings.of(context);
     final value = ref.watch(profileAccountProvider(ownerId));
-    final canRefresh = ref.watch(profileAccountGatewayProvider).isAvailable;
     return BuilderCard(
+      padding: const EdgeInsets.fromLTRB(12, 11, 12, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const BuilderIconTile(BuilderGlyph.bolt),
-              const SizedBox(width: BuilderSpace.sm),
-              Expanded(child: Text(s.usage, style: BuilderType.title)),
-              if (canRefresh)
-                IconButton(
-                  tooltip: s.refresh,
-                  onPressed: value.isLoading
-                      ? null
-                      : () => ref.invalidate(profileAccountProvider(ownerId)),
-                  icon: const Icon(Icons.refresh, size: 20),
+              const BuilderIconTile(BuilderGlyph.bolt, size: 38),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('АККАУНТ CRAFTAI', style: BuilderType.label),
+                    Text(s.usage, style: BuilderType.title),
+                  ],
                 ),
+              ),
             ],
           ),
-          const SizedBox(height: BuilderSpace.md),
+          const SizedBox(height: 10),
           value.when(
             loading: () => const LinearProgressIndicator(),
             error: (_, _) => Text(s.usageUnavailable, style: BuilderType.body),
@@ -244,7 +367,6 @@ class _UsageCard extends ConsumerWidget {
               final tokens = data?.usedTokens;
               final locale = Localizations.localeOf(context).languageCode;
               final number = NumberFormat.decimalPattern(locale);
-              final date = DateFormat('d MMM y, HH:mm', locale);
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -253,51 +375,18 @@ class _UsageCard extends ConsumerWidget {
                     const SizedBox(height: BuilderSpace.xxs),
                     Text(s.usageExplanation, style: BuilderType.small),
                   ] else ...[
-                    Text(number.format(tokens), style: BuilderType.h1),
-                    Text(s.used, style: BuilderType.small),
-                    if (data!.periodStartUtc != null &&
-                        data.periodEndUtc != null) ...[
-                      const SizedBox(height: BuilderSpace.xs),
-                      Text(
-                        '${DateFormat.yMMMd(locale).format(data.periodStartUtc!.toLocal())} — '
-                        '${DateFormat.yMMMd(locale).format(data.periodEndUtc!.toLocal())}',
-                        style: BuilderType.small,
-                      ),
-                    ],
-                    if (data.tokenLimit != null) ...[
-                      const SizedBox(height: BuilderSpace.sm),
-                      LinearProgressIndicator(
-                        value: (tokens / data.tokenLimit!).clamp(0.0, 1.0),
-                        minHeight: 6,
-                        borderRadius: BorderRadius.circular(
-                          BuilderRadii.control,
-                        ),
-                        backgroundColor: BuilderColors.primaryTint,
-                        semanticsLabel: s.usage,
-                        semanticsValue:
-                            '${number.format(tokens)} / ${number.format(data.tokenLimit)}',
-                      ),
-                      const SizedBox(height: BuilderSpace.xs),
-                      Text(
-                        '${number.format(tokens)} / ${number.format(data.tokenLimit)}',
-                        style: BuilderType.small,
-                      ),
-                    ],
-                  ],
-                  if (data != null) ...[
-                    const SizedBox(height: BuilderSpace.sm),
                     Text(
-                      '${state.cached ? s.cached : s.refresh}: ${date.format(data.updatedAtUtc.toLocal())}',
-                      style: BuilderType.small,
+                      number.format(tokens),
+                      style: BuilderType.h2.copyWith(
+                        color: BuilderColors.primary,
+                      ),
                     ),
-                  ],
-                  if (state.unavailable && state.cached) ...[
-                    const SizedBox(height: BuilderSpace.xs),
+                    const SizedBox(height: 2),
                     Text(
-                      s.updateFailed,
-                      style: BuilderType.small.copyWith(
-                        color: BuilderColors.warning,
-                      ),
+                      data?.periodStartUtc != null && data?.periodEndUtc != null
+                          ? '${DateFormat('d MMM', locale).format(data!.periodStartUtc!.toLocal())} — ${DateFormat('d MMM', locale).format(data.periodEndUtc!.toLocal())}'
+                          : s.t('Текущий месяц', 'Ағымдағы ай'),
+                      style: BuilderType.small,
                     ),
                   ],
                 ],
@@ -972,19 +1061,29 @@ class _SupportContactSheetState extends State<_SupportContactSheet> {
 }
 
 class _ProfileScaffold extends StatelessWidget {
-  const _ProfileScaffold({required this.title, required this.children});
+  const _ProfileScaffold({
+    required this.title,
+    required this.children,
+    this.showHeader = true,
+  });
   final String title;
   final List<Widget> children;
+  final bool showHeader;
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(title)),
+    appBar: showHeader ? AppBar(title: Text(title)) : null,
     body: SafeArea(
       child: Align(
         alignment: Alignment.topCenter,
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 640),
           child: ListView.separated(
-            padding: const EdgeInsets.all(BuilderSpace.md),
+            padding: EdgeInsets.fromLTRB(
+              BuilderSpace.md,
+              showHeader ? BuilderSpace.md : BuilderSpace.lg,
+              BuilderSpace.md,
+              BuilderSpace.md,
+            ),
             itemCount: children.length,
             separatorBuilder: (_, _) => const SizedBox(height: BuilderSpace.md),
             itemBuilder: (_, index) => children[index],
@@ -1031,10 +1130,16 @@ class _ProfileLink extends StatelessWidget {
   final VoidCallback onTap;
   @override
   Widget build(BuildContext context) => ListTile(
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    leading: BuilderIconTile(icon),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+    minLeadingWidth: 38,
+    leading: BuilderIconTile(icon, size: 38),
     title: Text(title, style: BuilderType.title),
-    subtitle: Text(subtitle, style: BuilderType.small),
+    subtitle: Text(
+      subtitle,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: BuilderType.small,
+    ),
     trailing: const BuilderIcon(
       BuilderGlyph.chevron,
       size: 18,
