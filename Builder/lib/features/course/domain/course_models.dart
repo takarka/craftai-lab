@@ -89,6 +89,8 @@ class CourseLevel {
   });
 
   final int id;
+  /// Stable editorial identity. Numeric [id] remains the progress/checkpoint key.
+  String get contentId => 'course.level.${id.toString().padLeft(2, '0')}';
   final String title;
   final String subtitle;
   final int estimatedMinutes;

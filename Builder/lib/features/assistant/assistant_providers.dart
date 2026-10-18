@@ -5,6 +5,9 @@ import '../../core/storage/storage_providers.dart';
 import '../chat/chat_providers.dart';
 import '../models/model_providers.dart';
 import '../onboarding/application/onboarding_controller.dart';
+import '../onboarding/domain/assistant_setup.dart';
+import '../onboarding/domain/initial_workspace_repository.dart';
+import '../profile/profile_providers.dart';
 import 'domain/assistant_config.dart';
 import 'domain/assistant_repository.dart';
 import 'infrastructure/persistent_assistant_repository.dart';
@@ -97,6 +100,57 @@ class AssistantController {
       enabledSkills: currentConfig?.enabledSkills ?? {},
       systemRules: currentConfig?.systemRules,
       reason: 'Изменение имени на «$trimmed»',
+    );
+
+    ref.invalidate(assistantConfigProvider(ownerId));
+    ref.invalidate(assistantVersionsProvider(ownerId));
+    ref.invalidate(localDataSummaryProvider(ownerId));
+  }
+
+  Future<void> saveLanguage(AssistantLanguage newLanguage) async {
+    final store = ref.read(profileStoreProvider);
+    final preferences = await ref.read(teacherPreferencesProvider(ownerId).future);
+    final currentConfig = await ref.read(assistantConfigProvider(ownerId).future);
+    final selectedCat = ref.read(selectedCategoryProvider(ownerId));
+
+    if (store != null && preferences != null) {
+      await store.savePreferences(
+        permit: WorkspaceWritePermit(
+          ownerId: ownerId,
+          canCommit: () => true,
+        ),
+        setup: preferences.setup.copyWith(language: newLanguage),
+        uiLanguage: preferences.uiLanguage,
+      );
+      ref.invalidate(teacherPreferencesProvider(ownerId));
+    }
+
+    final langRule = switch (newLanguage) {
+      AssistantLanguage.kazakh => 'Негізгі жауап тілі: қазақша. Барлық жауаптар мен материалдарды тек қазақ тілінде құрастыр.',
+      AssistantLanguage.russian => 'Основной язык ответов: русский. Формулируй ответы и методические материалы на русском языке.',
+      AssistantLanguage.bilingual => 'Двуязычный режим: отвечай на том языке, на котором обращается учитель (русский или казахский).',
+    };
+
+    final currentRules = List<String>.from(currentConfig?.systemRules ?? []);
+    currentRules.removeWhere((r) =>
+        r.startsWith('Негізгі жауап тілі') ||
+        r.startsWith('Основной язык ответов') ||
+        r.startsWith('Двуязычный режим'));
+    currentRules.insert(0, langRule);
+
+    final langTitle = switch (newLanguage) {
+      AssistantLanguage.kazakh => 'казахский',
+      AssistantLanguage.russian => 'русский',
+      AssistantLanguage.bilingual => 'двуязычный (RU/KK)',
+    };
+
+    await _repo.commitChange(
+      ownerId: ownerId,
+      name: currentConfig?.name ?? '',
+      selectedCategory: selectedCat,
+      enabledSkills: currentConfig?.enabledSkills ?? {},
+      systemRules: currentRules,
+      reason: 'Смена языка ассистента на $langTitle',
     );
 
     ref.invalidate(assistantConfigProvider(ownerId));

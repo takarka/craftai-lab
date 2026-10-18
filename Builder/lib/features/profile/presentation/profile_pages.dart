@@ -5,12 +5,16 @@ import 'package:intl/intl.dart';
 
 import '../../../app/localization/app_localizations.dart';
 import '../../../app/providers.dart';
+import '../../../core/storage/storage_providers.dart';
 import '../../../ui_kit/ui_kit.dart';
 import '../../onboarding/domain/assistant_setup.dart';
 import '../../onboarding/domain/initial_workspace_repository.dart';
 import '../../onboarding/presentation/onboarding_labels.dart';
 import '../../session/infrastructure/persistent_session_repository.dart';
+import '../../tools/domain/tool_definition.dart';
+import '../../tools/presentation/d07_os_permission_dialog.dart';
 import '../domain/profile.dart';
+import '../infrastructure/reminder_service.dart';
 import '../profile_providers.dart';
 import 'profile_strings.dart';
 
@@ -331,20 +335,7 @@ class ProfileSettingsPage extends ConsumerWidget {
                   initial: value,
                 ),
         ),
-        BuilderCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(s.reminders, style: BuilderType.title),
-              const SizedBox(height: BuilderSpace.xs),
-              Text(s.remindersUnavailable, style: BuilderType.small),
-              const Divider(height: 32),
-              Text(s.font, style: BuilderType.title),
-              const SizedBox(height: BuilderSpace.xs),
-              Text(s.systemFont, style: BuilderType.small),
-            ],
-          ),
-        ),
+        const _RemindersCard(),
         _InfoCard(
           title: s.about,
           body: 'Craft Builder · $profileAppVersion\n\n${s.localStorage}',
@@ -536,8 +527,141 @@ class _PreferencesFormState extends ConsumerState<_PreferencesForm> {
   }
 }
 
+class _RemindersCard extends ConsumerWidget {
+  const _RemindersCard();
+
+  static const _notificationToolDef = ToolDefinition(
+    name: 'system.notifications',
+    displayName: 'Системные уведомления',
+    description: 'Отправка локальных напоминаний о графике курса',
+    category: ToolCategory.calendar,
+    capability: ToolCapability.requiresConfirmation,
+    defaultOsPermission: OsPermissionStatus.notRequested,
+    parametersSchema: {},
+  );
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ProfileStrings.of(context);
+    final isKk = Localizations.localeOf(context).languageCode == 'kk';
+    final reminderState = ref.watch(reminderServiceProvider);
+    final notifier = ref.read(reminderServiceProvider.notifier);
+
+    return BuilderCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const BuilderIconTile(BuilderGlyph.calendar),
+              const SizedBox(width: BuilderSpace.sm),
+              Expanded(child: Text(s.reminders, style: BuilderType.title)),
+            ],
+          ),
+          const SizedBox(height: BuilderSpace.xs),
+          Text(s.remindersDescription, style: BuilderType.body),
+          const SizedBox(height: BuilderSpace.md),
+          DropdownButtonFormField<ReminderFrequency>(
+            key: const Key('profile.remindersDropdown'),
+            initialValue: reminderState.frequency,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: s.reminders,
+            ),
+            items: ReminderFrequency.values
+                .map(
+                  (freq) => DropdownMenuItem(
+                    value: freq,
+                    child: Text(freq.label(isKk)),
+                  ),
+                )
+                .toList(),
+            onChanged: (newFreq) async {
+              if (newFreq == null) return;
+              if (newFreq == ReminderFrequency.disabled) {
+                notifier.cancelAll();
+                _showMessage(context, s.remindersCancelled);
+                return;
+              }
+
+              if (!reminderState.hasPermission) {
+                final granted = await D07OsPermissionDialog.show(
+                  context,
+                  tool: _notificationToolDef,
+                );
+                if (granted == true) {
+                  notifier.setPermissionStatus(OsPermissionStatus.granted);
+                  notifier.setFrequency(newFreq);
+                  if (context.mounted) {
+                    _showMessage(context, s.remindersSaved);
+                  }
+                } else {
+                  notifier.setPermissionStatus(OsPermissionStatus.denied);
+                  if (context.mounted) {
+                    _showMessage(context, s.remindersPermissionRequired);
+                  }
+                }
+              } else {
+                notifier.setFrequency(newFreq);
+                _showMessage(context, s.remindersSaved);
+              }
+            },
+          ),
+          if (reminderState.frequency != ReminderFrequency.disabled) ...[
+            const SizedBox(height: BuilderSpace.xs),
+            Text(
+              reminderState.frequency.schedule(isKk),
+              style: BuilderType.small.copyWith(color: BuilderColors.primary),
+            ),
+          ],
+          if (reminderState.scheduledReminders.isNotEmpty) ...[
+            const SizedBox(height: BuilderSpace.sm),
+            Column(
+              key: const Key('profile.scheduledRemindersList'),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final rem in reminderState.scheduledReminders) ...[
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.alarm, size: 16, color: BuilderColors.primary),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '${rem.title} (${rem.scheduledTime})',
+                            style: BuilderType.small,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+          if (reminderState.frequency != ReminderFrequency.disabled) ...[
+            const SizedBox(height: BuilderSpace.md),
+            OutlinedButton.icon(
+              key: const Key('profile.cancelAllRemindersBtn'),
+              onPressed: () {
+                notifier.cancelAll();
+                _showMessage(context, s.remindersCancelled);
+              },
+              icon: const Icon(Icons.notifications_off_outlined, size: 18),
+              label: Text(s.remindersCancelAll),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class ProfilePrivacyPage extends StatelessWidget {
-  const ProfilePrivacyPage({super.key});
+  const ProfilePrivacyPage({super.key, this.ownerId});
+  final String? ownerId;
+
   @override
   Widget build(BuildContext context) {
     final s = ProfileStrings.of(context);
@@ -564,8 +688,112 @@ class ProfilePrivacyPage extends StatelessWidget {
           label: Text(s.policy),
         ),
         Text(s.assistantDataOwner, style: BuilderType.small),
-        _InfoCard(title: s.deletion, body: s.deletionUnavailable),
+        _AccountDeletionCard(ownerId: ownerId),
       ],
+    );
+  }
+}
+
+class _AccountDeletionCard extends ConsumerStatefulWidget {
+  const _AccountDeletionCard({this.ownerId});
+  final String? ownerId;
+
+  @override
+  ConsumerState<_AccountDeletionCard> createState() => _AccountDeletionCardState();
+}
+
+class _AccountDeletionCardState extends ConsumerState<_AccountDeletionCard> {
+  bool _deleting = false;
+
+  Future<void> _handleDelete() async {
+    final s = ProfileStrings.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        key: const Key('profile.deleteAccountDialog'),
+        title: Text(s.deleteAccountPrompt),
+        content: Text(s.deleteAccountWarning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(s.cancel),
+          ),
+          TextButton(
+            key: const Key('profile.confirmDeleteAccount'),
+            style: TextButton.styleFrom(foregroundColor: BuilderColors.warning),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(s.deleteAccountConfirm),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _deleting = true);
+    try {
+      final gateway = ref.read(profileAccountGatewayProvider);
+      if (widget.ownerId != null) {
+        await gateway.deleteAccount(widget.ownerId!);
+      }
+      final session = ref.read(sessionRepositoryProvider);
+      if (session is PersistentSessionRepository) {
+        await session.signOut();
+      }
+      await ref.read(workspaceStorageServiceProvider)?.closeActiveWorkspace();
+      if (mounted) {
+        _showMessage(context, s.deleteAccountSuccess);
+        context.go('/');
+      }
+    } catch (_) {
+      if (mounted) {
+        _showMessage(context, s.failed);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _deleting = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = ProfileStrings.of(context);
+    final gateway = ref.watch(profileAccountGatewayProvider);
+    if (!gateway.isAvailable || widget.ownerId == null) {
+      return _InfoCard(title: s.deletion, body: s.deletionUnavailable);
+    }
+
+    return BuilderCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const BuilderIconTile(BuilderGlyph.lock),
+              const SizedBox(width: BuilderSpace.sm),
+              Expanded(child: Text(s.deletion, style: BuilderType.title)),
+            ],
+          ),
+          const SizedBox(height: BuilderSpace.xs),
+          Text(s.deleteAccountWarning, style: BuilderType.body),
+          const SizedBox(height: BuilderSpace.md),
+          TextButton.icon(
+            key: const Key('profile.deleteAccountBtn'),
+            onPressed: _deleting ? null : _handleDelete,
+            style: TextButton.styleFrom(
+              foregroundColor: BuilderColors.warning,
+            ),
+            icon: _deleting
+                ? const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.delete_forever, size: 18),
+            label: Text(s.deleteAccount),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -583,7 +811,7 @@ class _ProfileHelpPageState extends State<ProfileHelpPage> {
     final s = ProfileStrings.of(context);
     final query = _query.trim().toLowerCase();
     final items = s.faq
-        .where((item) => '${item.$1} ${item.$2}'.toLowerCase().contains(query))
+        .where((item) => '${item.question} ${item.answer}'.toLowerCase().contains(query))
         .toList();
     return _ProfileScaffold(
       title: s.help,
@@ -601,19 +829,137 @@ class _ProfileHelpPageState extends State<ProfileHelpPage> {
           BuilderCard(
             padding: EdgeInsets.zero,
             child: ExpansionTile(
-              key: ValueKey(item.$1),
-              title: Text(item.$1, style: BuilderType.title),
+              key: ValueKey(item.id),
+              title: Text(item.question, style: BuilderType.title),
               childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               children: [
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: Text(item.$2, style: BuilderType.body),
+                  child: Text(item.answer, style: BuilderType.body),
                 ),
               ],
             ),
           ),
-        _InfoCard(title: s.support, body: s.supportUnavailable),
+        const _SupportContactCard(),
       ],
+    );
+  }
+}
+
+class _SupportContactCard extends StatelessWidget {
+  const _SupportContactCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final s = ProfileStrings.of(context);
+    return BuilderCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const BuilderIconTile(BuilderGlyph.info),
+              const SizedBox(width: BuilderSpace.sm),
+              Expanded(child: Text(s.support, style: BuilderType.title)),
+            ],
+          ),
+          const SizedBox(height: BuilderSpace.xs),
+          Text(s.supportPrivacyNotice, style: BuilderType.body),
+          const SizedBox(height: BuilderSpace.xs),
+          Text(s.supportSlaNotice, style: BuilderType.small),
+          const SizedBox(height: BuilderSpace.md),
+          BuilderButton(
+            key: const Key('profile.contactSupportBtn'),
+            label: s.contactSupport,
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (context) => const _SupportContactSheet(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SupportContactSheet extends StatefulWidget {
+  const _SupportContactSheet();
+
+  @override
+  State<_SupportContactSheet> createState() => _SupportContactSheetState();
+}
+
+class _SupportContactSheetState extends State<_SupportContactSheet> {
+  final _subjectController = TextEditingController();
+  final _messageController = TextEditingController();
+  bool _sending = false;
+
+  @override
+  void dispose() {
+    _subjectController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final msg = _messageController.text.trim();
+    if (msg.isEmpty) return;
+
+    final s = ProfileStrings.of(context);
+    setState(() => _sending = true);
+    // B06 does not expose a support-submission contract yet. Keep the draft
+    // in the sheet and never report success for a message that was not sent.
+    setState(() => _sending = false);
+    _showMessage(context, s.supportUnavailable);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = ProfileStrings.of(context);
+    return Padding(
+      key: const Key('profile.supportSheet'),
+      padding: EdgeInsets.only(
+        left: BuilderSpace.md,
+        right: BuilderSpace.md,
+        top: BuilderSpace.md,
+        bottom: MediaQuery.of(context).viewInsets.bottom + BuilderSpace.md,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(s.contactSupport, style: BuilderType.h3),
+          const SizedBox(height: BuilderSpace.xs),
+          Text(s.supportPrivacyNotice, style: BuilderType.small),
+          const SizedBox(height: BuilderSpace.md),
+          TextField(
+            key: const Key('profile.supportSubject'),
+            controller: _subjectController,
+            decoration: InputDecoration(
+              labelText: s.supportSubject,
+            ),
+          ),
+          const SizedBox(height: BuilderSpace.sm),
+          TextField(
+            key: const Key('profile.supportMessage'),
+            controller: _messageController,
+            maxLines: 4,
+            decoration: InputDecoration(
+              labelText: s.supportMessage,
+            ),
+          ),
+          const SizedBox(height: BuilderSpace.md),
+          BuilderButton(
+            key: const Key('profile.sendSupportBtn'),
+            label: s.send,
+            loading: _sending,
+            onPressed: _sending ? null : _submit,
+          ),
+        ],
+      ),
     );
   }
 }

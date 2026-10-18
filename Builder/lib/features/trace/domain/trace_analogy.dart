@@ -15,6 +15,8 @@ class AnalogyItem {
 
 @immutable
 class TraceAnalogy {
+  static const String stableId = 'analogy.trace.secretary';
+
   final String title;
   final String story;
   final String subtitle;

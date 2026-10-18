@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/localization/app_localizations.dart';
 import '../../../ui_kit/ui_kit.dart';
+import '../../onboarding/domain/assistant_setup.dart';
+import '../../onboarding/presentation/onboarding_labels.dart';
+import '../../profile/profile_providers.dart';
 import '../assistant_providers.dart';
 import '../domain/assistant_config.dart';
 import 'reset_confirmation_dialog.dart';
@@ -28,6 +31,8 @@ class AssistantSettingsPage extends ConsumerWidget {
 
     final currentVersionNumber = versions.isNotEmpty ? versions.first.versionNumber : 1;
     final highestLevel = completedLevels.fold<int>(1, (max, lvl) => lvl > max ? lvl : max);
+    final preferences = ref.watch(teacherPreferencesProvider(ownerId)).asData?.value;
+    final assistantLanguage = preferences?.setup.language ?? AssistantLanguage.russian;
 
     return Scaffold(
       appBar: AppBar(
@@ -87,6 +92,22 @@ class AssistantSettingsPage extends ConsumerWidget {
                     : 'Рабочая (по умолчанию) · Данные за рубежом',
                 icon: BuilderGlyph.bolt,
                 onTap: () => context.push('/assistant/models'),
+              ),
+              const SizedBox(height: 12),
+
+              // 2b. Assistant Language row (F16-04)
+              BuilderLinkRow(
+                key: const Key('assistantSettings.languageRow'),
+                title: 'Язык ответов ассистента',
+                subtitle: '${languageLabel(assistantLanguage, s)} · Создаёт новую версию',
+                icon: BuilderGlyph.globe,
+                onTap: () => _showLanguageSelectionSheet(
+                  context,
+                  ref,
+                  ownerId,
+                  assistantLanguage,
+                  currentVersionNumber,
+                ),
               ),
               const SizedBox(height: 12),
 
@@ -311,6 +332,212 @@ class AssistantSettingsPage extends ConsumerWidget {
           context.push('/assistant/tools');
         }
       },
+    );
+  }
+
+  void _showLanguageSelectionSheet(
+    BuildContext context,
+    WidgetRef ref,
+    String ownerId,
+    AssistantLanguage currentLanguage,
+    int currentVersion,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _AssistantLanguageSheet(
+        ownerId: ownerId,
+        currentLanguage: currentLanguage,
+        currentVersion: currentVersion,
+      ),
+    );
+  }
+}
+
+class _AssistantLanguageSheet extends ConsumerStatefulWidget {
+  final String ownerId;
+  final AssistantLanguage currentLanguage;
+  final int currentVersion;
+
+  const _AssistantLanguageSheet({
+    required this.ownerId,
+    required this.currentLanguage,
+    required this.currentVersion,
+  });
+
+  @override
+  ConsumerState<_AssistantLanguageSheet> createState() => _AssistantLanguageSheetState();
+}
+
+class _AssistantLanguageSheetState extends ConsumerState<_AssistantLanguageSheet> {
+  late AssistantLanguage _selectedLanguage;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLanguage = widget.currentLanguage;
+  }
+
+  Future<void> _applyLanguage() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      await ref.read(assistantControllerProvider(widget.ownerId)).saveLanguage(_selectedLanguage);
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Язык ассистента обновлён (создана версия v${widget.currentVersion + 1})')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ошибка обновления языка: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = AppLocalizations.of(context);
+    final nextVersion = widget.currentVersion + 1;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: BuilderColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(BuilderRadii.sheet)),
+      ),
+      padding: const EdgeInsets.all(BuilderSpace.lg),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: BuilderColors.line,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: BuilderSpace.md),
+            Text('Язык ответов ассистента', style: BuilderType.h3),
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.all(BuilderSpace.sm),
+              decoration: BoxDecoration(
+                color: BuilderColors.primaryTint,
+                borderRadius: BorderRadius.circular(BuilderRadii.card),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 2),
+                    child: BuilderIcon(BuilderGlyph.info, size: 18, color: BuilderColors.primary),
+                  ),
+                  const SizedBox(width: BuilderSpace.xs),
+                  Expanded(
+                    child: Text(
+                      'Смена языка создаст новую версию ассистента (v$nextVersion). '
+                      'Ассистент начнёт формулировать ответы и генерировать материалы на выбранном языке. '
+                      'Сохранённые диалоги, память и документы останутся на месте.',
+                      style: BuilderType.small.copyWith(color: BuilderColors.primary, height: 1.35),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _buildLanguageOption(
+              key: const Key('assistantLanguage.radio.russian'),
+              title: s.onbRussian,
+              subtitle: 'Ответы и планы уроков на русском языке',
+              value: AssistantLanguage.russian,
+            ),
+            _buildLanguageOption(
+              key: const Key('assistantLanguage.radio.kazakh'),
+              title: s.onbKazakh,
+              subtitle: 'Барлық жауаптар мен сабақ жоспарлары қазақ тілінде',
+              value: AssistantLanguage.kazakh,
+            ),
+            _buildLanguageOption(
+              key: const Key('assistantLanguage.radio.bilingual'),
+              title: s.onbBilingual,
+              subtitle: 'Ответ на языке запроса учителя (RU / KK)',
+              value: AssistantLanguage.bilingual,
+            ),
+            const SizedBox(height: BuilderSpace.lg),
+            BuilderButton(
+              key: const Key('assistantLanguage.saveBtn'),
+              label: 'Применить и создать v$nextVersion',
+              loading: _saving,
+              onPressed: _applyLanguage,
+            ),
+            const SizedBox(height: BuilderSpace.xs),
+            BuilderButton(
+              key: const Key('assistantLanguage.cancelBtn'),
+              label: 'Отмена',
+              variant: BuilderButtonVariant.secondary,
+              onPressed: _saving ? null : () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption({
+    required Key key,
+    required String title,
+    required String subtitle,
+    required AssistantLanguage value,
+  }) {
+    final isSelected = _selectedLanguage == value;
+    return InkWell(
+      key: key,
+      onTap: _saving ? null : () => setState(() => _selectedLanguage = value),
+      borderRadius: BorderRadius.circular(BuilderRadii.card),
+      child: Container(
+        padding: const EdgeInsets.all(BuilderSpace.sm),
+        margin: const EdgeInsets.only(bottom: BuilderSpace.xs),
+        decoration: BoxDecoration(
+          color: isSelected ? BuilderColors.primaryTint : BuilderColors.surface,
+          borderRadius: BorderRadius.circular(BuilderRadii.card),
+          border: Border.all(
+            color: isSelected ? BuilderColors.primary : BuilderColors.line,
+            width: isSelected ? 1.5 : 1.0,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+              color: isSelected ? BuilderColors.primary : BuilderColors.inkSecondary,
+              size: 22,
+            ),
+            const SizedBox(width: BuilderSpace.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: BuilderType.title),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

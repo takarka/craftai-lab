@@ -8,6 +8,10 @@ import '../onboarding/domain/initial_workspace_repository.dart';
 import '../session/session_repository.dart';
 import 'domain/profile.dart';
 import 'infrastructure/profile_store.dart';
+import 'infrastructure/reminder_service.dart';
+
+final reminderServiceProvider =
+    NotifierProvider<ReminderNotifier, ReminderState>(ReminderNotifier.new);
 
 final profileStoreProvider = Provider<ProfileStore?>((ref) {
   final db = ref.watch(storageDatabaseProvider);

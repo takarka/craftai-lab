@@ -465,6 +465,34 @@ void main() {
     );
 
     testWidgets(
+      'F16-04: S11 renders assistant language row and opens language selection sheet',
+      (tester) async {
+        await tester.pumpWidget(
+          createTestApp(const AssistantSettingsPage(ownerId: testOwner)),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+        await tester.pumpAndSettle();
+
+        final languageRow = find.byKey(const Key('assistantSettings.languageRow'));
+        expect(languageRow, findsOneWidget);
+        expect(find.textContaining('Язык ответов ассистента'), findsOneWidget);
+
+        await tester.tap(languageRow);
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('assistantLanguage.radio.russian')), findsOneWidget);
+        expect(find.byKey(const Key('assistantLanguage.radio.kazakh')), findsOneWidget);
+        expect(find.byKey(const Key('assistantLanguage.radio.bilingual')), findsOneWidget);
+        expect(find.byKey(const Key('assistantLanguage.saveBtn')), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('assistantLanguage.cancelBtn')));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const Key('assistantLanguage.saveBtn')), findsNothing);
+      },
+    );
+
+    testWidgets(
       'F09-02 & F09-V02: S14 validates graphemes (max 30) and saves draft',
       (tester) async {
         await tester.pumpWidget(

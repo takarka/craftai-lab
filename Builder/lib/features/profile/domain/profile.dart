@@ -64,6 +64,7 @@ class AccountSnapshot {
 abstract interface class ProfileAccountGateway {
   bool get isAvailable;
   Future<AccountSnapshot> load(String ownerId);
+  Future<void> deleteAccount(String ownerId);
 }
 
 class UnavailableProfileAccountGateway implements ProfileAccountGateway {
@@ -72,6 +73,9 @@ class UnavailableProfileAccountGateway implements ProfileAccountGateway {
   bool get isAvailable => false;
   @override
   Future<AccountSnapshot> load(String ownerId) async =>
+      throw StateError('Account API is not connected');
+  @override
+  Future<void> deleteAccount(String ownerId) async =>
       throw StateError('Account API is not connected');
 }
 

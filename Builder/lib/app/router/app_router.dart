@@ -233,7 +233,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'glossary',
-                    builder: (context, state) => const GlossaryPage(),
+                    builder: (context, state) => GlossaryPage(
+                      initialQuery: state.uri.queryParameters['q'],
+                      fromLessonId: state.uri.queryParameters['fromLesson'],
+                      fromTraceId: state.uri.queryParameters['fromTrace'],
+                    ),
                   ),
                 ],
               ),
@@ -253,7 +257,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'privacy',
-                    builder: (context, state) => const ProfilePrivacyPage(),
+                    builder: (context, state) =>
+                        ProfilePrivacyPage(ownerId: ownerId),
                   ),
                   GoRoute(
                     path: 'help',

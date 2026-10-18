@@ -338,6 +338,7 @@ class PersistentKnowledgeRepository implements KnowledgeRepository {
       whereArgs: [docId, ownerId],
     );
 
+    var fileDeletionFailed = false;
     for (final r in revRows) {
       final blobPath = r['blob_path'] as String?;
       if (blobPath != null) {
@@ -345,9 +346,23 @@ class PersistentKnowledgeRepository implements KnowledgeRepository {
         if (await f.exists()) {
           try {
             await f.delete();
-          } catch (_) {}
+          } on FileSystemException {
+            fileDeletionFailed = true;
+          }
         }
       }
+    }
+
+    if (fileDeletionFailed) {
+      // Keep the source/index records available for retry, but prevent their
+      // derived content from entering new prompts after a partial file failure.
+      await database.db.update(
+        StorageSchemaV1.tableKnowledgeDocuments,
+        {'is_enabled': 0},
+        where: 'id = ? AND owner_id = ?',
+        whereArgs: [docId, ownerId],
+      );
+      throw const KnowledgeFileDeletionException();
     }
 
     // 2. Delete from DB in transaction (foreign key cascade removes revisions and chunks)
@@ -400,4 +415,11 @@ class PersistentKnowledgeRepository implements KnowledgeRepository {
     // Preserve letters, numbers, dots, dashes, underscores, spaces
     return name.replaceAll(RegExp(r'[^\w\s\.\-_а-яА-ЯёЁ]'), '_').trim();
   }
+}
+
+class KnowledgeFileDeletionException implements Exception {
+  const KnowledgeFileDeletionException();
+
+  @override
+  String toString() => 'Не удалось физически удалить файл. Документ отключён; повторите удаление.';
 }

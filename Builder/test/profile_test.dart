@@ -21,13 +21,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'package:builder/features/course/presentation/glossary_page.dart';
+import 'package:builder/features/profile/infrastructure/reminder_service.dart';
+import 'package:builder/features/tools/domain/tool_definition.dart';
+
 class _AccountGateway implements ProfileAccountGateway {
-  _AccountGateway(this.action);
+  _AccountGateway(this.action, {this.available = true, this.onDelete});
   final Future<AccountSnapshot> Function(String) action;
+  final bool available;
+  final Future<void> Function(String)? onDelete;
   @override
-  bool get isAvailable => true;
+  bool get isAvailable => available;
   @override
   Future<AccountSnapshot> load(String ownerId) => action(ownerId);
+  @override
+  Future<void> deleteAccount(String ownerId) async {
+    if (onDelete != null) await onDelete!(ownerId);
+  }
 }
 
 void main() {
@@ -229,6 +239,7 @@ void main() {
     WidgetTester tester,
     Widget page, {
     Locale locale = const Locale('ru'),
+    ProfileAccountGateway? accountGateway,
   }) async {
     tester.view.physicalSize = const Size(360, 780);
     tester.view.devicePixelRatio = 1;
@@ -255,6 +266,8 @@ void main() {
           profileAccountProvider('teacher').overrideWithValue(
             const AsyncData(ProfileAccountState(unavailable: true)),
           ),
+          if (accountGateway != null)
+            profileAccountGatewayProvider.overrideWithValue(accountGateway),
         ],
         child: MaterialApp(
           theme: BuilderTheme.light,
@@ -351,5 +364,143 @@ void main() {
     await tester.scrollUntilVisible(find.text('Аккаунтты жою'), 200);
     expect(find.textContaining('әзірге қолжетімсіз'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  test('F16-05: ReminderNotifier schedules, switches frequency and cancels properly', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final notifier = container.read(reminderServiceProvider.notifier);
+    expect(container.read(reminderServiceProvider).frequency, ReminderFrequency.disabled);
+
+    notifier.setFrequency(ReminderFrequency.daily);
+    expect(container.read(reminderServiceProvider).frequency, ReminderFrequency.daily);
+    expect(container.read(reminderServiceProvider).scheduledReminders, isEmpty);
+
+    notifier.setPermissionStatus(OsPermissionStatus.granted);
+    expect(container.read(reminderServiceProvider).scheduledReminders.length, 1);
+    expect(container.read(reminderServiceProvider).scheduledReminders.first.id, 'rem_daily_course');
+
+    notifier.setFrequency(ReminderFrequency.weekdays);
+    expect(container.read(reminderServiceProvider).scheduledReminders.first.id, 'rem_weekdays_prep');
+
+    notifier.cancelAll();
+    expect(container.read(reminderServiceProvider).frequency, ReminderFrequency.disabled);
+    expect(container.read(reminderServiceProvider).scheduledReminders, isEmpty);
+  });
+
+  testWidgets('F16-05: S54 displays reminders dropdown', (tester) async {
+    await pumpProfile(tester, const ProfileSettingsPage(ownerId: 'teacher'));
+    await tester.scrollUntilVisible(find.byKey(const Key('profile.remindersDropdown')), 200);
+    expect(find.text('Напоминания о курсе'), findsWidgets);
+    expect(find.byKey(const Key('profile.remindersDropdown')), findsOneWidget);
+    expect(find.byKey(const Key('profile.cancelAllRemindersBtn')), findsNothing);
+  });
+
+  testWidgets('F16-07: S55 confirms and executes account deletion when gateway is available', (tester) async {
+    var deletedOwner = '';
+    final gateway = _AccountGateway(
+      (id) async => throw StateError(''),
+      available: true,
+      onDelete: (id) async {
+        deletedOwner = id;
+      },
+    );
+
+    await pumpProfile(
+      tester,
+      const ProfilePrivacyPage(ownerId: 'teacher'),
+      accountGateway: gateway,
+    );
+
+    await tester.scrollUntilVisible(find.byKey(const Key('profile.deleteAccountBtn')), 200);
+    await tester.ensureVisible(find.byKey(const Key('profile.deleteAccountBtn')));
+    await tester.pumpAndSettle();
+
+    final deleteBtn = find.byKey(const Key('profile.deleteAccountBtn'));
+    expect(deleteBtn, findsOneWidget);
+
+    await tester.tap(deleteBtn);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('profile.deleteAccountDialog')), findsOneWidget);
+    expect(find.text('Удалить аккаунт CraftAI?'), findsOneWidget);
+
+    final confirmBtn = find.byKey(const Key('profile.confirmDeleteAccount'));
+    expect(confirmBtn, findsOneWidget);
+
+    await tester.tap(confirmBtn);
+    await tester.pumpAndSettle();
+
+    expect(deletedOwner, 'teacher');
+  });
+
+  testWidgets('F16-09: S56 opens support sheet and submits contact form', (tester) async {
+    await pumpProfile(tester, const ProfileHelpPage());
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('profile.contactSupportBtn')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.ensureVisible(find.byKey(const Key('profile.contactSupportBtn')));
+    await tester.pumpAndSettle();
+
+    final contactBtn = find.byKey(const Key('profile.contactSupportBtn'));
+    expect(contactBtn, findsOneWidget);
+
+    await tester.tap(contactBtn);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('profile.supportSheet')), findsOneWidget);
+    expect(find.byKey(const Key('profile.supportSubject')), findsOneWidget);
+    expect(find.byKey(const Key('profile.supportMessage')), findsOneWidget);
+
+    await tester.enterText(find.byKey(const Key('profile.supportSubject')), 'Вопрос по уроку 3');
+    await tester.enterText(find.byKey(const Key('profile.supportMessage')), 'Как правильно настроить RAG?');
+    await tester.pumpAndSettle();
+
+    final sendBtn = find.byKey(const Key('profile.sendSupportBtn'));
+    expect(sendBtn, findsOneWidget);
+    await tester.tap(sendBtn);
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('profile.supportSheet')), findsOneWidget);
+    expect(find.textContaining('Отправка обращений из приложения пока недоступна'), findsOneWidget);
+  });
+
+  testWidgets('F16-10: S27 GlossaryPage displays AI terms, search, level badges and return banner', (tester) async {
+    await pumpProfile(
+      tester,
+      const GlossaryPage(
+        fromLessonId: 'L3.2',
+        initialQuery: 'RAG',
+      ),
+    );
+
+    expect(find.text('Вернуться к уроку L3.2'), findsOneWidget);
+    expect(find.byKey(const Key('glossary.returnBtn')), findsOneWidget);
+
+    expect(find.byKey(const Key('glossary.searchField')), findsOneWidget);
+    expect(find.textContaining('RAG'), findsWidgets);
+    expect(find.text('Уровень 3'), findsOneWidget);
+
+    final clearIcon = find.byIcon(Icons.clear);
+    expect(clearIcon, findsOneWidget);
+    await tester.tap(clearIcon);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Модель (LLM)'), findsOneWidget);
+  });
+
+  testWidgets('F16-10: S27 GlossaryPage localized in Kazakh', (tester) async {
+    await pumpProfile(
+      tester,
+      const GlossaryPage(fromTraceId: 'TR-105'),
+      locale: const Locale('kk'),
+    );
+
+    expect(find.text('TR-105 трейсіне оралу'), findsOneWidget);
+    expect(find.text('ЖИ терминдер сөздігі'), findsOneWidget);
+    expect(find.text('Деңгей 1'), findsWidgets);
   });
 }
