@@ -159,6 +159,35 @@ class AssistantController {
     ref.invalidate(localDataSummaryProvider(ownerId));
   }
 
+  Future<void> saveInstructions({
+    required List<String> systemRules,
+    String? reason,
+  }) async {
+    final currentConfig = await ref.read(assistantConfigProvider(ownerId).future);
+    final selectedCat = ref.read(selectedCategoryProvider(ownerId));
+    final currentSkills = Set<String>.from(currentConfig?.enabledSkills ?? {});
+
+    // Ensure instructions skill is enabled
+    currentSkills.add(AssistantSkillId.instructions.id);
+
+    final actualReason = (reason != null && reason.trim().isNotEmpty)
+        ? reason.trim()
+        : 'Обновлены инструкции ассистента';
+
+    await _repo.commitChange(
+      ownerId: ownerId,
+      name: currentConfig?.name ?? '',
+      selectedCategory: selectedCat,
+      enabledSkills: currentSkills,
+      systemRules: systemRules,
+      reason: actualReason,
+    );
+
+    ref.invalidate(assistantConfigProvider(ownerId));
+    ref.invalidate(assistantVersionsProvider(ownerId));
+    ref.invalidate(localDataSummaryProvider(ownerId));
+  }
+
   Future<void> rollbackToVersion(int targetVersionNumber) async {
     final completedLevels = await ref.read(completedCourseLevelsProvider(ownerId).future);
     final allowedSkills = AssistantSkillId.values

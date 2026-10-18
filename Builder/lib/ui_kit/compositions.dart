@@ -258,6 +258,7 @@ class BuilderSkillCard extends StatelessWidget {
     required this.level,
     this.location = DataLocation.device,
     this.onChanged,
+    this.onTap,
   });
   final String title;
   final String subtitle;
@@ -266,6 +267,8 @@ class BuilderSkillCard extends StatelessWidget {
   final int level;
   final DataLocation location;
   final ValueChanged<bool>? onChanged;
+  final VoidCallback? onTap;
+
   @override
   Widget build(BuildContext context) {
     final available =
@@ -277,7 +280,7 @@ class BuilderSkillCard extends StatelessWidget {
       SkillStatus.unavailable => 'Недоступно в текущем режиме',
       SkillStatus.comingSoon => 'После MVP · скоро',
     };
-    return BuilderCard(
+    final cardContent = BuilderCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -309,6 +312,15 @@ class BuilderSkillCard extends StatelessWidget {
         ],
       ),
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: cardContent,
+      );
+    }
+    return cardContent;
   }
 }
 

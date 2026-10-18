@@ -243,13 +243,33 @@ class RequestTrace {
   }) {
     if (manifest != null) {
       const estimator = ContextAssembler();
-      instructionSnippet = manifest.messages
+      final rawSystemText = manifest.messages
           .where((message) => message['role'] == 'system')
           .map((message) => message['content'] ?? '')
           .join('\n\n');
-      instructionTokens = estimator.estimateTokens(instructionSnippet);
-      memoryTokens = 0;
-      retrievalTokens = 0;
+
+      if (manifest.activeInstruction != null && manifest.activeInstruction!.trim().isNotEmpty) {
+        instructionSnippet = manifest.activeInstruction!;
+        instructionTokens = estimator.estimateTokens(instructionSnippet);
+      } else if (rawSystemText.trim().isNotEmpty && manifest.knowledgeChunks.isEmpty) {
+        instructionSnippet = rawSystemText;
+        instructionTokens = estimator.estimateTokens(instructionSnippet);
+      } else {
+        instructionSnippet = null;
+        instructionTokens = 0;
+      }
+      if (manifest.memoryFacts.isNotEmpty) {
+        memorySnippet = manifest.memoryFacts.map((f) => '- $f').join('\n');
+        memoryTokens = estimator.estimateTokens(memorySnippet);
+      } else {
+        memoryTokens = 0;
+      }
+      if (manifest.knowledgeChunks.isNotEmpty) {
+        retrievalSnippet = manifest.knowledgeChunks.map((c) => '[Источник]: $c').join('\n\n');
+        retrievalTokens = estimator.estimateTokens(retrievalSnippet);
+      } else {
+        retrievalTokens = 0;
+      }
       historyTokens = manifest.messages
           .where((message) => message['role'] != 'system')
           .take(

@@ -8,11 +8,17 @@ import '../../features/assistant/presentation/assistant_settings_page.dart';
 import '../../features/assistant/presentation/assistant_name_page.dart';
 import '../../features/assistant/presentation/assistant_versions_page.dart';
 import '../../features/assistant/presentation/local_data_settings_page.dart';
+import '../../features/instructions/presentation/instructions_page.dart';
+import '../../features/knowledge/presentation/knowledge_page.dart';
+import '../../features/memory/presentation/memory_page.dart';
 import '../../features/models/presentation/model_selection_page.dart';
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/presentation/auth_page.dart';
 import '../../features/onboarding/application/onboarding_controller.dart';
 import '../../features/onboarding/presentation/onboarding_pages.dart';
+import '../../features/course/presentation/course_page.dart';
+import '../../features/course/presentation/lesson_player_page.dart';
+import '../../features/course/presentation/glossary_page.dart';
 import '../localization/app_localizations.dart';
 import '../presentation/foundation_pages.dart';
 import '../providers.dart';
@@ -157,6 +163,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                         ModelSelectionPage(ownerId: ownerId!),
                   ),
                   GoRoute(
+                    path: 'instructions',
+                    builder: (context, state) =>
+                        InstructionsPage(ownerId: ownerId!),
+                  ),
+                  GoRoute(
+                    path: 'knowledge',
+                    builder: (context, state) =>
+                        KnowledgePage(ownerId: ownerId!),
+                  ),
+                  GoRoute(
+                    path: 'memory',
+                    builder: (context, state) =>
+                        MemoryPage(ownerId: ownerId!),
+                  ),
+                  GoRoute(
                     path: 'settings',
                     builder: (context, state) =>
                         AssistantSettingsPage(ownerId: ownerId!),
@@ -186,10 +207,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/course',
-                builder: (context, state) => FoundationPage(
-                  title: AppLocalizations.of(context).courseTab,
-                  message: AppLocalizations.of(context).coursePending,
-                ),
+                builder: (context, state) => CoursePage(ownerId: ownerId!),
+                routes: [
+                  GoRoute(
+                    path: 'lesson/:levelId',
+                    builder: (context, state) {
+                      final levelId = int.tryParse(state.pathParameters['levelId'] ?? '1') ?? 1;
+                      return LessonPlayerPage(ownerId: ownerId!, levelId: levelId);
+                    },
+                  ),
+                  GoRoute(
+                    path: 'glossary',
+                    builder: (context, state) => const GlossaryPage(),
+                  ),
+                ],
               ),
             ],
           ),

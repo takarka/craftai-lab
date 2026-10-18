@@ -8,12 +8,14 @@ import '../../chat/chat_providers.dart';
 import '../../chat/domain/chat_message.dart';
 import '../../chat/presentation/conversation_history_sheet.dart';
 import '../../chat/presentation/markdown_message_view.dart';
-import '../../chat/presentation/report_dialog.dart';
+
 import '../../models/domain/model_category.dart';
 import '../../models/model_providers.dart';
 import '../../onboarding/presentation/d02_consent_sheet.dart';
 import '../../policy/policy_providers.dart';
 import '../../trace/presentation/trace_sheet.dart';
+import '../../course/course_providers.dart';
+import '../../course/domain/course_catalog.dart';
 
 class AssistantPage extends ConsumerStatefulWidget {
   const AssistantPage({super.key, required this.ownerId});
@@ -172,6 +174,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                   ],
                 ),
               ),
+            _buildResumeCourseBanner(context),
             Expanded(
               child: chatState.isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -460,60 +463,37 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                   const SizedBox(height: 12),
                   const Divider(height: 1),
                   const SizedBox(height: 6),
-                  Row(
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
                     children: [
-                      IconButton(
-                        key: const Key('chat.copyBtn'),
-                        icon: const Icon(Icons.copy, size: 16),
-                        tooltip: 'Копировать ответ',
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(text: message.content));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Скопировано в буфер обмена')),
-                          );
-                        },
-                      ),
-                      IconButton(
-                        key: const Key('chat.reportBtn'),
-                        icon: Icon(
-                          message.isReported ? Icons.flag : Icons.flag_outlined,
-                          size: 16,
-                          color: message.isReported ? BuilderColors.warning : null,
+                      if (message.content.trim().isNotEmpty)
+                        IconButton(
+                          key: const Key('chat.copyBtn'),
+                          icon: const Icon(Icons.copy_outlined, size: 16),
+                          tooltip: 'Копировать ответ',
+                          onPressed: () async {
+                            try {
+                              await Clipboard.setData(ClipboardData(text: message.content));
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Ответ скопирован')),
+                              );
+                            } catch (_) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Не удалось скопировать ответ. Попробуйте ещё раз.')),
+                              );
+                            }
+                          },
                         ),
-                        tooltip: message.isReported ? 'Жалоба отправлена' : 'Пожаловаться на ответ',
-                        onPressed: message.isReported || message.requestId == null
-                            ? null
-                            : () async {
-                                final res = await ReportDialog.show(context, requestId: message.requestId!);
-                                if (res != null) {
-                                  await ref.read(chatSessionProvider(widget.ownerId).notifier).reportMessage(
-                                        requestId: message.requestId!,
-                                        reason: res['reason'] ?? 'other',
-                                        comment: res['comment'],
-                                      );
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Жалоба отправлена. Спасибо за отзыв!')),
-                                    );
-                                  }
-                                }
-                              },
-                      ),
-                      IconButton(
-                        key: Key('chat.traceBtn_${message.id}'),
-                        icon: const Icon(Icons.tune, size: 16, color: BuilderColors.primary),
-                        tooltip: 'Под капотом',
-                        onPressed: message.requestId != null
-                            ? () => TraceSheet.show(context, requestId: message.requestId!)
-                            : null,
-                      ),
-                      const Tooltip(
-                        message: 'Сохранение в заметки станет доступно на Уровне 5 (Инструменты)',
-                        child: IconButton(
-                          icon: Icon(Icons.note_add_outlined, size: 16),
-                          onPressed: null,
+                      if (message.requestId?.trim().isNotEmpty == true)
+                        IconButton(
+                          key: Key('chat.traceBtn_${message.id}'),
+                          icon: const Icon(Icons.tune, size: 16),
+                          tooltip: 'Под капотом',
+                          onPressed: () => TraceSheet.show(context, requestId: message.requestId!),
                         ),
-                      ),
                     ],
                   ),
                 ],
@@ -571,6 +551,88 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             ),
         ],
       ),
+    );
+  }
+
+  Widget _buildResumeCourseBanner(BuildContext context) {
+    final overallAsync = ref.watch(overallCourseProgressProvider(widget.ownerId));
+    return overallAsync.maybeWhen(
+      data: (overall) {
+        if (overall.isAllCompleted || overall.activeLevelId == null) {
+          return const SizedBox.shrink();
+        }
+        final level = CourseCatalog.getLevel(overall.activeLevelId!);
+        final levelTitle = level?.title ?? 'Уровень ${overall.activeLevelId}';
+        final stepName = overall.activeStep.title;
+
+        return Container(
+          key: const Key('assistant.resumeLessonBanner'),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: BuilderColors.primaryTint,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: BuilderColors.primary.withValues(alpha: 0.3)),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => context.push('/course/lesson/${overall.activeLevelId}'),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              child: Row(
+                children: [
+                  const Icon(Icons.play_circle_outline, color: BuilderColors.primary, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Продолжить урок',
+                              style: BuilderType.label.copyWith(
+                                color: BuilderColors.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: BuilderColors.primary.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                stepName,
+                                style: BuilderType.small.copyWith(
+                                  fontSize: 11,
+                                  color: BuilderColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          levelTitle,
+                          style: BuilderType.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: BuilderColors.ink,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios, size: 14, color: BuilderColors.primary),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
     );
   }
 }

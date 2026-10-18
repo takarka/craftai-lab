@@ -13,6 +13,12 @@ import 'domain/context_assembler.dart';
 import 'domain/conversation.dart';
 import 'infrastructure/chat_stream_client.dart';
 import 'infrastructure/persistent_chat_repository.dart';
+import '../assistant/assistant_providers.dart';
+import '../assistant/domain/assistant_config.dart';
+import '../instructions/domain/instruction_models.dart';
+import '../knowledge/presentation/knowledge_providers.dart';
+import '../memory/domain/memory_models.dart';
+import '../memory/presentation/memory_providers.dart';
 import '../trace/domain/request_trace.dart';
 import '../trace/trace_providers.dart';
 
@@ -284,12 +290,57 @@ class ChatSessionNotifier extends Notifier<ChatState> {
     // 2. Prepare Context Manifest
     final requestId = CraftAiClient.generateRequestId();
     final assembler = const ContextAssembler();
+
+    // Check if instructions skill is enabled in assistant config (F11 acceptance criteria)
+    final assistantConfig = await ref.read(assistantConfigProvider(ownerId).future);
+    String? activeInstruction;
+    if (assistantConfig != null &&
+        assistantConfig.enabledSkills.contains(AssistantSkillId.instructions.id) &&
+        assistantConfig.systemRules.isNotEmpty) {
+      final text = InstructionConfig.getActiveInstructionText(assistantConfig.systemRules);
+      if (text.trim().isNotEmpty) {
+        activeInstruction = text.trim();
+      }
+    }
+
+    // Check if knowledge (RAG) skill is enabled in assistant config (F12)
+    final List<String> knowledgeChunks = [];
+    if (assistantConfig != null &&
+        assistantConfig.enabledSkills.contains(AssistantSkillId.knowledge.id)) {
+      try {
+        final knowledgeRepo = ref.read(knowledgeRepositoryProvider);
+        final searchResult = await knowledgeRepo.searchKnowledge(
+          ownerId: ownerId,
+          query: trimmed,
+        );
+        if (searchResult.hasRelevantMatches) {
+          knowledgeChunks.addAll(searchResult.matchedChunkTexts);
+        }
+      } catch (_) {}
+    }
+
+    // Check if memory skill is enabled in assistant config (F13)
+    final List<String> memoryFacts = [];
+    if (assistantConfig != null &&
+        assistantConfig.enabledSkills.contains(AssistantSkillId.memory.id)) {
+      try {
+        final memoryRepo = ref.read(memoryRepositoryProvider);
+        final facts = await memoryRepo.getFacts(ownerId: ownerId, enabledOnly: true);
+        const policy = MemorySelectionPolicy();
+        final selected = policy.selectForContext(facts);
+        memoryFacts.addAll(selected.map((f) => f.factText));
+      } catch (_) {}
+    }
+
     final manifest = assembler.assemble(
       manifestId: 'manifest_$requestId',
       requestId: requestId,
       category: selectedCategory.id,
       catalogRevision: '2026-03-31-01',
       contextWindow: 128000,
+      activeInstruction: activeInstruction,
+      memoryFacts: memoryFacts,
+      knowledgeChunks: knowledgeChunks,
       conversationHistory: initialNewMessages.where((message) => message.id != userMsg.id).toList(),
       userPrompt: trimmed,
     );

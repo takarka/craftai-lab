@@ -173,6 +173,8 @@ class AssistantSettingsPage extends ConsumerWidget {
 
               // 5. Documents / Knowledge card (F09-V01)
               BuilderCard(
+                key: const Key('assistantSettings.documentsCard'),
+                onTap: () => context.push('/assistant/knowledge'),
                 child: Row(
                   children: [
                     const BuilderIconTile(BuilderGlyph.doc, warm: true),
@@ -298,6 +300,15 @@ class AssistantSettingsPage extends ConsumerWidget {
               ref.read(assistantControllerProvider(ownerId)).toggleSkill(skill, val);
             }
           : null,
+      onTap: () {
+        if (skill == AssistantSkillId.instructions && (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
+          context.push('/assistant/instructions');
+        } else if (skill == AssistantSkillId.knowledge && (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
+          context.push('/assistant/knowledge');
+        } else if (skill == AssistantSkillId.memory && (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
+          context.push('/assistant/memory');
+        }
+      },
     );
   }
 }

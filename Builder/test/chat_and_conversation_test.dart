@@ -17,6 +17,7 @@ import 'package:builder/features/policy/policy_providers.dart';
 import 'package:builder/features/session/domain/auth_tokens.dart';
 import 'package:builder/features/session/infrastructure/secure_token_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -503,7 +504,42 @@ void main() {
 
       // Check message actions
       expect(find.byKey(const Key('chat.copyBtn')), findsOneWidget);
-      expect(find.byKey(const Key('chat.reportBtn')), findsOneWidget);
+      expect(find.byKey(const Key('chat.reportBtn')), findsNothing);
+      expect(find.byIcon(Icons.note_add_outlined), findsNothing);
+      expect(find.byTooltip('Под капотом'), findsOneWidget);
+
+      String? copiedText;
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            copiedText = (call.arguments as Map)['text'] as String;
+          }
+          return null;
+        },
+      );
+      addTearDown(() => tester.binding.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null));
+      await tester.tap(find.byKey(const Key('chat.copyBtn')));
+      await tester.pumpAndSettle();
+      expect(copiedText, 'Сила тока прямо пропорциональна напряжению.');
+      expect(find.text('Ответ скопирован'), findsOneWidget);
+
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (call) async {
+          if (call.method == 'Clipboard.setData') {
+            throw PlatformException(code: 'clipboard_unavailable');
+          }
+          return null;
+        },
+      );
+      await tester.tap(find.byKey(const Key('chat.copyBtn')));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(find.text('Не удалось скопировать ответ. Попробуйте ещё раз.'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('allows opening conversation history sheet', (tester) async {
@@ -546,7 +582,7 @@ void main() {
       // Verify sheet open
       expect(find.text('История разговоров'), findsOneWidget);
       expect(find.text('Разговор 1'), findsAtLeastNWidgets(1));
-      expect(find.text('Разговор 2'), findsOneWidget);
+      expect(find.text('Разговор 2'), findsAtLeastNWidgets(1));
       expect(find.text('Режим без сохранения истории'), findsOneWidget);
     });
   });

@@ -127,3 +127,40 @@ abstract final class BuilderType {
     color: BuilderColors.inkSecondary,
   );
 }
+
+abstract final class BuilderTypography {
+  static const displayLarge = BuilderType.display;
+  static const headlineMedium = BuilderType.h1;
+  static const headlineSmall = BuilderType.h2;
+  static const titleLarge = BuilderType.h3;
+  static const titleMedium = BuilderType.title;
+  static const titleSmall = TextStyle(
+    fontFamily: 'Onest',
+    fontSize: 15,
+    height: 20 / 15,
+    fontWeight: FontWeight.w700,
+  );
+  static const bodyLarge = BuilderType.body;
+  static const bodyMedium = TextStyle(
+    fontFamily: 'Onest',
+    fontSize: 14,
+    height: 20 / 14,
+    fontWeight: FontWeight.w400,
+  );
+  static const bodySmall = BuilderType.small;
+  static const labelLarge = TextStyle(
+    fontFamily: 'Onest',
+    fontSize: 13,
+    height: 18 / 13,
+    fontWeight: FontWeight.w600,
+    color: BuilderColors.ink,
+  );
+  static const labelMedium = BuilderType.label;
+  static const labelSmall = TextStyle(
+    fontFamily: 'Onest',
+    fontSize: 11,
+    height: 14 / 11,
+    fontWeight: FontWeight.w600,
+    color: BuilderColors.inkSecondary,
+  );
+}
