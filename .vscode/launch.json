@@ -33,6 +33,30 @@
         "--dart-define=APP_ENV=dev",
         "--dart-define=CRAFTAI_API_BASE_URL=https://localhost:5001"
       ]
+    },
+    {
+      "name": "Builder (Web Chrome)",
+      "cwd": "Builder",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "deviceId": "chrome",
+      "args": [
+        "--dart-define=APP_ENV=dev",
+        "--dart-define=CRAFTAI_API_BASE_URL=https://localhost:5001"
+      ]
+    },
+    {
+      "name": "Builder (Web Chrome - без отладки)",
+      "cwd": "Builder",
+      "request": "launch",
+      "type": "dart",
+      "noDebug": true,
+      "deviceId": "chrome",
+      "args": [
+        "--dart-define=APP_ENV=dev",
+        "--dart-define=CRAFTAI_API_BASE_URL=https://localhost:5001"
+      ]
     }
   ]
 }
