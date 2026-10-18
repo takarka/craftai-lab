@@ -12,6 +12,7 @@ import '../../features/instructions/presentation/instructions_page.dart';
 import '../../features/knowledge/presentation/knowledge_page.dart';
 import '../../features/memory/presentation/memory_page.dart';
 import '../../features/models/presentation/model_selection_page.dart';
+import '../../features/tools/presentation/tools_page.dart';
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/presentation/auth_page.dart';
 import '../../features/onboarding/application/onboarding_controller.dart';
@@ -19,6 +20,7 @@ import '../../features/onboarding/presentation/onboarding_pages.dart';
 import '../../features/course/presentation/course_page.dart';
 import '../../features/course/presentation/lesson_player_page.dart';
 import '../../features/course/presentation/glossary_page.dart';
+import '../../features/profile/presentation/profile_pages.dart';
 import '../localization/app_localizations.dart';
 import '../presentation/foundation_pages.dart';
 import '../providers.dart';
@@ -111,12 +113,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/reset-password',
         builder: (context, state) {
-          final token = state.uri.queryParameters['token'] ??
+          final token =
+              state.uri.queryParameters['token'] ??
               state.uri.queryParameters['t'];
-          return AuthPage(
-            kind: AuthFormKind.resetPassword,
-            resetToken: token,
-          );
+          return AuthPage(kind: AuthFormKind.resetPassword, resetToken: token);
         },
       ),
       GoRoute(
@@ -174,8 +174,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'memory',
-                    builder: (context, state) =>
-                        MemoryPage(ownerId: ownerId!),
+                    builder: (context, state) => MemoryPage(ownerId: ownerId!),
+                  ),
+                  GoRoute(
+                    path: 'tools',
+                    builder: (context, state) => ToolsPage(ownerId: ownerId!),
                   ),
                   GoRoute(
                     path: 'settings',
@@ -212,8 +215,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'lesson/:levelId',
                     builder: (context, state) {
-                      final levelId = int.tryParse(state.pathParameters['levelId'] ?? '1') ?? 1;
-                      return LessonPlayerPage(ownerId: ownerId!, levelId: levelId);
+                      final levelId =
+                          int.tryParse(
+                            state.pathParameters['levelId'] ?? '1',
+                          ) ??
+                          1;
+                      return LessonPlayerPage(
+                        ownerId: ownerId!,
+                        levelId: levelId,
+                      );
                     },
                   ),
                   GoRoute(
@@ -228,10 +238,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/profile',
-                builder: (context, state) => FoundationPage(
-                  title: AppLocalizations.of(context).profileTab,
-                  message: AppLocalizations.of(context).profilePending,
-                ),
+                builder: (context, state) =>
+                    ProfilePage(key: ValueKey(ownerId), ownerId: ownerId!),
+                routes: [
+                  GoRoute(
+                    path: 'settings',
+                    builder: (context, state) =>
+                        ProfileSettingsPage(ownerId: ownerId!),
+                  ),
+                  GoRoute(
+                    path: 'privacy',
+                    builder: (context, state) => const ProfilePrivacyPage(),
+                  ),
+                  GoRoute(
+                    path: 'help',
+                    builder: (context, state) => const ProfileHelpPage(),
+                  ),
+                ],
               ),
             ],
           ),

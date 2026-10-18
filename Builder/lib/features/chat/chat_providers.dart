@@ -21,6 +21,8 @@ import '../memory/domain/memory_models.dart';
 import '../memory/presentation/memory_providers.dart';
 import '../trace/domain/request_trace.dart';
 import '../trace/trace_providers.dart';
+import '../tools/domain/tools_registry.dart';
+import '../tools/presentation/tools_providers.dart';
 
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
   final db = ref.watch(storageDatabaseProvider);
@@ -332,6 +334,22 @@ class ChatSessionNotifier extends Notifier<ChatState> {
       } catch (_) {}
     }
 
+    // Check if tools skill is enabled in assistant config (F14)
+    final List<Map<String, dynamic>> activeTools = [];
+    if (assistantConfig != null &&
+        assistantConfig.enabledSkills.contains(AssistantSkillId.tools.id)) {
+      try {
+        final toolsRepo = ref.read(toolsRepositoryProvider);
+        final grants = await toolsRepo.getGrants(ownerId);
+        final enabledToolNames = grants.where((g) => g.isEnabled).map((g) => g.toolName).toSet();
+        for (final tool in ToolsRegistry.allTools) {
+          if (enabledToolNames.contains(tool.name)) {
+            activeTools.add(tool.toWireSchema());
+          }
+        }
+      } catch (_) {}
+    }
+
     final manifest = assembler.assemble(
       manifestId: 'manifest_$requestId',
       requestId: requestId,
@@ -341,6 +359,7 @@ class ChatSessionNotifier extends Notifier<ChatState> {
       activeInstruction: activeInstruction,
       memoryFacts: memoryFacts,
       knowledgeChunks: knowledgeChunks,
+      tools: activeTools,
       conversationHistory: initialNewMessages.where((message) => message.id != userMsg.id).toList(),
       userPrompt: trimmed,
     );

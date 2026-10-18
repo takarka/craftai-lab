@@ -9,6 +9,8 @@ import '../../knowledge/presentation/knowledge_page.dart';
 import '../../knowledge/presentation/knowledge_providers.dart';
 import '../../memory/presentation/memory_page.dart';
 import '../../memory/presentation/memory_providers.dart';
+import '../../tools/presentation/tools_page.dart';
+import '../../tools/presentation/tools_providers.dart';
 import '../course_providers.dart';
 import '../domain/course_catalog.dart';
 import '../domain/course_models.dart';
@@ -496,6 +498,64 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                       );
                       final mState = ref.read(memoryControllerProvider(widget.ownerId));
                       if (mState.facts.isNotEmpty) {
+                        setState(() {
+                          _practiceApplied = true;
+                          _practiceEvidenceMet = true;
+                          _showComparison = true;
+                        });
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+
+        if (level.id == 5) ...[
+          BuilderCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const BuilderIcon(BuilderGlyph.tool, size: 20, color: BuilderColors.primary),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text('Инструменты на устройстве (S43)', style: BuilderType.title),
+                    ),
+                    if (_practiceEvidenceMet)
+                      const BuilderBadge('Выполнено', icon: BuilderGlyph.check)
+                    else
+                      const BuilderBadge('Требуется действие', neutral: true),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Откройте экран S43: включите инструмент «Календарь уроков», проверьте разрешение и создайте тестовое событие расписания с обязательным подтверждением действия.',
+                  style: BuilderType.small,
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: BuilderButton(
+                    key: const Key('practice.openToolsSkillBtn'),
+                    label: _practiceEvidenceMet ? 'Проверить инструменты снова' : 'Открыть экран инструментов',
+                    icon: BuilderGlyph.chevron,
+                    onPressed: () async {
+                      await Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (ctx) => ToolsPage(
+                            ownerId: widget.ownerId,
+                            isLearnMode: true,
+                          ),
+                        ),
+                      );
+                      final tRepo = ref.read(toolsRepositoryProvider);
+                      final pending = await tRepo.getPendingActions(widget.ownerId);
+                      final grants = await tRepo.getGrants(widget.ownerId);
+                      if (grants.any((g) => g.isEnabled) || pending.isNotEmpty) {
                         setState(() {
                           _practiceApplied = true;
                           _practiceEvidenceMet = true;

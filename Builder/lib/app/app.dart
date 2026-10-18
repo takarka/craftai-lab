@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../features/profile/profile_providers.dart';
 import '../ui_kit/ui_kit.dart';
 import 'localization/app_localizations.dart';
 import 'presentation/foundation_pages.dart';
@@ -12,6 +13,7 @@ class BuilderApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(profileLocaleRestoreProvider);
     final locale = ref.watch(appLocaleProvider);
     final configured = ref.watch(appConfigProvider) != null;
     if (!configured) {

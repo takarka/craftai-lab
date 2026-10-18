@@ -22,7 +22,17 @@ abstract final class StorageSchemaV1 {
   static const String tableFileStagingJournal = 'file_staging_journal';
   static const String tablePolicyAcknowledgments = 'policy_acknowledgments';
 
+  static const String tableAccountSnapshots = 'account_snapshots';
+
   static const List<String> createStatements = [
+    // Additive table; onOpen also upgrades existing v1 installations.
+    '''
+    CREATE TABLE IF NOT EXISTS $tableAccountSnapshots (
+      owner_id TEXT PRIMARY KEY,
+      snapshot_json TEXT NOT NULL,
+      FOREIGN KEY (owner_id) REFERENCES $tableWorkspaces(owner_id) ON DELETE CASCADE
+    );
+    ''',
     // 1. Workspaces
     '''
     CREATE TABLE IF NOT EXISTS $tableWorkspaces (

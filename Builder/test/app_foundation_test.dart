@@ -7,6 +7,7 @@ import 'package:builder/app/providers.dart';
 import 'package:builder/app/router/app_router.dart';
 import 'package:builder/core/platform/platform_capabilities.dart';
 import 'package:builder/features/session/session_repository.dart';
+import 'package:builder/features/profile/presentation/profile_pages.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -222,6 +223,28 @@ void main() {
           tester.element(find.byType(NavigationBar)),
         );
         expect(find.byType(NavigationDestination), findsNWidgets(3));
+        router = container.read(appRouterProvider);
+        router.go('/profile');
+        await tester.pumpAndSettle();
+        expect(router.routeInformationProvider.value.uri.path, '/profile');
+        expect(find.byType(ProfilePage), findsOneWidget);
+        router.go('/profile/settings');
+        await tester.pumpAndSettle();
+        expect(
+          router.routeInformationProvider.value.uri.path,
+          '/profile/settings',
+        );
+        router.go('/profile/privacy');
+        await tester.pumpAndSettle();
+        expect(
+          router.routeInformationProvider.value.uri.path,
+          '/profile/privacy',
+        );
+        router.go('/profile/help');
+        await tester.pumpAndSettle();
+        expect(router.routeInformationProvider.value.uri.path, '/profile/help');
+        router.go('/profile');
+        await tester.pumpAndSettle();
         await tester.tap(find.text(strings.courseTab).last);
         await tester.pumpAndSettle();
         expect(

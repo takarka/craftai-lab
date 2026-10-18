@@ -307,6 +307,8 @@ class AssistantSettingsPage extends ConsumerWidget {
           context.push('/assistant/knowledge');
         } else if (skill == AssistantSkillId.memory && (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
           context.push('/assistant/memory');
+        } else if (skill == AssistantSkillId.tools && (status == SkillStatus.enabled || status == SkillStatus.disabled)) {
+          context.push('/assistant/tools');
         }
       },
     );
