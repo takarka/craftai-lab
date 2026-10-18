@@ -578,7 +578,8 @@ void main() {
 
       // 3. Verify min 44x44 touch targets for action buttons
       final testEventBtn = find.byKey(const Key('tools.createTestEventBtn'));
-      await tester.scrollUntilVisible(testEventBtn, 300);
+      await tester.ensureVisible(testEventBtn);
+      await tester.pumpAndSettle();
       expect(testEventBtn, findsOneWidget);
       final btnSize = tester.getSize(testEventBtn);
       expect(btnSize.width, greaterThanOrEqualTo(44.0));
@@ -588,8 +589,10 @@ void main() {
       await tester.tap(testEventBtn);
       await tester.pumpAndSettle();
 
-      await tester.scrollUntilVisible(find.byType(ToolConfirmationCard), -300);
-      expect(find.byType(ToolConfirmationCard), findsOneWidget);
+      final confirmCard = find.byType(ToolConfirmationCard);
+      await tester.ensureVisible(confirmCard);
+      await tester.pumpAndSettle();
+      expect(confirmCard, findsOneWidget);
       expect(find.text('Запрос на создание события'), findsOneWidget);
       expect(find.text('Родительское собрание 7Б'), findsOneWidget);
 

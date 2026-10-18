@@ -13,6 +13,7 @@ import '../../features/knowledge/presentation/knowledge_page.dart';
 import '../../features/memory/presentation/memory_page.dart';
 import '../../features/models/presentation/model_selection_page.dart';
 import '../../features/tools/presentation/tools_page.dart';
+import '../../features/mcp/presentation/mcp_page.dart';
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/presentation/auth_page.dart';
 import '../../features/onboarding/application/onboarding_controller.dart';
@@ -179,6 +180,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'tools',
                     builder: (context, state) => ToolsPage(ownerId: ownerId!),
+                  ),
+                  GoRoute(
+                    path: 'mcp',
+                    builder: (context, state) => McpPage(ownerId: ownerId!),
                   ),
                   GoRoute(
                     path: 'settings',

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../ui_kit/identity.dart';
-import '../../../ui_kit/tokens.dart';
+import '../../../ui_kit/ui_kit.dart';
 import '../domain/tool_definition.dart';
 import 'd07_os_permission_dialog.dart';
 import 'tool_confirmation_card.dart';
 import 'tools_providers.dart';
+import '../../mcp/presentation/mcp_page.dart';
 
 /// Screen S43: Assistant Tools Management (F14-02, F14-04, F14-09, F14-13).
 class ToolsPage extends ConsumerStatefulWidget {
@@ -203,7 +203,54 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                   ),
                   const SizedBox(height: BuilderSpace.md),
 
-                  // 4. Practice Verification Card (F14-13)
+                  // 4. MCP External Integrations Banner (F15-01)
+                  Container(
+                    key: const Key('tools.mcpBanner'),
+                    padding: const EdgeInsets.all(BuilderSpace.sm),
+                    decoration: BoxDecoration(
+                      color: BuilderColors.surface,
+                      borderRadius: BorderRadius.circular(BuilderRadii.card),
+                      border: Border.all(color: BuilderColors.line),
+                    ),
+                    child: Row(
+                      children: [
+                        const BuilderIconTile(BuilderGlyph.cloud, warm: true),
+                        const SizedBox(width: BuilderSpace.sm),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Внешние интеграции (MCP)',
+                                style: BuilderTypography.labelMedium.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: BuilderColors.ink,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Каталог уроков CraftAI, Google Drive и сторонние сервисы',
+                                style: BuilderTypography.bodySmall.copyWith(color: BuilderColors.inkSecondary),
+                              ),
+                            ],
+                          ),
+                        ),
+                        TextButton(
+                          key: const Key('tools.openMcpBtn'),
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (ctx) => McpPage(ownerId: widget.ownerId),
+                            ),
+                          ),
+                          style: TextButton.styleFrom(minimumSize: const Size(44, 44)),
+                          child: const Text('Открыть'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: BuilderSpace.md),
+
+                  // 5. Practice Verification Card (F14-13)
                   Container(
                     key: const Key('tools.practiceCard'),
                     padding: const EdgeInsets.all(BuilderSpace.sm),
