@@ -38,10 +38,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   bool _initialized = false;
 
   // S23 Practice interactive state
-  bool _practiceApplied = false;
   bool _showComparison = false;
-  final TextEditingController _practiceInputController =
-      TextEditingController();
 
   // S25 Quiz state
   final Map<int, int> _selectedQuizAnswers = {};
@@ -52,18 +49,8 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   final Map<int, GlobalKey> _questionKeys = {};
 
   @override
-  void initState() {
-    super.initState();
-    final level = CourseCatalog.getLevel(widget.levelId);
-    if (level != null) {
-      _practiceInputController.text = level.practiceDefaultInput;
-    }
-  }
-
-  @override
   void dispose() {
     _scrollController.dispose();
-    _practiceInputController.dispose();
     super.dispose();
   }
 
@@ -488,7 +475,6 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                             mode: SkillScreenMode.learn,
                             onPracticeCompleted: () {
                               setState(() {
-                                _practiceApplied = true;
                                 _practiceEvidenceMet = true;
                                 _showComparison = true;
                               });
@@ -503,7 +489,6 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                       if (draft.config.enabledRulesCount >= 3 &&
                           draft.testResult != null) {
                         setState(() {
-                          _practiceApplied = true;
                           _practiceEvidenceMet = true;
                           _showComparison = true;
                         });
@@ -579,7 +564,6 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                             isLearningMode: true,
                             onLearningCompleted: () {
                               setState(() {
-                                _practiceApplied = true;
                                 _practiceEvidenceMet = true;
                                 _showComparison = true;
                               });
@@ -593,7 +577,6 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                       if (kState.documents.isNotEmpty &&
                           kState.searchResult != null) {
                         setState(() {
-                          _practiceApplied = true;
                           _practiceEvidenceMet = true;
                           _showComparison = true;
                         });
@@ -672,7 +655,6 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                       );
                       if (mState.facts.isNotEmpty) {
                         setState(() {
-                          _practiceApplied = true;
                           _practiceEvidenceMet = true;
                           _showComparison = true;
                         });
@@ -757,7 +739,6 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                       if (grants.any((g) => g.isEnabled) ||
                           pending.isNotEmpty) {
                         setState(() {
-                          _practiceApplied = true;
                           _practiceEvidenceMet = true;
                           _showComparison = true;
                         });
@@ -771,7 +752,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           const SizedBox(height: 16),
         ],
 
-        // Isolated Learning Draft
+        // Interactive Case Study: Before / After Comparison
         BuilderCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -779,14 +760,14 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
               Row(
                 children: [
                   const BuilderIcon(
-                    BuilderGlyph.bolt,
+                    BuilderGlyph.doc,
                     size: 18,
                     color: BuilderColors.primary,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      cs.practiceLearningDraft,
+                      cs.caseStudyTitle,
                       style: BuilderType.title,
                     ),
                   ),
@@ -794,78 +775,205 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   if (_practiceEvidenceMet)
                     BuilderBadge(cs.practiceCompleted, icon: BuilderGlyph.check)
                   else
-                    BuilderBadge(cs.practiceActiveTask, neutral: true),
+                    BuilderBadge(cs.practiceRequired, neutral: true),
                 ],
               ),
-              const SizedBox(height: 12),
-              TextField(
-                key: const Key('practice.inputField'),
-                controller: _practiceInputController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: cs.practiceQueryField,
-                  border: const OutlineInputBorder(),
+              const SizedBox(height: 8),
+              Text(
+                cs.caseStudySubtitle,
+                style: BuilderType.small.copyWith(
+                  color: BuilderColors.inkSecondary,
                 ),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: BuilderButton(
-                      key: const Key('practice.applyBtn'),
-                      label: _practiceApplied
-                          ? cs.practiceUpdateBtn
-                          : cs.practiceApplyBtn,
-                      onPressed: () {
-                        setState(() {
-                          _practiceApplied = true;
-                          _practiceEvidenceMet =
-                              true; // Evidence met on real interaction (F10-07)
-                          _showComparison = true;
-                        });
-                      },
-                    ),
+              const SizedBox(height: 14),
+
+              // Teacher's Prompt / Scenario Box
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: BuilderColors.primaryTint,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: BuilderColors.primary.withValues(alpha: 0.2),
                   ),
-                ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const BuilderIcon(
+                          BuilderGlyph.bolt,
+                          size: 16,
+                          color: BuilderColors.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          cs.caseStudyPromptLabel,
+                          style: BuilderType.small.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: BuilderColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '«${level.practiceDefaultInput}»',
+                      style: BuilderType.body.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // Action button to examine/compare
+              SizedBox(
+                width: double.infinity,
+                child: BuilderButton(
+                  key: const Key('practice.applyBtn'),
+                  label: _practiceEvidenceMet
+                      ? cs.caseStudyCompletedBtn
+                      : cs.caseStudyAnalyzeBtn,
+                  icon: _practiceEvidenceMet
+                      ? BuilderGlyph.check
+                      : BuilderGlyph.chevron,
+                  variant: _practiceEvidenceMet
+                      ? BuilderButtonVariant.secondary
+                      : BuilderButtonVariant.primary,
+                  onPressed: () {
+                    setState(() {
+                      _practiceEvidenceMet = true; // Evidence met (F10-07)
+                      _showComparison = true;
+                    });
+                  },
+                ),
               ),
             ],
           ),
         ),
 
-        // Before / After Comparison
+        // Visual Comparison Cards (Rendered when explored or completed)
         if (_showComparison) ...[
           const SizedBox(height: 16),
           Text(cs.comparisonTitle, style: BuilderType.title),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
+
+          // 1. Before Card (Neutral/Disabled Tint)
           Container(
-            padding: const EdgeInsets.all(12),
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: BuilderColors.surfaceDisabled,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: BuilderColors.line),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.cancel_outlined,
+                      size: 18,
+                      color: BuilderColors.inkSecondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        cs.beforeSettingLabel,
+                        style: BuilderType.small.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: BuilderColors.ink,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 Text(
-                  cs.beforeSetting,
-                  style: BuilderType.small.copyWith(
-                    fontWeight: FontWeight.w700,
+                  cs.beforePlaceholder,
+                  style: BuilderType.body.copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: BuilderColors.inkSecondary,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(cs.beforePlaceholder, style: BuilderType.small),
-                const Divider(height: 16),
-                Text(
-                  cs.afterSetting,
-                  style: BuilderType.small.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: BuilderColors.primary,
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: BuilderColors.warning,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          cs.beforeSettingProblem,
+                          style: BuilderType.small.copyWith(
+                            color: BuilderColors.inkSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // 2. After Card (Green/Primary Tint)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: BuilderColors.primaryTint,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: BuilderColors.primary.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const BuilderIcon(
+                      BuilderGlyph.check,
+                      size: 18,
+                      color: BuilderColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        cs.afterSettingLabel,
+                        style: BuilderType.small.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: BuilderColors.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 Text(
                   level.practiceExpectedAnswer,
-                  style: BuilderType.small.copyWith(color: BuilderColors.ink),
+                  style: BuilderType.body.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: BuilderColors.ink,
+                  ),
                 ),
               ],
             ),

@@ -404,7 +404,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Check section header
-        expect(find.text('Учебный путь'), findsOneWidget);
+        expect(find.text('Курс'), findsOneWidget);
 
         // Check level 1 and level 2 cards
         expect(find.byKey(const Key('course.levelCard.1')), findsOneWidget);

@@ -575,33 +575,6 @@ class _ComingSoonNotice extends StatelessWidget {
   );
 }
 
-class _LevelIcon extends StatelessWidget {
-  const _LevelIcon({required this.level, required this.completed, required this.locked, required this.current});
-  final int level;
-  final bool completed;
-  final bool locked;
-  final bool current;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 42,
-    height: 42,
-    decoration: BoxDecoration(
-      color: current ? BuilderColors.warningTint : locked ? BuilderColors.surfaceDisabled : BuilderColors.primaryTint,
-      borderRadius: BorderRadius.circular(13),
-    ),
-    alignment: Alignment.center,
-    child: completed
-        ? const BuilderIcon(BuilderGlyph.check, color: BuilderColors.primary, size: 19)
-        : locked
-        ? const BuilderIcon(BuilderGlyph.lock, color: BuilderColors.inkSecondary, size: 19)
-        : BuilderIcon(
-            [BuilderGlyph.robot, BuilderGlyph.doc, BuilderGlyph.course, BuilderGlyph.memory, BuilderGlyph.tool][level - 1],
-            color: current ? BuilderColors.warning : BuilderColors.primary,
-            size: 20,
-          ),
-  );
-}
 
 class _StatusBadge extends StatelessWidget {
   const _StatusBadge({required this.status, required this.step});
