@@ -66,17 +66,20 @@ class CraftAiClient {
       if (headers != null) ...headers,
     };
 
-    if (tokenStorage != null) {
-      final tokens = await tokenStorage!.readTokens();
-      if (tokens != null && !tokens.isExpired) {
-        requestHeaders['Authorization'] = 'Bearer ${tokens.accessToken}';
-      }
-    }
-
     try {
-      final response = await _httpClient
-          .get(url, headers: requestHeaders)
-          .timeout(timeout);
+      var tokens = tokenStorage == null ? null : await tokenStorage!.readTokens();
+      if (tokens != null) requestHeaders['Authorization'] = 'Bearer ${tokens.accessToken}';
+      var response = await _httpClient.get(url, headers: requestHeaders).timeout(timeout);
+
+      // A request is retried once after the shared refresh operation. This is
+      // required even when a server invalidates a token before its expiry.
+      if (response.statusCode == 401 && tokenStorage != null) {
+        tokens = await tokenStorage!.refreshTokens();
+        if (tokens != null) {
+          requestHeaders['Authorization'] = 'Bearer ${tokens.accessToken}';
+          response = await _httpClient.get(url, headers: requestHeaders).timeout(timeout);
+        }
+      }
 
       final status = response.statusCode;
       final bodyText = response.body;

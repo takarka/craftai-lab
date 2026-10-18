@@ -71,7 +71,7 @@ class CraftAiAuthGateway implements AuthGateway {
 
   Future<void> fetchDocuments(String languageCode) async {
     try {
-      final uri = baseUri.resolve('/auth/documents?lang=$languageCode');
+      final uri = baseUri.resolve('/mobile/auth/documents?lang=$languageCode');
       final response = await _httpClient.get(
         uri,
         headers: const {'Accept': 'application/json'},
@@ -110,7 +110,7 @@ class CraftAiAuthGateway implements AuthGateway {
     required String email,
     required String password,
   }) async {
-    final uri = baseUri.resolve('/auth/login');
+    final uri = baseUri.resolve('/mobile/auth/login');
     try {
       final response = await _httpClient.post(
         uri,
@@ -167,7 +167,7 @@ class CraftAiAuthGateway implements AuthGateway {
     required String termsRevision,
     required String privacyRevision,
   }) async {
-    final uri = baseUri.resolve('/auth/register');
+    final uri = baseUri.resolve('/mobile/auth/register');
     try {
       final response = await _httpClient.post(
         uri,
@@ -221,7 +221,7 @@ class CraftAiAuthGateway implements AuthGateway {
 
   @override
   Future<void> requestPasswordReset({required String email}) async {
-    final uri = baseUri.resolve('/auth/forgot-password');
+    final uri = baseUri.resolve('/mobile/auth/forgot-password');
     try {
       final response = await _httpClient.post(
         uri,
@@ -257,7 +257,7 @@ class CraftAiAuthGateway implements AuthGateway {
     required String token,
     required String newPassword,
   }) async {
-    final uri = baseUri.resolve('/auth/reset-password');
+    final uri = baseUri.resolve('/mobile/auth/reset-password');
     try {
       final response = await _httpClient.post(
         uri,
@@ -300,13 +300,63 @@ class CraftAiAuthGateway implements AuthGateway {
     }
   }
 
+  @override
+  Future<void> changePassword({required String newPassword}) async {
+    await _postAuthenticated('/mobile/auth/change-password', {'newPassword': newPassword});
+    if (sessionRepository is PersistentSessionRepository) {
+      (sessionRepository as PersistentSessionRepository).markPasswordChanged();
+    }
+  }
+
+  @override
+  Future<void> logout() async {
+    final tokens = tokenStorage == null ? null : await tokenStorage!.readTokens();
+    final stored =
+        tokenStorage == null ? null : await tokenStorage!.readRefreshSession();
+    try {
+      await _postAuthenticated('/mobile/auth/logout', {
+        if (stored != null)
+          'refreshToken': stored.refreshToken
+        else if (tokens != null)
+          'refreshToken': tokens.refreshToken,
+      });
+    } finally {
+      // Logout is terminal even when the server cannot be reached.
+      await tokenStorage?.clearSession();
+    }
+  }
+
+  Future<void> _postAuthenticated(String path, Map<String, dynamic> body) async {
+    final tokens = tokenStorage == null ? null : await tokenStorage!.readTokens();
+    if (tokens == null) throw const AppFailure(AppFailureCode.invalidCredentials);
+    try {
+      final response = await _httpClient.post(
+        baseUri.resolve(path),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer ${tokens.accessToken}',
+        },
+        body: jsonEncode(body),
+      ).timeout(const Duration(seconds: 15));
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw const AppFailure(AppFailureCode.serviceUnavailable);
+      }
+    } on TimeoutException {
+      throw const AppFailure(AppFailureCode.networkUnavailable);
+    } on SocketException {
+      throw const AppFailure(AppFailureCode.networkUnavailable);
+    }
+  }
+
   Future<void> _handleAuthTokenResponse(Map<String, dynamic> data) async {
     final accessToken = data['accessToken'] as String? ?? '';
     final refreshToken = data['refreshToken'] as String? ?? '';
     final userId = data['userId'] as String? ?? '';
     final expiresStr = data['accessTokenExpiresAtUtc'] as String?;
+    final refreshExpiresStr = data['refreshExpiresAtUtc'] as String?;
 
-    if (accessToken.isEmpty || refreshToken.isEmpty || userId.isEmpty) {
+    if (accessToken.isEmpty || refreshToken.isEmpty || userId.isEmpty || refreshExpiresStr == null) {
       throw const AppFailure(AppFailureCode.unexpected);
     }
 
@@ -319,12 +369,15 @@ class CraftAiAuthGateway implements AuthGateway {
       accessToken: accessToken,
       refreshToken: refreshToken,
       expiresAtUtc: expiresAtUtc,
+      refreshExpiresAtUtc: DateTime.tryParse(refreshExpiresStr)?.toUtc() ??
+          expiresAtUtc,
     );
 
     if (sessionRepository is PersistentSessionRepository) {
       await (sessionRepository as PersistentSessionRepository).saveSession(
         ownerId: userId,
         tokens: tokens,
+        mustChangePassword: data['mustChangePassword'] == true,
       );
     } else if (tokenStorage != null) {
       await tokenStorage!.writeSession(ownerId: userId, tokens: tokens);

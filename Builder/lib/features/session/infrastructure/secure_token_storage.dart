@@ -4,13 +4,27 @@ import '../domain/auth_tokens.dart';
 abstract interface class SecureTokenStorage {
   Future<void> writeSession({required String ownerId, required AuthTokens tokens});
   Future<AuthTokens?> readTokens();
+  /// Forces one mobile-token rotation. Implementations must coalesce callers.
+  Future<AuthTokens?> refreshTokens();
+  Future<StoredRefreshSession?> readRefreshSession();
   Future<String?> readOwnerId();
   Future<void> clearSession();
   Future<bool> hasStoredSession();
 }
 
+class StoredRefreshSession {
+  const StoredRefreshSession({
+    required this.ownerId,
+    required this.refreshToken,
+    required this.refreshExpiresAtUtc,
+  });
+  final String ownerId;
+  final String refreshToken;
+  final DateTime refreshExpiresAtUtc;
+}
+
 final class PlatformSecureTokenStorage implements SecureTokenStorage {
-  const PlatformSecureTokenStorage({
+  PlatformSecureTokenStorage({
     FlutterSecureStorage? storage,
   }) : _storage = storage ??
             const FlutterSecureStorage(
@@ -19,11 +33,12 @@ final class PlatformSecureTokenStorage implements SecureTokenStorage {
             );
 
   final FlutterSecureStorage _storage;
+  AuthTokens? _memoryTokens;
 
-  static const _keyAccessToken = 'craftai_access_token';
   static const _keyRefreshToken = 'craftai_refresh_token';
   static const _keyTokenType = 'craftai_token_type';
   static const _keyTokenExpires = 'craftai_token_expires_at';
+  static const _keyRefreshExpires = 'craftai_refresh_expires_at';
   static const _keyOwnerId = 'craftai_session_owner_id';
 
   @override
@@ -32,36 +47,42 @@ final class PlatformSecureTokenStorage implements SecureTokenStorage {
     required AuthTokens tokens,
   }) async {
     await _storage.write(key: _keyOwnerId, value: ownerId);
-    await _storage.write(key: _keyAccessToken, value: tokens.accessToken);
+    // Access tokens deliberately never enter OS storage. They live only for
+    // this process lifetime; a cold start uses the persisted refresh token.
+    _memoryTokens = tokens;
     await _storage.write(key: _keyRefreshToken, value: tokens.refreshToken);
     await _storage.write(key: _keyTokenType, value: tokens.tokenType);
     await _storage.write(
       key: _keyTokenExpires,
       value: tokens.expiresAtUtc.toIso8601String(),
     );
+    await _storage.write(
+      key: _keyRefreshExpires,
+      value: tokens.refreshExpiresAtUtc.toIso8601String(),
+    );
   }
 
   @override
   Future<AuthTokens?> readTokens() async {
-    final access = await _storage.read(key: _keyAccessToken);
-    final refresh = await _storage.read(key: _keyRefreshToken);
-    final expires = await _storage.read(key: _keyTokenExpires);
-    final type = await _storage.read(key: _keyTokenType) ?? 'Bearer';
+    return _memoryTokens;
+  }
 
-    if (access == null || refresh == null || expires == null) {
-      return null;
-    }
+  @override
+  Future<AuthTokens?> refreshTokens() async => null;
 
-    try {
-      return AuthTokens(
-        accessToken: access,
-        refreshToken: refresh,
-        tokenType: type,
-        expiresAtUtc: DateTime.parse(expires).toUtc(),
-      );
-    } catch (_) {
-      return null;
-    }
+  @override
+  Future<StoredRefreshSession?> readRefreshSession() async {
+    final ownerId = await _storage.read(key: _keyOwnerId);
+    final refreshToken = await _storage.read(key: _keyRefreshToken);
+    final expiry = await _storage.read(key: _keyRefreshExpires);
+    if (ownerId == null || refreshToken == null || expiry == null) return null;
+    final parsed = DateTime.tryParse(expiry);
+    if (ownerId.isEmpty || refreshToken.isEmpty || parsed == null) return null;
+    return StoredRefreshSession(
+      ownerId: ownerId,
+      refreshToken: refreshToken,
+      refreshExpiresAtUtc: parsed.toUtc(),
+    );
   }
 
   @override
@@ -72,10 +93,11 @@ final class PlatformSecureTokenStorage implements SecureTokenStorage {
   @override
   Future<void> clearSession() async {
     await _storage.delete(key: _keyOwnerId);
-    await _storage.delete(key: _keyAccessToken);
+    _memoryTokens = null;
     await _storage.delete(key: _keyRefreshToken);
     await _storage.delete(key: _keyTokenType);
     await _storage.delete(key: _keyTokenExpires);
+    await _storage.delete(key: _keyRefreshExpires);
   }
 
   @override
@@ -94,34 +116,43 @@ final class InMemorySecureTokenStorage implements SecureTokenStorage {
     required AuthTokens tokens,
   }) async {
     _storage['owner_id'] = ownerId;
-    _storage['access_token'] = tokens.accessToken;
+    _tokens = tokens;
     _storage['refresh_token'] = tokens.refreshToken;
     _storage['token_type'] = tokens.tokenType;
     _storage['expires_at'] = tokens.expiresAtUtc.toIso8601String();
+    _storage['refresh_expires_at'] = tokens.refreshExpiresAtUtc.toIso8601String();
   }
+
+  AuthTokens? _tokens;
 
   @override
   Future<AuthTokens?> readTokens() async {
-    final access = _storage['access_token'];
-    final refresh = _storage['refresh_token'];
-    final expires = _storage['expires_at'];
-    final type = _storage['token_type'] ?? 'Bearer';
+    return _tokens;
+  }
 
-    if (access == null || refresh == null || expires == null) return null;
-    return AuthTokens(
-      accessToken: access,
-      refreshToken: refresh,
-      tokenType: type,
-      expiresAtUtc: DateTime.parse(expires).toUtc(),
-    );
+  @override
+  Future<AuthTokens?> refreshTokens() async => null;
+
+  @override
+  Future<StoredRefreshSession?> readRefreshSession() async {
+    final ownerId = _storage['owner_id'];
+    final refreshToken = _storage['refresh_token'];
+    final expiry = _storage['refresh_expires_at'];
+    final parsed = expiry == null ? null : DateTime.tryParse(expiry);
+    if (ownerId == null || refreshToken == null || parsed == null) return null;
+    return StoredRefreshSession(ownerId: ownerId, refreshToken: refreshToken, refreshExpiresAtUtc: parsed.toUtc());
   }
 
   @override
   Future<String?> readOwnerId() async => _storage['owner_id'];
 
   @override
-  Future<void> clearSession() async => _storage.clear();
+  Future<void> clearSession() async {
+    _tokens = null;
+    _storage.clear();
+  }
 
   @override
   Future<bool> hasStoredSession() async => _storage.containsKey('owner_id');
 }
+

@@ -10,12 +10,14 @@ final class AuthenticatedSession extends SessionSnapshot {
   AuthenticatedSession({
     required this.ownerId,
     required this.onboardingComplete,
+    this.mustChangePassword = false,
   }) {
     if (ownerId.trim().isEmpty) throw ArgumentError('Owner ID is required.');
   }
 
   final String ownerId;
   final bool onboardingComplete;
+  final bool mustChangePassword;
 }
 
 /// F04 will supply secure restoration and the real CraftAI auth adapter.

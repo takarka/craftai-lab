@@ -9,11 +9,11 @@ import 'infrastructure/refreshing_token_storage.dart';
 final secureTokenStorageProvider = Provider<SecureTokenStorage>((ref) {
   final config = ref.watch(appConfigProvider);
   final uri = config?.apiBaseUri;
-  if (uri == null) return const PlatformSecureTokenStorage();
+  if (uri == null) return PlatformSecureTokenStorage();
   final client = createApiHttpClient(config);
   ref.onDispose(client.close);
   return RefreshingTokenStorage(
-    storage: const PlatformSecureTokenStorage(),
+    storage: PlatformSecureTokenStorage(),
     baseUri: uri,
     client: client,
   );

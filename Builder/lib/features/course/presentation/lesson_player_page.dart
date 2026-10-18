@@ -296,7 +296,9 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                 children: [
                   const BuilderIcon(BuilderGlyph.info, size: 18, color: BuilderColors.primary),
                   const SizedBox(width: 8),
-                  Text(cs.schoolExampleTitle, style: BuilderType.title),
+                  Expanded(
+                    child: Text(cs.schoolExampleTitle, style: BuilderType.title),
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -711,7 +713,9 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   children: [
                     const BuilderIcon(BuilderGlyph.code, size: 16, color: BuilderColors.primary),
                     const SizedBox(width: 8),
-                    Text(layer['layer'] ?? '', style: BuilderType.title),
+                    Expanded(
+                      child: Text(layer['layer'] ?? '', style: BuilderType.title),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -847,10 +851,12 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                       color: _quizPassed ? BuilderColors.primary : BuilderColors.warning,
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      _quizPassed ? cs.quizPassedTitle : cs.quizFailedTitle,
-                      style: BuilderType.title.copyWith(
-                        color: _quizPassed ? BuilderColors.primary : BuilderColors.warning,
+                    Expanded(
+                      child: Text(
+                        _quizPassed ? cs.quizPassedTitle : cs.quizFailedTitle,
+                        style: BuilderType.title.copyWith(
+                          color: _quizPassed ? BuilderColors.primary : BuilderColors.warning,
+                        ),
                       ),
                     ),
                   ],

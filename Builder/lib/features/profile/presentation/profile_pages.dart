@@ -8,6 +8,7 @@ import '../../../app/providers.dart';
 import '../../../core/storage/storage_providers.dart';
 import '../../../ui_kit/ui_kit.dart';
 import '../../onboarding/domain/assistant_setup.dart';
+import '../../auth/application/auth_controller.dart';
 import '../../onboarding/domain/initial_workspace_repository.dart';
 import '../../onboarding/presentation/onboarding_labels.dart';
 import '../../session/infrastructure/persistent_session_repository.dart';
@@ -61,7 +62,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       if (session is! PersistentSessionRepository) {
         throw StateError('Sign out unavailable');
       }
-      await session.signOut();
+      try {
+        await ref.read(authGatewayProvider).logout();
+      } finally {
+        // Always close the local workspace and return to sign-in, including a
+        // network failure while revoking the server-side refresh token.
+        await session.signOut();
+      }
     } catch (_) {
       if (mounted) _showMessage(context, s.failed);
     } finally {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/providers.dart';
 import '../../core/network/api_http_client.dart';
@@ -436,6 +437,8 @@ class ChatSessionNotifier extends Notifier<ChatState> {
           _coalescingTimer?.cancel();
           _flushBufferedText(assistantMsgId);
 
+          if (!ref.mounted) break;
+
           final finalStatus = event.isInterrupted
               ? MessageStatus.interrupted
               : (event.isError ? MessageStatus.error : MessageStatus.completed);
@@ -495,7 +498,20 @@ class ChatSessionNotifier extends Notifier<ChatState> {
       _coalescingTimer?.cancel();
       _flushBufferedText(assistantMsgId);
 
-      final errorMsg = e.toString().replaceFirst('Exception: ', '');
+      if (!ref.mounted) return;
+
+      final rawError = e.toString().replaceFirst('Exception: ', '');
+      final isOfflineOrNetwork = e is SocketException ||
+          rawError.contains('SocketException') ||
+          rawError.contains('Failed host lookup') ||
+          rawError.contains('Network is unreachable') ||
+          rawError.contains('Connection refused') ||
+          rawError.contains('ClientException');
+
+      final errorMsg = isOfflineOrNetwork
+          ? 'Для ответа облачной модели требуется интернет. Локальные данные и уроки доступны на устройстве.'
+          : rawError;
+
       final updatedMessages = state.messages.map((m) {
         if (m.id == assistantMsgId) {
           return m.copyWith(
@@ -549,6 +565,7 @@ class ChatSessionNotifier extends Notifier<ChatState> {
   }
 
   void _flushBufferedText(String assistantMsgId) {
+    if (!ref.mounted) return;
     if (_bufferedText.isEmpty) return;
 
     final updated = state.messages.map((m) {

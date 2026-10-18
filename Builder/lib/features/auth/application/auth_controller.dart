@@ -6,7 +6,7 @@ import '../../session/session_providers.dart';
 import '../domain/auth_gateway.dart';
 import '../infrastructure/craft_ai_auth_gateway.dart';
 
-enum AuthFormKind { signIn, register, recovery, resetPassword }
+enum AuthFormKind { signIn, register, recovery, resetPassword, changePassword }
 
 final authGatewayProvider = Provider<AuthGateway>((ref) {
   final config = ref.watch(appConfigProvider);

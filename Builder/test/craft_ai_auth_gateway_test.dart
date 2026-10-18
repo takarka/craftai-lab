@@ -21,6 +21,12 @@ class InMemoryTokenStorage implements SecureTokenStorage {
   Future<AuthTokens?> readTokens() async => _tokens;
 
   @override
+  Future<AuthTokens?> refreshTokens() async => null;
+
+  @override
+  Future<StoredRefreshSession?> readRefreshSession() async => null;
+
+  @override
   Future<void> writeSession({
     required String ownerId,
     required AuthTokens tokens,
@@ -61,7 +67,7 @@ void main() {
     test('signIn succeeds and writes session tokens', () async {
       final tokenStorage = InMemoryTokenStorage();
       final mockClient = MockClient((request) async {
-        if (request.url.path == '/auth/login') {
+        if (request.url.path == '/mobile/auth/login') {
           final body = jsonDecode(request.body) as Map<String, dynamic>;
           expect(body['email'], 'teacher1@craftai.kz');
           expect(body['password'], 'TeacherPass123!');
@@ -73,6 +79,7 @@ void main() {
                   .add(const Duration(minutes: 15))
                   .toUtc()
                   .toIso8601String(),
+              'refreshExpiresAtUtc': DateTime.now().add(const Duration(days: 30)).toUtc().toIso8601String(),
               'userId': '00000000-0000-0000-0000-0000000000d1',
               'email': 'teacher1@craftai.kz',
               'fullName': 'Марат Ахметов',
@@ -156,7 +163,7 @@ void main() {
     test('register succeeds and writes session tokens', () async {
       final tokenStorage = InMemoryTokenStorage();
       final mockClient = MockClient((request) async {
-        if (request.url.path == '/auth/register') {
+        if (request.url.path == '/mobile/auth/register') {
           final body = jsonDecode(request.body) as Map<String, dynamic>;
           expect(body['name'], 'New User');
           expect(body['email'], 'new@mail.kz');
@@ -168,6 +175,7 @@ void main() {
                   .add(const Duration(minutes: 15))
                   .toUtc()
                   .toIso8601String(),
+              'refreshExpiresAtUtc': DateTime.now().add(const Duration(days: 30)).toUtc().toIso8601String(),
               'userId': '11111111-1111-1111-1111-111111111111',
             }),
             200,
@@ -235,11 +243,11 @@ void main() {
       var resetCalled = false;
 
       final mockClient = MockClient((request) async {
-        if (request.url.path == '/auth/forgot-password') {
+        if (request.url.path == '/mobile/auth/forgot-password') {
           forgotCalled = true;
           return http.Response('', 200);
         }
-        if (request.url.path == '/auth/reset-password') {
+        if (request.url.path == '/mobile/auth/reset-password') {
           resetCalled = true;
           return http.Response('', 204);
         }

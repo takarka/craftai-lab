@@ -59,6 +59,12 @@ class MockTestAuthGateway implements AuthGateway {
     if (pending != null) await pending!.future;
     if (failure != null) throw failure!;
   }
+
+  @override
+  Future<void> changePassword({required String newPassword}) async {}
+
+  @override
+  Future<void> logout() async {}
 }
 
 void main() {

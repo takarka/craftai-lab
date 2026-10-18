@@ -18,10 +18,28 @@ final class RefreshingTokenStorage implements SecureTokenStorage {
   @override
   Future<AuthTokens?> readTokens() async {
     final tokens = await storage.readTokens();
-    if (tokens == null || !tokens.isExpired) return tokens;
+    if (tokens != null && !tokens.isExpired) return tokens;
+    return refreshTokens();
+  }
+
+  @override
+  Future<AuthTokens?> refreshTokens() async {
+    final tokens = await storage.readTokens();
+    final stored = tokens == null ? await storage.readRefreshSession() : null;
+    if (tokens == null && stored == null) return null;
+    if (stored != null && DateTime.now().toUtc().isAfter(stored.refreshExpiresAtUtc)) {
+      await clearSession();
+      return null;
+    }
     final pending = _pending;
     if (pending != null) return pending;
-    final refresh = _refresh(tokens, _generation);
+    final refresh = _refresh(
+      tokens ?? AuthTokens(
+        accessToken: '', refreshToken: stored!.refreshToken,
+        expiresAtUtc: DateTime.utc(1970), refreshExpiresAtUtc: stored.refreshExpiresAtUtc,
+      ),
+      _generation,
+    );
     _pending = refresh;
     try {
       return await refresh;
@@ -35,29 +53,30 @@ final class RefreshingTokenStorage implements SecureTokenStorage {
     if (ownerId == null) return null;
     try {
       final response = await client.post(
-        baseUri.resolve('/auth/refresh'),
+        baseUri.resolve('/mobile/auth/refresh'),
         headers: const {'Content-Type': 'application/json', 'Accept': 'application/json'},
         body: jsonEncode({'refreshToken': old.refreshToken}),
       ).timeout(const Duration(seconds: 15));
       if (generation != _generation) return null;
-      if (response.statusCode == 401 || response.statusCode == 403) {
+      if (response.statusCode != 200) {
         await clearSession();
         return null;
       }
-      if (response.statusCode != 200) return old;
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final access = data['accessToken'] as String?;
       final refresh = data['refreshToken'] as String?;
       final expiry = DateTime.tryParse(data['accessTokenExpiresAtUtc'] as String? ?? '');
-      if (access == null || access.isEmpty || refresh == null || refresh.isEmpty || expiry == null) {
-        return old;
+      final refreshExpiry = DateTime.tryParse(data['refreshExpiresAtUtc'] as String? ?? '');
+      if (access == null || access.isEmpty || refresh == null || refresh.isEmpty || expiry == null || refreshExpiry == null) {
+        await clearSession();
+        return null;
       }
-      final tokens = AuthTokens(accessToken: access, refreshToken: refresh, expiresAtUtc: expiry.toUtc());
+      final tokens = AuthTokens(accessToken: access, refreshToken: refresh, expiresAtUtc: expiry.toUtc(), refreshExpiresAtUtc: refreshExpiry.toUtc());
       await storage.writeSession(ownerId: ownerId, tokens: tokens);
       return tokens;
     } catch (_) {
-      // A temporary outage must not erase the saved account or local workspace.
-      return generation == _generation ? old : null;
+      if (generation == _generation) await clearSession();
+      return null;
     }
   }
 
@@ -80,4 +99,7 @@ final class RefreshingTokenStorage implements SecureTokenStorage {
 
   @override
   Future<bool> hasStoredSession() => storage.hasStoredSession();
+
+  @override
+  Future<StoredRefreshSession?> readRefreshSession() => storage.readRefreshSession();
 }

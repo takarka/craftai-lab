@@ -16,6 +16,7 @@ import 'package:builder/features/policy/infrastructure/persistent_policy_reposit
 import 'package:builder/features/policy/policy_providers.dart';
 import 'package:builder/features/session/domain/auth_tokens.dart';
 import 'package:builder/features/session/infrastructure/secure_token_storage.dart';
+import 'package:builder/features/session/infrastructure/refreshing_token_storage.dart';
 import 'package:builder/features/session/session_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -94,6 +95,51 @@ void main() {
               .having((e) => e.message, 'message', contains('Unauthorized')),
         ),
       );
+    });
+
+    test('retries once after a shared mobile refresh on 401', () async {
+      final rawStorage = InMemorySecureTokenStorage();
+      await rawStorage.writeSession(
+        ownerId: 'owner',
+        tokens: AuthTokens(
+          accessToken: 'old-access',
+          refreshToken: 'old-refresh',
+          expiresAtUtc: DateTime.now().toUtc().add(const Duration(hours: 1)),
+          refreshExpiresAtUtc: DateTime.now().toUtc().add(const Duration(days: 30)),
+        ),
+      );
+      var refreshCalls = 0;
+      final storage = RefreshingTokenStorage(
+        storage: rawStorage,
+        baseUri: Uri.parse('https://localhost:5001'),
+        client: MockClient((request) async {
+          refreshCalls++;
+          expect(request.url.path, '/mobile/auth/refresh');
+          expect(jsonDecode(request.body)['refreshToken'], 'old-refresh');
+          return http.Response(jsonEncode({
+            'accessToken': 'new-access',
+            'accessTokenExpiresAtUtc': DateTime.now().toUtc().add(const Duration(hours: 1)).toIso8601String(),
+            'refreshToken': 'new-refresh',
+            'refreshExpiresAtUtc': DateTime.now().toUtc().add(const Duration(days: 30)).toIso8601String(),
+          }), 200);
+        }),
+      );
+      var requestCalls = 0;
+      final client = CraftAiClient(
+        baseUri: Uri.parse('https://localhost:5001'),
+        tokenStorage: storage,
+        httpClient: MockClient((request) async {
+          requestCalls++;
+          if (requestCalls == 1) return http.Response('', 401);
+          expect(request.headers['Authorization'], 'Bearer new-access');
+          return http.Response('{"models": []}', 200);
+        }),
+      );
+
+      await client.getJson('/builder/models');
+      expect(requestCalls, 2);
+      expect(refreshCalls, 1);
+      expect((await rawStorage.readTokens())!.refreshToken, 'new-refresh');
     });
 
     test('maps 500 to CraftAiServerException', () async {

@@ -24,7 +24,7 @@ void main() {
       storage: storage, baseUri: Uri.parse('https://api.example.test'),
       client: MockClient((request) {
         calls++;
-        expect(request.url.path, '/auth/refresh');
+        expect(request.url.path, '/mobile/auth/refresh');
         expect(jsonDecode(request.body)['refreshToken'], 'refresh');
         return response.future;
       }),
@@ -35,6 +35,7 @@ void main() {
     response.complete(http.Response(jsonEncode({
       'accessToken': 'renewed', 'refreshToken': 'rotated',
       'accessTokenExpiresAtUtc': DateTime.now().toUtc().add(const Duration(hours: 1)).toIso8601String(),
+      'refreshExpiresAtUtc': DateTime.now().toUtc().add(const Duration(days: 30)).toIso8601String(),
     }), 200));
     expect((await reads).map((t) => t!.accessToken), everyElement('renewed'));
     expect((await storage.readTokens())!.refreshToken, 'rotated');
@@ -51,13 +52,13 @@ void main() {
     expect(await storage.readOwnerId(), isNull);
   });
 
-  test('temporary server outage preserves the saved session', () async {
+  test('failed refresh clears the saved session', () async {
     final refreshing = RefreshingTokenStorage(
       storage: storage, baseUri: Uri.parse('https://api.example.test'),
       client: MockClient((_) async => http.Response('{}', 503)),
     );
-    expect((await refreshing.readTokens())!.accessToken, 'expired');
-    expect(await storage.readOwnerId(), 'teacher');
+    expect(await refreshing.readTokens(), isNull);
+    expect(await storage.readOwnerId(), isNull);
   });
 
   test('sign out during refresh cannot restore the old account', () async {
@@ -72,6 +73,7 @@ void main() {
     response.complete(http.Response(jsonEncode({
       'accessToken': 'renewed', 'refreshToken': 'rotated',
       'accessTokenExpiresAtUtc': DateTime.now().toUtc().add(const Duration(hours: 1)).toIso8601String(),
+      'refreshExpiresAtUtc': DateTime.now().toUtc().add(const Duration(days: 30)).toIso8601String(),
     }), 200));
     expect(await pending, isNull);
     expect(await storage.readTokens(), isNull);

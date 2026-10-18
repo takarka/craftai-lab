@@ -245,10 +245,11 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                         children: [
                           const BuilderIcon(BuilderGlyph.robot, size: 24, color: BuilderColors.inkSecondary),
                           const SizedBox(height: 8),
-                          Row(
+                          Wrap(
+                            spacing: 4,
+                            crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Text('Награды', style: BuilderType.title),
-                              const SizedBox(width: 4),
                               Text('Скоро', style: BuilderType.small.copyWith(color: BuilderColors.inkDisabled)),
                             ],
                           ),
@@ -431,7 +432,11 @@ class _LevelCard extends StatelessWidget {
                     Expanded(
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: _StatusBadge(status: status, step: progress.currentStep),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: _StatusBadge(status: status, step: progress.currentStep),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -454,11 +459,15 @@ class _LevelCard extends StatelessWidget {
                     children: [
                       const BuilderIcon(BuilderGlyph.bolt, size: 14, color: BuilderColors.primary),
                       const SizedBox(width: 4),
-                      Text(
-                        '${cs.t('Награда: ', 'Сыйлық: ')}${level.targetSkillName}',
-                        style: BuilderType.small.copyWith(
-                          color: BuilderColors.primary,
-                          fontWeight: FontWeight.w600,
+                      Expanded(
+                        child: Text(
+                          '${cs.t('Награда: ', 'Сыйлық: ')}${level.targetSkillName}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: BuilderType.small.copyWith(
+                            color: BuilderColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -565,9 +574,13 @@ class _StatusBadge extends StatelessWidget {
             children: [
               const BuilderIcon(BuilderGlyph.lock, size: 14, color: BuilderColors.inkSecondary),
               const SizedBox(width: 4),
-              Text(
-                cs.locked,
-                style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
+              Flexible(
+                child: Text(
+                  cs.locked,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: BuilderType.small.copyWith(color: BuilderColors.inkSecondary),
+                ),
               ),
             ],
           ),

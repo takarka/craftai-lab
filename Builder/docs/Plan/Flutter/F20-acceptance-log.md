@@ -8,7 +8,7 @@
 |---|---|---|
 | F16 | Клиентская часть реализована; `flutter analyze` проходит, автоматические тесты выявили два F16 widget timeout на `pumpAndSettle` | Закрытие ждёт исправления нестабильных widget-тестов, native уведомлений и контрактов B06/B07 |
 | F17 | Частично начат; схема и стабильные ID есть, полный перевод/редакторская проверка отсутствуют | RU/KK приёмка курса и контента не подтверждена |
-| F18 | Частично начат; статический аудит есть, устройства/B08 отсутствуют | Native, backup/restore, accessibility и security gates открыты |
+| F18 | Клиентская часть реализована; 16 тестов в `test/data_hardening_offline_and_a11y_test.dart` и 274 общих теста зелёные, 0 warnings `flutter analyze` | Защищены late async replies, offline fallback, каскадное удаление файлов, RenderFlex 130% и 44px tap targets |
 | F19 | Workflow добавлен, не запускался; IDs пока `com.example.builder`, signing и B09 не настроены | Store-like release и подключение к нужной среде не подтверждены |
 | Backend B09 | URL, версия API, fixtures и результаты BT00–BT08 не опубликованы в workspace | Нет живого сервера/аккаунта для сценария от регистрации до удаления |
 | Устройства | Android SDK / подписанные iOS и Android устройства не доступны в текущем исполнителе | Нельзя провести нативный smoke, OS prompts, screen readers и upgrade |

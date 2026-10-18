@@ -106,6 +106,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
                 token: widget.resetToken ?? '',
                 newPassword: password,
               ),
+              AuthFormKind.changePassword => gateway.changePassword(
+                newPassword: password,
+              ),
             },
           );
     } finally {
@@ -125,8 +128,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
     final gateway = ref.watch(authGatewayProvider);
     final registering = widget.kind == AuthFormKind.register;
     final recovering = widget.kind == AuthFormKind.recovery;
-    final resetting = widget.kind == AuthFormKind.resetPassword;
-    final hasValidToken = widget.resetToken != null && widget.resetToken!.trim().isNotEmpty;
+    final resetting = widget.kind == AuthFormKind.resetPassword || widget.kind == AuthFormKind.changePassword;
+    final changingPassword = widget.kind == AuthFormKind.changePassword;
+    final hasValidToken = changingPassword || (widget.resetToken != null && widget.resetToken!.trim().isNotEmpty);
     final documents = _documents();
     final revision = _revision(documents);
     final accepted = revision != null && _acceptedRevision == revision;

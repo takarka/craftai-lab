@@ -123,11 +123,15 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                 children: [
                   const BuilderIcon(BuilderGlyph.robot, size: 12, color: BuilderColors.primary),
                   const SizedBox(width: 4),
-                  Text(
-                    '$categoryLabel (S33) ›',
-                    style: BuilderType.small.copyWith(
-                      color: BuilderColors.primary,
-                      fontWeight: FontWeight.w600,
+                  Flexible(
+                    child: Text(
+                      '$categoryLabel (S33) ›',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: BuilderType.small.copyWith(
+                        color: BuilderColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -586,7 +590,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Text(
                               'Продолжить урок',
@@ -594,7 +601,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                 color: BuilderColors.primary,
                               ),
                             ),
-                            const SizedBox(width: 8),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(

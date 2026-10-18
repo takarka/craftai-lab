@@ -57,6 +57,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             : '/sign-in';
       }
       final account = value as AuthenticatedSession;
+      if (account.mustChangePassword && path != '/change-password') {
+        return '/change-password';
+      }
       final onboarding = ref.read(
         onboardingControllerProvider(account.ownerId),
       );
@@ -81,6 +84,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         '/register',
         '/recover-password',
         '/reset-password',
+        '/change-password',
         '/onboarding',
         '/',
       ].contains(path)) {
@@ -119,6 +123,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               state.uri.queryParameters['t'];
           return AuthPage(kind: AuthFormKind.resetPassword, resetToken: token);
         },
+      ),
+      GoRoute(
+        path: '/change-password',
+        builder: (context, state) => const AuthPage(kind: AuthFormKind.changePassword),
       ),
       GoRoute(
         path: '/legal/terms',

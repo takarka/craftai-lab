@@ -35,6 +35,8 @@ abstract interface class AuthGateway {
   });
   Future<void> requestPasswordReset({required String email});
   Future<void> resetPassword({required String token, required String newPassword});
+  Future<void> changePassword({required String newPassword});
+  Future<void> logout();
 }
 
 final class NotConnectedAuthGateway implements AuthGateway {
@@ -64,4 +66,10 @@ final class NotConnectedAuthGateway implements AuthGateway {
     required String token,
     required String newPassword,
   }) async => throw const AppFailure(AppFailureCode.serviceUnavailable);
+  @override
+  Future<void> changePassword({required String newPassword}) async =>
+      throw const AppFailure(AppFailureCode.serviceUnavailable);
+  @override
+  Future<void> logout() async =>
+      throw const AppFailure(AppFailureCode.serviceUnavailable);
 }

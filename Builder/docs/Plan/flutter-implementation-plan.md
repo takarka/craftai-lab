@@ -526,9 +526,9 @@ request reset → strong confirmation → freeze new work → cancel in-flight
 
 | ID | Экран / маршрут | Обязательные состояния и действия | Этап |
 |---|---|---|---|
-| S00 | Вход `/auth/login` | Loading, invalid credentials, offline; показ пароля, RU/KK, регистрация, восстановление | F04 |
-| S00 | Регистрация `/auth/register` | Политики, требования пароля, duplicate e-mail, сохранение полей без пароля в логах | F04 |
-| S00 | Восстановление `/auth/recovery` и reset deep link | Письмо, истёкшая/использованная ссылка, новый пароль | F04 |
+| S00 | Вход `/mobile/auth/login` | Loading, invalid credentials, offline; показ пароля, RU/KK, регистрация, восстановление | F04 |
+| S00 | Регистрация `/mobile/auth/register` | Политики, требования пароля, duplicate e-mail, сохранение полей без пароля в логах | F04 |
+| S00 | Восстановление `/mobile/auth/forgot-password` и reset deep link | Письмо, истёкшая/использованная ссылка, новый пароль | F04 |
 | S01 | Знакомство `/onboarding/welcome` | Базовый персонаж, три тезиса, следующий шаг | F05 |
 | S02 | Предмет `/onboarding/preferences` | Поиск/«Другое», классы 1–11, RU/KK/оба, сводка | F05 |
 | S03 | Имя `/onboarding/assistant` | Имя по предмету, редактирование, базовое состояние, переход D02 | F05 |

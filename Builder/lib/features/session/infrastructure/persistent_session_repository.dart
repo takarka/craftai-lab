@@ -88,6 +88,7 @@ final class PersistentSessionRepository implements SessionRepository {
   Future<void> saveSession({
     required String ownerId,
     required AuthTokens tokens,
+    bool mustChangePassword = false,
   }) async {
     if (ownerId.trim().isEmpty) {
       throw ArgumentError('Owner ID is required.');
@@ -105,6 +106,7 @@ final class PersistentSessionRepository implements SessionRepository {
     final session = AuthenticatedSession(
       ownerId: ownerId,
       onboardingComplete: onboardingComplete,
+      mustChangePassword: mustChangePassword,
     );
     _emit(session);
   }
@@ -179,6 +181,16 @@ final class PersistentSessionRepository implements SessionRepository {
       _emit(AuthenticatedSession(
         ownerId: ownerId,
         onboardingComplete: false,
+      ));
+    }
+  }
+
+  void markPasswordChanged() {
+    final current = _currentSnapshot;
+    if (current is AuthenticatedSession && current.mustChangePassword) {
+      _emit(AuthenticatedSession(
+        ownerId: current.ownerId,
+        onboardingComplete: current.onboardingComplete,
       ));
     }
   }

@@ -86,6 +86,15 @@ class TestAuthGateway implements AuthGateway {
     password = newPassword;
     return _complete();
   }
+
+  @override
+  Future<void> changePassword({required String newPassword}) {
+    password = newPassword;
+    return _complete();
+  }
+
+  @override
+  Future<void> logout() => _complete();
 }
 
 class ReadySessionRepository implements SessionRepository {
