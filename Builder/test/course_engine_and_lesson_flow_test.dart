@@ -509,7 +509,7 @@ void main() {
     );
 
     testWidgets(
-      'S25 Quiz displays question progress, navigation chips and auto-scrolls on answer and submission',
+      'S25 Quiz displays questions, updates button progress counter and auto-scrolls on answer and submission',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 2.0;
@@ -534,17 +534,11 @@ void main() {
         );
         await tester.pump();
 
-        // Question navigation chips
-        expect(find.byKey(const Key('quiz.chip.0')), findsOneWidget);
-        expect(find.byKey(const Key('quiz.chip.1')), findsOneWidget);
-        expect(find.byKey(const Key('quiz.chip.2')), findsOneWidget);
+        // Questions are immediately visible without an obstructive progress block
+        expect(find.textContaining('Вопрос 1 из 3'), findsOneWidget);
 
         // Submit button shows unanswered count initially
         expect(find.text('Проверить ответы (0 из 3)'), findsOneWidget);
-
-        // Tap chip 1 to jump to question 2, verifying chip tap works
-        await tester.tap(find.byKey(const Key('quiz.chip.1')));
-        await tester.pump(const Duration(milliseconds: 300));
 
         // Scroll back to and answer question 0
         await tester.scrollUntilVisible(
