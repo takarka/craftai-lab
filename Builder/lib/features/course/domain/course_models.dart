@@ -154,7 +154,9 @@ class LevelProgress {
   final bool practiceEvidenceMet;
 
   LevelStatus get status {
-    if (levelId > 5) return LevelStatus.comingSoon;
+    if (!CourseTopic.isEnabledStorageId(levelId)) {
+      return LevelStatus.comingSoon;
+    }
     if (isCompleted) return LevelStatus.completed;
     if (currentStep > 1) return LevelStatus.inProgress;
     return LevelStatus.available;
@@ -186,7 +188,7 @@ class LevelProgress {
 class OverallCourseProgress {
   const OverallCourseProgress({
     required this.completedLevelsCount,
-    this.totalActiveLevels = 5,
+    this.totalActiveLevels = 6,
     this.activeLevelId,
     this.activeStep = LessonStep.idea,
     this.completedLevelIds = const {},

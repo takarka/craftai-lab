@@ -17,6 +17,7 @@ import '../../features/memory/presentation/memory_page.dart';
 import '../../features/models/presentation/model_selection_page.dart';
 import '../../features/tools/presentation/tools_page.dart';
 import '../../features/mcp/presentation/mcp_page.dart';
+import '../../features/skills/presentation/skills_page.dart';
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/presentation/auth_page.dart';
 import '../../features/onboarding/application/onboarding_controller.dart';
@@ -189,6 +190,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                       skill: AssistantSkillId.instructions,
                       builder: (_) => InstructionsPage(ownerId: ownerId),
                     ),
+                  ),
+                  GoRoute(
+                    path: 'skills',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) => SkillsPage(ownerId: ownerId!),
                   ),
                   GoRoute(
                     path: 'knowledge',

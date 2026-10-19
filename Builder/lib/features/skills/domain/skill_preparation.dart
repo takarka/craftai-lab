@@ -25,6 +25,7 @@ class SkillPreparation {
     // This is a user request for the existing CraftAI generation path, never a
     // system message or tool grant. JSON keeps inputs separate from the workflow.
     final prompt = jsonEncode({
+      'builder_skill_request': 1,
       'task':
           'Execute the declarative skill using the supplied inputs. '
           'Respect the assistant system instructions and existing permissions. '

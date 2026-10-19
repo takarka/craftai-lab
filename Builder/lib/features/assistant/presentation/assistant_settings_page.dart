@@ -139,6 +139,18 @@ class AssistantSettingsPage extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // 6. Skills domain states (F09-01) - 8 skills (6-9 Скоро)
+              BuilderLinkRow(
+                key: const Key('assistantSettings.skillsLink'),
+                title: Localizations.localeOf(context).languageCode == 'kk'
+                    ? 'Дағдылар'
+                    : 'Навыки',
+                subtitle: Localizations.localeOf(context).languageCode == 'kk'
+                    ? 'Қайталанатын тапсырмалар және қолмен іске қосу'
+                    : 'Повторяемые задачи и ручной запуск',
+                icon: BuilderGlyph.code,
+                onTap: () => context.push('/assistant/skills'),
+              ),
+              const SizedBox(height: 16),
               Text(s.assistantSkillsHeader, style: BuilderType.h3),
               const SizedBox(height: 12),
               for (final skill in AssistantSkillId.values)

@@ -1,5 +1,6 @@
 import '../domain/course_catalog.dart';
 import '../domain/course_models.dart';
+import '../domain/course_topic.dart';
 import '../domain/course_repository.dart';
 
 final class InMemoryCourseRepository implements CourseRepository {
@@ -34,7 +35,9 @@ final class InMemoryCourseRepository implements CourseRepository {
 
   @override
   Future<LevelStatus> getLevelStatus(String ownerId, int levelId) async {
-    if (levelId > 5) return LevelStatus.comingSoon;
+    if (!CourseTopic.isEnabledStorageId(levelId)) {
+      return LevelStatus.comingSoon;
+    }
 
     final all = await getAllProgress(ownerId);
     final current = all.firstWhere(
@@ -50,12 +53,15 @@ final class InMemoryCourseRepository implements CourseRepository {
           : LevelStatus.available;
     }
 
-    final prev = all.firstWhere(
-      (p) => p.levelId == levelId - 1,
-      orElse: () => all.first,
-    );
-    if (!prev.isCompleted) {
-      return LevelStatus.locked;
+    final prerequisite = CourseTopic.fromStorageId(levelId).prerequisite;
+    if (prerequisite != null) {
+      final prev = all.firstWhere(
+        (p) => p.levelId == prerequisite.storageId,
+        orElse: () => all.first,
+      );
+      if (!prev.isCompleted) {
+        return LevelStatus.locked;
+      }
     }
 
     return current.currentStep > 1
@@ -67,14 +73,15 @@ final class InMemoryCourseRepository implements CourseRepository {
   Future<OverallCourseProgress> getOverallProgress(String ownerId) async {
     final all = await getAllProgress(ownerId);
     final completed = all
-        .where((p) => p.levelId <= 5 && p.isCompleted)
+        .where((p) => CourseTopic.isEnabledStorageId(p.levelId) && p.isCompleted)
         .map((p) => p.levelId)
         .toSet();
 
     int? activeLevelId;
     var activeStep = LessonStep.idea;
 
-    for (int lvl = 1; lvl <= 5; lvl++) {
+    for (final topic in CourseTopic.enabledSequence) {
+      final lvl = topic.storageId;
       if (!completed.contains(lvl)) {
         activeLevelId = lvl;
         final p = all.firstWhere((item) => item.levelId == lvl);
@@ -84,7 +91,7 @@ final class InMemoryCourseRepository implements CourseRepository {
     }
 
     return OverallCourseProgress(
-      totalActiveLevels: 5,
+      totalActiveLevels: CourseTopic.enabledSequence.length,
       completedLevelsCount: completed.length,
       activeLevelId: activeLevelId,
       activeStep: activeStep,

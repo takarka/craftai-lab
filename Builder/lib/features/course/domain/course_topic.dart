@@ -20,6 +20,38 @@ enum CourseTopic {
 
   String get contentId => 'course.topic.$name';
 
+  /// Topics with a working lesson, in the order a learner passes them.
+  /// Each one unlocks after the previous one in this list.
+  static const List<CourseTopic> enabledSequence = [
+    introduction,
+    instructions,
+    skills,
+    knowledge,
+    memory,
+    tools,
+  ];
+
+  bool get isEnabled => enabledSequence.contains(this);
+
+  CourseTopic? get prerequisite {
+    final index = enabledSequence.indexOf(this);
+    return index > 0 ? enabledSequence[index - 1] : null;
+  }
+
+  CourseTopic? get next {
+    final index = enabledSequence.indexOf(this);
+    return index >= 0 && index < enabledSequence.length - 1
+        ? enabledSequence[index + 1]
+        : null;
+  }
+
+  static bool isEnabledStorageId(int id) {
+    for (final topic in enabledSequence) {
+      if (topic.storageId == id) return true;
+    }
+    return false;
+  }
+
   static CourseTopic fromStorageId(int id) => values.firstWhere(
     (topic) => topic.storageId == id,
     orElse: () => throw ArgumentError.value(id, 'id', 'Unknown course topic'),

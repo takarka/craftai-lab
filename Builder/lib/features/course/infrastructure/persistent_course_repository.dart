@@ -6,6 +6,7 @@ import '../../../core/storage/schema/storage_schema_v1.dart';
 import '../../assistant/domain/assistant_repository.dart';
 import '../domain/course_catalog.dart';
 import '../domain/course_models.dart';
+import '../domain/course_topic.dart';
 import '../domain/course_repository.dart';
 
 class PersistentCourseRepository implements CourseRepository {
@@ -136,7 +137,9 @@ class PersistentCourseRepository implements CourseRepository {
 
   @override
   Future<LevelStatus> getLevelStatus(String ownerId, int levelId) async {
-    if (levelId > 5) return LevelStatus.comingSoon;
+    if (!CourseTopic.isEnabledStorageId(levelId)) {
+      return LevelStatus.comingSoon;
+    }
 
     final all = await getAllProgress(ownerId);
     final current = all.firstWhere(
@@ -153,13 +156,16 @@ class PersistentCourseRepository implements CourseRepository {
           : LevelStatus.available;
     }
 
-    // Level N requires level N-1 to be completed
-    final prev = all.firstWhere(
-      (p) => p.levelId == levelId - 1,
-      orElse: () => all.first,
-    );
-    if (!prev.isCompleted) {
-      return LevelStatus.locked;
+    // A topic requires the previous enabled topic to be completed
+    final prerequisite = CourseTopic.fromStorageId(levelId).prerequisite;
+    if (prerequisite != null) {
+      final prev = all.firstWhere(
+        (p) => p.levelId == prerequisite.storageId,
+        orElse: () => all.first,
+      );
+      if (!prev.isCompleted) {
+        return LevelStatus.locked;
+      }
     }
 
     return current.currentStep > 1
@@ -171,7 +177,7 @@ class PersistentCourseRepository implements CourseRepository {
   Future<OverallCourseProgress> getOverallProgress(String ownerId) async {
     final all = await getAllProgress(ownerId);
     final completed = all
-        .where((p) => p.levelId <= 5 && p.isCompleted)
+        .where((p) => CourseTopic.isEnabledStorageId(p.levelId) && p.isCompleted)
         .map((p) => p.levelId)
         .toSet();
 
@@ -179,7 +185,8 @@ class PersistentCourseRepository implements CourseRepository {
     int? activeLevelId;
     var activeStep = LessonStep.idea;
 
-    for (int i = 1; i <= 5; i++) {
+    for (final topic in CourseTopic.enabledSequence) {
+      final i = topic.storageId;
       final p = all.firstWhere((item) => item.levelId == i);
       if (!p.isCompleted) {
         activeLevelId = i;
@@ -190,7 +197,7 @@ class PersistentCourseRepository implements CourseRepository {
 
     return OverallCourseProgress(
       completedLevelsCount: completed.length,
-      totalActiveLevels: 5,
+      totalActiveLevels: CourseTopic.enabledSequence.length,
       activeLevelId: activeLevelId,
       activeStep: activeStep,
       completedLevelIds: completed,
