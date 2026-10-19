@@ -52,9 +52,9 @@ void main() {
   });
 
   group('F10: Course Catalog & Schemas (F10-01, F10-V01)', () {
-    test('Catalog contains 9 levels with 5 active and 4 coming soon', () {
+    test('Catalog contains 11 levels with 5 active and 6 coming soon', () {
       final levels = CourseCatalog.allLevels;
-      expect(levels.length, 9);
+      expect(levels.length, 11);
 
       for (int i = 1; i <= 5; i++) {
         final level = CourseCatalog.getLevel(i);
@@ -389,7 +389,7 @@ void main() {
     }
 
     testWidgets(
-      'S20 CoursePage displays 9 levels and locked level shows theory preview (F10-02, F10-13)',
+      'S20 CoursePage displays 11 levels and locked level shows theory preview (F10-02, F10-13)',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 2.0;
@@ -581,40 +581,39 @@ void main() {
       },
     );
 
-    testWidgets(
-      'S26 Summary displays test in chat card and button',
-      (tester) async {
-        tester.view.physicalSize = const Size(1080, 2400);
-        tester.view.devicePixelRatio = 2.0;
-        addTearDown(() => tester.view.resetPhysicalSize());
+    testWidgets('S26 Summary displays test in chat card and button', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
 
-        // Pre-set progress to step 5 (Summary)
-        await tester.runAsync(() async {
-          await courseRepo.saveCheckpoint(
-            ownerId: testOwner,
-            levelId: 1,
-            step: 5,
-            practiceEvidenceMet: true,
-          );
-        });
-
-        await tester.pumpWidget(
-          createTestApp(const LessonPlayerPage(ownerId: testOwner, levelId: 1)),
+      // Pre-set progress to step 5 (Summary)
+      await tester.runAsync(() async {
+        await courseRepo.saveCheckpoint(
+          ownerId: testOwner,
+          levelId: 1,
+          step: 5,
+          practiceEvidenceMet: true,
         );
-        await tester.pump();
-        await tester.runAsync(
-          () => Future.delayed(const Duration(milliseconds: 300)),
-        );
-        await tester.pump();
+      });
 
-        // Verify combined changes & Test in Chat card and finish button
-        expect(find.byKey(const Key('lesson.testInChatCard')), findsOneWidget);
-        expect(find.byKey(const Key('lesson.testInChatBtn')), findsOneWidget);
-        expect(find.byKey(const Key('lesson.summaryChatBtn')), findsNothing);
-        expect(find.byKey(const Key('lesson.summaryFinishBtn')), findsOneWidget);
-        expect(find.text('Протестировать в чате'), findsOneWidget);
-      },
-    );
+      await tester.pumpWidget(
+        createTestApp(const LessonPlayerPage(ownerId: testOwner, levelId: 1)),
+      );
+      await tester.pump();
+      await tester.runAsync(
+        () => Future.delayed(const Duration(milliseconds: 300)),
+      );
+      await tester.pump();
+
+      // Verify combined changes & Test in Chat card and finish button
+      expect(find.byKey(const Key('lesson.testInChatCard')), findsOneWidget);
+      expect(find.byKey(const Key('lesson.testInChatBtn')), findsOneWidget);
+      expect(find.byKey(const Key('lesson.summaryChatBtn')), findsNothing);
+      expect(find.byKey(const Key('lesson.summaryFinishBtn')), findsOneWidget);
+      expect(find.text('Протестировать в чате'), findsOneWidget);
+    });
 
     testWidgets('S27 GlossaryPage displays search and items', (tester) async {
       await tester.pumpWidget(createTestApp(const GlossaryPage()));

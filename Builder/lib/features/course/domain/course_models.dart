@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../assistant/domain/assistant_config.dart';
+import 'course_topic.dart';
 
 enum LessonStep {
   idea(1, 'Идея'),
@@ -97,8 +98,10 @@ class CourseLevel {
 
   final int id;
 
-  /// Stable editorial identity. Numeric [id] remains the progress/checkpoint key.
-  String get contentId => 'course.level.${id.toString().padLeft(2, '0')}';
+  /// Compatibility key for persisted progress and existing deep links.
+  CourseTopic get topic => CourseTopic.fromStorageId(id);
+  String get contentId => topic.contentId;
+  int get displayOrder => topic.displayOrder;
   final String title;
   final String subtitle;
   final int estimatedMinutes;

@@ -65,7 +65,7 @@ class PersistentCourseRepository implements CourseRepository {
       }
     }
 
-    // Ensure all 9 levels have a representative representation
+    // Keep stored keys unchanged; the catalog supplies the current display order.
     return CourseCatalog.levels.map((lvl) {
       if (map.containsKey(lvl.id)) {
         return map[lvl.id]!;
@@ -345,6 +345,9 @@ class PersistentCourseRepository implements CourseRepository {
     final level = CourseCatalog.getLevel(levelId);
     if (level == null) {
       throw ArgumentError('Уровень $levelId не найден в каталоге курса');
+    }
+    if (level.comingSoon) {
+      throw StateError('Уровень ещё недоступен');
     }
 
     // 1. Check if level is already completed (F10-11: Idempotency, no repeated grants or version spam)

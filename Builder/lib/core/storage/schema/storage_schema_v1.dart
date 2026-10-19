@@ -23,8 +23,19 @@ abstract final class StorageSchemaV1 {
   static const String tablePolicyAcknowledgments = 'policy_acknowledgments';
 
   static const String tableAccountSnapshots = 'account_snapshots';
+  static const String tableSkillScenarios = 'skill_scenarios';
 
   static const List<String> createStatements = [
+    // Additive, idempotent upgrade for existing v1 workspaces on open.
+    '''
+    CREATE TABLE IF NOT EXISTS $tableSkillScenarios (
+      owner_id TEXT NOT NULL,
+      id TEXT NOT NULL,
+      scenario_json TEXT NOT NULL,
+      PRIMARY KEY (owner_id, id),
+      FOREIGN KEY (owner_id) REFERENCES $tableWorkspaces(owner_id) ON DELETE CASCADE
+    );
+    ''',
     // Additive table; onOpen also upgrades existing v1 installations.
     '''
     CREATE TABLE IF NOT EXISTS $tableAccountSnapshots (

@@ -244,7 +244,7 @@ class AssistantSettingsPage extends ConsumerWidget {
       subtitle: skill.subtitle,
       icon: skill.glyph,
       status: status,
-      level: skill.level,
+      level: skill.displayLevel,
       onChanged:
           (status == SkillStatus.enabled || status == SkillStatus.disabled)
           ? (val) {

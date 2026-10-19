@@ -2,7 +2,58 @@ import '../../assistant/domain/assistant_config.dart';
 import 'course_models.dart';
 
 abstract final class CourseCatalog {
-  static const String currentContentVersion = '1.0.0';
+  static const String currentContentVersion = '1.1.0';
+
+  static final List<CourseLevel> levelsRu = _buildCurriculum(
+    _legacyLevelsRu,
+    false,
+  );
+  static final List<CourseLevel> levelsKk = _buildCurriculum(
+    _legacyLevelsKk,
+    true,
+  );
+
+  static List<CourseLevel> _buildCurriculum(List<CourseLevel> legacy, bool kk) {
+    final levels = [
+      ...legacy,
+      _plannedLevel(10, kk ? 'Дағдылар (Skills)' : 'Навыки (Skills)', kk),
+      _plannedLevel(11, kk ? 'Автоматтандыру' : 'Автоматизация', kk),
+    ]..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+    return List.unmodifiable(levels);
+  }
+
+  // These entries reserve the agreed curriculum positions. They do not claim
+  // implementation or award progress before EF-01 / EF-07 are accepted.
+  static CourseLevel _plannedLevel(int id, String title, bool kk) =>
+      CourseLevel(
+        id: id,
+        title: title,
+        subtitle: kk
+            ? 'Келесі жаңартуда қолжетімді болады'
+            : 'Будет доступно в следующем обновлении',
+        estimatedMinutes: 0,
+        comingSoon: true,
+        ideaTitle: title,
+        ideaText: kk ? 'Деңгей әзірленуде.' : 'Уровень готовится.',
+        ideaExampleTemplate: '',
+        practiceTask: '',
+        practiceDefaultInput: '',
+        practiceExpectedAnswer: '',
+        underTheHoodConcept: '',
+        underTheHoodExplanation: '',
+        underTheHoodLayers: const [],
+        quizQuestions: const [],
+      );
+
+  static CourseLevel? getLevelByContentId(
+    String contentId, {
+    String locale = 'ru',
+  }) {
+    for (final level in getLevels(locale: locale)) {
+      if (level.contentId == contentId) return level;
+    }
+    return null;
+  }
 
   static List<CourseLevel> get allLevels => levelsRu;
   static List<CourseLevel> get levels => levelsRu;
@@ -32,7 +83,7 @@ abstract final class CourseCatalog {
   // ===========================================================================
   // РУССКИЙ КОНТЕНТ (RU)
   // ===========================================================================
-  static const List<CourseLevel> levelsRu = [
+  static const List<CourseLevel> _legacyLevelsRu = [
     // ----------------------------------------------------
     // УРОВЕНЬ 1. Пустой ассистент
     // ----------------------------------------------------
@@ -533,7 +584,7 @@ abstract final class CourseCatalog {
   // ===========================================================================
   // ҚАЗАҚША КОНТЕНТ (KK)
   // ===========================================================================
-  static const List<CourseLevel> levelsKk = [
+  static const List<CourseLevel> _legacyLevelsKk = [
     // ----------------------------------------------------
     // 1-ДЕҢГЕЙ. Бос ассистент
     // ----------------------------------------------------

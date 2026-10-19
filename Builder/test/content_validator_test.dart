@@ -28,18 +28,18 @@ void main() {
     });
 
     test(
-      'CourseCatalog levels bilingual parity: identical IDs and counts (5 active, 4 comingSoon)',
+      'CourseCatalog levels bilingual parity: identical IDs and counts (5 active, 6 comingSoon)',
       () {
         final ruLevels = CourseCatalog.levelsRu;
         final kkLevels = CourseCatalog.levelsKk;
 
-        expect(ruLevels.length, 9);
-        expect(kkLevels.length, 9);
+        expect(ruLevels.length, 11);
+        expect(kkLevels.length, 11);
 
         final ruIds = ruLevels.map((l) => l.id).toList();
         final kkIds = kkLevels.map((l) => l.id).toList();
-        expect(ruIds, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
-        expect(kkIds, [1, 2, 3, 4, 5, 6, 7, 8, 9]);
+        expect(ruIds, [1, 2, 10, 3, 4, 5, 11, 6, 7, 8, 9]);
+        expect(kkIds, [1, 2, 10, 3, 4, 5, 11, 6, 7, 8, 9]);
         expect(ruIds, equals(kkIds));
 
         final activeRu = ruLevels
@@ -65,7 +65,7 @@ void main() {
 
         locales.forEach((localeCode, levels) {
           for (final level in levels) {
-            expect(level.id, inInclusiveRange(1, 9));
+            expect(level.id, inInclusiveRange(1, 11));
             expect(
               level.title.trim(),
               isNotEmpty,
@@ -76,9 +76,8 @@ void main() {
               isNotEmpty,
               reason: '$localeCode level ${level.id} subtitle',
             );
-            expect(level.estimatedMinutes, greaterThan(0));
-
             if (!level.comingSoon) {
+              expect(level.estimatedMinutes, greaterThan(0));
               // Idea step
               expect(
                 level.ideaTitle.trim(),
@@ -178,8 +177,8 @@ void main() {
         expect(level1Ru?.title, 'Пустой ассистент');
 
         // Backward compatibility getters
-        expect(CourseCatalog.allLevels.length, 9);
-        expect(CourseCatalog.levels.length, 9);
+        expect(CourseCatalog.allLevels.length, 11);
+        expect(CourseCatalog.levels.length, 11);
         expect(CourseCatalog.allLevels.first.title, 'Пустой ассистент');
       },
     );
@@ -398,7 +397,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Check Kazakh section header, level titles and badges
-      expect(find.text('Оқу жолы'), findsOneWidget);
+      expect(find.text('Курс'), findsOneWidget);
       expect(find.text('Бос ассистент'), findsOneWidget);
       expect(find.text('Нұсқаулықтар'), findsOneWidget);
       expect(find.text('1-деңгей'), findsOneWidget);
@@ -419,7 +418,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Check Russian section header, level titles and badges
-      expect(find.text('Учебный путь'), findsOneWidget);
+      expect(find.text('Курс'), findsOneWidget);
       expect(find.text('Пустой ассистент'), findsOneWidget);
       expect(find.text('Инструкции'), findsOneWidget);
       expect(find.text('Уровень 1'), findsOneWidget);

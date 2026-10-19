@@ -229,11 +229,15 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
     final level =
         CourseCatalog.getLevel(widget.levelId, locale: locale) ??
         CourseCatalog.getLevel(widget.levelId);
-    if (level == null) {
+    if (level == null || level.comingSoon) {
       return Scaffold(
         appBar: AppBar(),
         body: Center(
-          child: Text(cs.t('Уровень не найден', 'Деңгей табылмады')),
+          child: Text(
+            level == null
+                ? cs.t('Уровень не найден', 'Деңгей табылмады')
+                : cs.t('Этот уровень готовится', 'Бұл деңгей әзірленуде'),
+          ),
         ),
       );
     }
@@ -265,7 +269,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           onPressed: () => _handleClose(context),
         ),
         title: Text(
-          '${cs.levelPrefix(level.id)} · ${level.title}',
+          '${cs.levelPrefix(level.displayOrder)} · ${level.title}',
           style: BuilderType.title,
         ),
         bottom: PreferredSize(
@@ -766,10 +770,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      cs.caseStudyTitle,
-                      style: BuilderType.title,
-                    ),
+                    child: Text(cs.caseStudyTitle, style: BuilderType.title),
                   ),
                   const SizedBox(width: 8),
                   if (_practiceEvidenceMet)
@@ -1092,7 +1093,6 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
         ),
         const SizedBox(height: 16),
 
-
         ...List.generate(totalQuestions, (qIndex) {
           final q = level.quizQuestions[qIndex];
           final selectedOption = _selectedQuizAnswers[qIndex];
@@ -1328,7 +1328,10 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
             children: [
               const BuilderCharacter(size: 80, compact: false),
               const SizedBox(height: 16),
-              Text(cs.levelCompletedTitle(level.id), style: BuilderType.h2),
+              Text(
+                cs.levelCompletedTitle(level.displayOrder),
+                style: BuilderType.h2,
+              ),
               const SizedBox(height: 8),
               Text(
                 cs.levelCompletedSubtitle,
@@ -1419,10 +1422,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          cs.testInChatTitle,
-                          style: BuilderType.title,
-                        ),
+                        Text(cs.testInChatTitle, style: BuilderType.title),
                         const SizedBox(height: 2),
                         Text(
                           cs.testInChatSubtitle,
@@ -1457,7 +1457,6 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   // Bottom Navigation Bar
   // --------------------------------------------------------------------------
   Widget _buildBottomBar(CourseLevel level, CourseStrings cs) {
-
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

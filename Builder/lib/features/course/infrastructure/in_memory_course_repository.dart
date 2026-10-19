@@ -200,6 +200,9 @@ final class InMemoryCourseRepository implements CourseRepository {
     required String ownerId,
     required int levelId,
   }) async {
+    final level = CourseCatalog.getLevel(levelId);
+    if (level == null) throw ArgumentError.value(levelId, 'levelId');
+    if (level.comingSoon) throw StateError('Уровень ещё недоступен');
     final userMap = _progress.putIfAbsent(ownerId, () => {});
     final current =
         userMap[levelId] ??
