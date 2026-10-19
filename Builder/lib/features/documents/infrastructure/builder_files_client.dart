@@ -87,4 +87,23 @@ class BuilderFilesClient {
       '$_root/document-jobs/${Uri.encodeComponent(id)}',
     );
   }
+
+  Future<DocumentArtifact> artifact(String id) async => DocumentArtifact.fromJson(
+    await api.getJson('$_root/artifacts/${Uri.encodeComponent(id)}'),
+  );
+
+  /// Streams the artifact bytes; [rangeStart] resumes a partial download.
+  Future<DownloadHead> downloadArtifact(
+    String id, {
+    required Future<void> Function(List<int> chunk) onChunk,
+    Future<void> Function(DownloadHead head)? onResponse,
+    int rangeStart = 0,
+    Future<void>? abortTrigger,
+  }) => api.download(
+    '$_root/artifacts/${Uri.encodeComponent(id)}/content',
+    onChunk: onChunk,
+    onResponse: onResponse,
+    rangeStart: rangeStart,
+    abortTrigger: abortTrigger,
+  );
 }

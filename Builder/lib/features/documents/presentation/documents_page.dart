@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../application/artifact_transfer_controller.dart';
 import '../application/document_controller.dart';
 import '../application/document_work_service.dart';
 import '../domain/document_models.dart';
@@ -122,6 +123,97 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
     }
   }
 
+  Future<void> _act(DocumentArtifact artifact, ArtifactAction action) async {
+    final result = await ref
+        .read(artifactTransferProvider(widget.ownerId).notifier)
+        .perform(artifact, action);
+    if (!mounted) return;
+    switch (result) {
+      case ArtifactResult.saved:
+        _message(_text('Файл сохранён.', 'Файл сақталды.'));
+      case ArtifactResult.noAppToOpen:
+        _message(_text(
+          'На устройстве нет приложения для этого формата. Сохраните файл или отправьте его через «Поделиться».',
+          'Құрылғыда бұл пішімге арналған қолданба жоқ. Файлды сақтаңыз немесе «Бөлісу» арқылы жіберіңіз.',
+        ));
+      case ArtifactResult.failed:
+        _message(_text('Не удалось выполнить действие с файлом.', 'Файлмен әрекетті орындау мүмкін болмады.'));
+      case ArtifactResult.downloadFailed:
+      case ArtifactResult.done:
+      case ArtifactResult.cancelledByUser:
+        break;
+    }
+  }
+
+  Widget _artifactTile(DocumentArtifact artifact) {
+    final transfer = ref.watch(artifactTransferProvider(widget.ownerId))[artifact.id];
+    final downloading = transfer?.phase == TransferPhase.downloading;
+    final id = artifact.id;
+    return Column(
+      key: ValueKey(id),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListTile(
+          dense: true,
+          contentPadding: EdgeInsets.zero,
+          leading: Icon(
+            artifact.format == DocumentFormat.pdf ? Icons.picture_as_pdf : Icons.description,
+          ),
+          title: Text(artifact.fileName),
+          subtitle: Text(
+            '${artifact.format.wire.toUpperCase()} · ${_size(artifact.sizeBytes)} · '
+            '${_text('на сервере до', 'серверде мына уақытқа дейін')} '
+            '${DateTime.parse(artifact.expiresAtUtc).toLocal().toString().substring(0, 16)}',
+          ),
+        ),
+        if (downloading) ...[
+          LinearProgressIndicator(value: transfer!.fraction),
+          Text(
+            '${_text('Скачивание', 'Жүктеу')}: ${_size(transfer.received)} / ${_size(transfer.total)}',
+          ),
+        ],
+        if (transfer?.phase == TransferPhase.failed && transfer?.problem != null)
+          Text(
+            transfer!.problem!.text(kk: _kk),
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        Wrap(
+          spacing: 8,
+          children: [
+            if (downloading)
+              OutlinedButton(
+                key: Key('artifact.cancel.$id'),
+                onPressed: () => ref
+                    .read(artifactTransferProvider(widget.ownerId).notifier)
+                    .cancel(id),
+                child: Text(_text('Отменить скачивание', 'Жүктеуді болдырмау')),
+              )
+            else ...[
+              TextButton.icon(
+                key: Key('artifact.open.$id'),
+                onPressed: () => _act(artifact, ArtifactAction.open),
+                icon: const Icon(Icons.open_in_new),
+                label: Text(_text('Открыть', 'Ашу')),
+              ),
+              TextButton.icon(
+                key: Key('artifact.save.$id'),
+                onPressed: () => _act(artifact, ArtifactAction.save),
+                icon: const Icon(Icons.save_alt),
+                label: Text(_text('Сохранить', 'Сақтау')),
+              ),
+              TextButton.icon(
+                key: Key('artifact.share.$id'),
+                onPressed: () => _act(artifact, ArtifactAction.share),
+                icon: const Icon(Icons.share),
+                label: Text(_text('Поделиться', 'Бөлісу')),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _card(DocumentWork work) {
     final problem = DocumentProblem.fromCode(work.problemCode);
     final failed = work.stage == DocumentStage.failed || work.stage == DocumentStage.expired;
@@ -150,23 +242,7 @@ class _DocumentsPageState extends ConsumerState<DocumentsPage> {
                   _text('Выберите другой файл.', 'Басқа файлды таңдаңыз.'),
                 ),
               ),
-            for (final artifact in work.artifacts)
-              ListTile(
-                key: ValueKey(artifact.id),
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  artifact.format == DocumentFormat.pdf
-                      ? Icons.picture_as_pdf
-                      : Icons.description,
-                ),
-                title: Text(artifact.fileName),
-                subtitle: Text(
-                  '${artifact.format.wire.toUpperCase()} · ${_size(artifact.sizeBytes)} · '
-                  '${_text('на сервере до', 'серверде мына уақытқа дейін')} '
-                  '${DateTime.parse(artifact.expiresAtUtc).toLocal().toString().substring(0, 16)}',
-                ),
-              ),
+            for (final artifact in work.artifacts) _artifactTile(artifact),
             Wrap(
               spacing: 8,
               children: [

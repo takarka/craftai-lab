@@ -11,6 +11,7 @@ import '../../../core/storage/storage_providers.dart';
 import '../../models/model_providers.dart';
 import '../domain/document_models.dart';
 import '../domain/document_work.dart';
+import '../infrastructure/artifact_file_store.dart';
 import '../infrastructure/builder_files_client.dart';
 import '../infrastructure/document_work_repository.dart';
 import 'document_work_service.dart';
@@ -33,6 +34,14 @@ final documentStagingStoreProvider = Provider<DocumentStagingStore>((ref) {
     return Directory(p.join(support.path, 'document_uploads'));
   });
 });
+
+/// Verified downloads of finished documents (private app storage).
+final artifactFileStoreProvider = Provider<ArtifactFileStore>(
+  (ref) => ArtifactFileStore(() async {
+    final support = await getApplicationSupportDirectory();
+    return Directory(p.join(support.path, 'artifact_downloads'));
+  }),
+);
 
 final documentWorkServiceProvider = Provider<DocumentWorkService>(
   (ref) => DocumentWorkService(
@@ -122,6 +131,13 @@ class DocumentController extends Notifier<DocumentsState> {
   /// Shows stored tasks and resumes the ones that were still running.
   Future<void> load() async {
     await _refresh();
+    // Copies of deleted or expired documents and interrupted downloads go now.
+    try {
+      await ref.read(artifactFileStoreProvider).sweep(ownerId, {
+        for (final work in state.items)
+          for (final artifact in work.artifacts) artifact.id,
+      });
+    } catch (_) {}
     _poll();
   }
 
@@ -159,7 +175,17 @@ class DocumentController extends Notifier<DocumentsState> {
   }
 
   Future<void> remove(String id) async {
+    final artifacts = state.items
+        .where((w) => w.id == id)
+        .expand((w) => w.artifacts)
+        .toList();
+    final store = ref.read(artifactFileStoreProvider);
     await _service.remove(ownerId, id);
+    for (final artifact in artifacts) {
+      try {
+        await store.delete(ownerId, artifact.id);
+      } catch (_) {}
+    }
     await _refresh();
   }
 
@@ -203,10 +229,16 @@ class DocumentController extends Notifier<DocumentsState> {
 /// failures are ignored) and removes every staged file and local task.
 Future<void> clearDocumentWork(WidgetRef ref, String ownerId) async {
   final service = ref.read(documentWorkServiceProvider);
-  try {
-    await service.clearOwner(ownerId).timeout(const Duration(seconds: 8));
-  } catch (_) {
-    // Whatever stayed on the server expires by its own TTL.
+  final files = ref.read(artifactFileStoreProvider);
+  for (final step in <Future<void> Function()>[
+    () => service.clearOwner(ownerId),
+    () => files.deleteOwner(ownerId),
+  ]) {
+    try {
+      await step().timeout(const Duration(seconds: 8));
+    } catch (_) {
+      // Whatever stayed on the server expires by its own TTL.
+    }
   }
   ref.invalidate(documentControllerProvider(ownerId));
 }

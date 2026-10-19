@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:builder/features/documents/infrastructure/builder_files_client.dart';
+import 'package:crypto/crypto.dart';
 import 'package:builder/features/models/infrastructure/craft_ai_client.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -11,6 +12,7 @@ Map<String, dynamic> fixture(String name) => Map<String, dynamic>.from(
       as Map,
 );
 
+const artifactIdFor = '00000000-0000-4000-8000-000000000021';
 const attachmentIdFor = '00000000-0000-4000-8000-000000000011';
 const jobIdFor = '00000000-0000-4000-8000-000000000031';
 
@@ -27,6 +29,24 @@ class FakeFilesServer {
   Map<String, String> lastUploadFields = {};
   String? lastUploadContentType;
   List<int> lastUploadBytes = const [];
+
+  /// Bytes the artifact endpoints serve; when set, the finished job lists an
+  /// artifact whose size and SHA-256 describe exactly these bytes.
+  List<int>? artifactContent;
+  String artifactFormat = 'docx';
+  bool artifactMetaExpired = false;
+
+  /// Serve the content with a flipped byte, so size matches but the hash does not.
+  bool corruptContent = false;
+
+  /// Cut the connection after this many body bytes.
+  int? dropAfterBytes;
+
+  /// Send this many bytes and then wait until the client aborts.
+  int? stallAfterBytes;
+  bool ignoreRange = false;
+  final ranges = <String?>[];
+  int contentBytesSent = 0;
 
   int attachmentsCreated = 0;
   int jobsCreated = 0;
@@ -66,14 +86,31 @@ class FakeFilesServer {
       requests.add(request);
       final bytes = await bodyStream.toBytes();
       final response = await handle(request, bytes);
+      final isContent = request.url.path.endsWith('/content');
       return http.StreamedResponse(
-        Stream.value(response.bodyBytes),
+        isContent ? _contentStream(request, response.bodyBytes) : Stream.value(response.bodyBytes),
         response.statusCode,
         headers: response.headers,
+        contentLength: response.bodyBytes.length,
         request: request,
       );
     }),
   );
+
+  Stream<List<int>> _contentStream(http.BaseRequest request, List<int> body) async* {
+    const chunk = 4096;
+    for (var i = 0; i < body.length; i += chunk) {
+      final end = (i + chunk).clamp(0, body.length);
+      final limit = dropAfterBytes ?? stallAfterBytes;
+      if (limit != null && i >= limit) {
+        if (dropAfterBytes != null) throw const SocketException('connection lost');
+        await (request as http.Abortable).abortTrigger;
+        throw http.RequestAbortedException(request.url);
+      }
+      contentBytesSent += end - i;
+      yield body.sublist(i, end);
+    }
+  }
 
   BuilderFilesClient get client => BuilderFilesClient(api);
 
@@ -166,12 +203,49 @@ class FakeFilesServer {
         job['status'] = status;
         job['progress'] = status == 'succeeded' ? 100 : (_polls * 20).clamp(0, 99);
         if (status == 'succeeded' && !succeedWithoutArtifacts) {
-          job['artifacts'] = fixture('DocumentJob.valid.0')['artifacts'];
+          job['artifacts'] = artifactContent != null
+              ? [artifactJson(artifactContent!)]
+              : fixture('DocumentJob.valid.0')['artifacts'];
         }
       }
       return _body(job, 200);
     }
 
+    if (method == 'GET' && path.startsWith('/builder/artifacts/')) {
+      final content = artifactContent;
+      if (content == null) return _error(404, 'artifact.not-found');
+      if (artifactMetaExpired) return _error(410, 'artifact.expired');
+      if (!path.endsWith('/content')) return _body(artifactJson(content), 200);
+      var data = List<int>.of(content);
+      if (corruptContent) data[data.length - 1] ^= 0xFF;
+      final range = request.headers['Range'];
+      ranges.add(range);
+      final start = range == null ? 0 : int.parse(RegExp(r'bytes=(\d+)-').firstMatch(range)!.group(1)!);
+      if (start > 0 && !ignoreRange) {
+        return http.Response.bytes(
+          data.sublist(start),
+          206,
+          headers: {'content-range': 'bytes $start-${data.length - 1}/${data.length}'},
+        );
+      }
+      return http.Response.bytes(data, 200);
+    }
+
     return _error(404, 'not-found');
+  }
+
+  /// Contract-shaped artifact describing [content].
+  Map<String, dynamic> artifactJson(List<int> content) {
+    final artifact = fixture('Artifact.valid.0');
+    artifact['id'] = artifactIdFor;
+    artifact['format'] = artifactFormat;
+    artifact['fileName'] = 'example.$artifactFormat';
+    artifact['mimeType'] = artifactFormat == 'pdf'
+        ? 'application/pdf'
+        : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    artifact['sizeBytes'] = content.length;
+    artifact['sha256'] = sha256.convert(content).toString();
+    artifact['expiresAtUtc'] = DateTime.now().toUtc().add(const Duration(hours: 24)).toIso8601String().replaceFirst(RegExp(r'\.\d+Z$'), 'Z');
+    return artifact;
   }
 }

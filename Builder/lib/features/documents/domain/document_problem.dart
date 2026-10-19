@@ -18,6 +18,8 @@ enum DocumentProblem {
 
   /// The attachment or job no longer exists on the server (expired or deleted).
   expired('resource.expired', false),
+  noSpace('client.no-space', false),
+  integrity('client.integrity', true),
   noNetwork('client.no-network', true),
   auth('client.auth', false),
   unknown('client.unknown', true);
@@ -107,6 +109,14 @@ enum DocumentProblem {
       expired => t(
         'Срок хранения файла или задания истёк. Начните заново.',
         'Файлдың немесе тапсырманың сақтау мерзімі аяқталды. Басынан бастаңыз.',
+      ),
+      noSpace => t(
+        'Не хватает места на устройстве. Освободите память и скачайте снова.',
+        'Құрылғыда орын жеткіліксіз. Жадты босатып, қайта жүктеңіз.',
+      ),
+      integrity => t(
+        'Скачанный файл не совпал с данными сервера и был удалён. Скачайте снова.',
+        'Жүктелген файл сервер деректеріне сәйкес келмеді және жойылды. Қайта жүктеңіз.',
       ),
       noNetwork => t(
         'Нет соединения. Задание сохранено и продолжится, когда связь появится.',
