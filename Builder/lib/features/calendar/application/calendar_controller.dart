@@ -1,24 +1,18 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/storage/storage_providers.dart';
 import '../../models/infrastructure/craft_ai_client.dart';
-import '../../models/model_providers.dart';
 import '../domain/calendar_models.dart';
 import '../domain/recurrence_expander.dart';
 import '../infrastructure/builder_calendar_client.dart';
 import '../infrastructure/calendar_repository.dart';
+import 'calendar_providers.dart';
+import 'calendar_reminder_controller.dart';
 import 'calendar_sync_service.dart';
 
-final builderCalendarClientProvider = Provider<BuilderCalendarClient?>((ref) {
-  final api = ref.watch(craftAiClientProvider);
-  return api == null ? null : BuilderCalendarClient(api);
-});
-
-final calendarRepositoryProvider = Provider<CalendarRepository>((ref) {
-  final db = ref.watch(storageDatabaseProvider);
-  if (db == null) return InMemoryCalendarRepository();
-  return PersistentCalendarRepository(database: db);
-});
+export 'calendar_providers.dart'
+    show builderCalendarClientProvider, calendarRepositoryProvider;
 
 final calendarControllerProvider =
     NotifierProvider.family<CalendarController, CalendarState, String>(
@@ -172,6 +166,12 @@ class CalendarController extends Notifier<CalendarState> {
     state = (await _fromCache(
       state.copyWith(month: month),
     )).copyWith(loading: false, problem: problem, rejectedTitles: rejected);
+    // Events or their reminders may have changed; keep the device's schedule in step.
+    unawaited(
+      ref
+          .read(calendarReminderProvider(ownerId).notifier)
+          .load(refreshWindow: problem == CalendarProblem.none),
+    );
   }
 
   /// Stored event, fresh from the server when reachable.

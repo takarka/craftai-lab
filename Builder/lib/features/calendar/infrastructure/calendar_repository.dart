@@ -31,6 +31,10 @@ abstract class CalendarRepository {
   Future<List<PendingCalendarCreate>> pendingCreates(String ownerId);
   Future<void> addPendingCreate(String ownerId, PendingCalendarCreate pending);
   Future<void> removePendingCreate(String ownerId, String key);
+
+  /// Whether local notifications for calendar reminders are switched on (off by default).
+  Future<bool> remindersEnabled(String ownerId);
+  Future<void> setRemindersEnabled(String ownerId, bool enabled);
 }
 
 class InMemoryCalendarRepository implements CalendarRepository {
@@ -39,6 +43,7 @@ class InMemoryCalendarRepository implements CalendarRepository {
   final _cursors = <String, String>{};
   final _synced = <String, DateTime>{};
   final _pending = <String, Map<String, PendingCalendarCreate>>{};
+  final _remindersEnabled = <String, bool>{};
 
   @override
   Future<List<CalendarEvent>> events(String ownerId) async =>
@@ -106,6 +111,14 @@ class InMemoryCalendarRepository implements CalendarRepository {
   @override
   Future<void> removePendingCreate(String ownerId, String key) async =>
       _pending[ownerId]?.remove(key);
+
+  @override
+  Future<bool> remindersEnabled(String ownerId) async =>
+      _remindersEnabled[ownerId] ?? false;
+
+  @override
+  Future<void> setRemindersEnabled(String ownerId, bool enabled) async =>
+      _remindersEnabled[ownerId] = enabled;
 }
 
 class PersistentCalendarRepository implements CalendarRepository {
@@ -280,5 +293,23 @@ class PersistentCalendarRepository implements CalendarRepository {
       where: 'owner_id = ? AND idempotency_key = ?',
       whereArgs: [ownerId, key],
     );
+  }
+
+  @override
+  Future<bool> remindersEnabled(String ownerId) async {
+    final rows = await (await _db).query(
+      StorageSchemaV1.tableCalendarReminderSettings,
+      where: 'owner_id = ?',
+      whereArgs: [ownerId],
+    );
+    return rows.isNotEmpty && rows.first['enabled'] == 1;
+  }
+
+  @override
+  Future<void> setRemindersEnabled(String ownerId, bool enabled) async {
+    await (await _db).insert(StorageSchemaV1.tableCalendarReminderSettings, {
+      'owner_id': ownerId,
+      'enabled': enabled ? 1 : 0,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 }

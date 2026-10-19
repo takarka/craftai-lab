@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../application/calendar_controller.dart';
 import '../domain/calendar_models.dart';
 import 'calendar_event_editor.dart';
+import 'calendar_reminder_card.dart';
 
 export '../application/calendar_controller.dart' show builderCalendarClientProvider;
 
@@ -219,6 +220,7 @@ class _CalendarPageState extends ConsumerState<BuilderCalendarPage> {
                 ),
               ),
             ),
+            CalendarReminderCard(ownerId: widget.ownerId, kk: _kk),
             if (state.problem != CalendarProblem.none)
               _Banner(
                 icon: Icons.cloud_off,

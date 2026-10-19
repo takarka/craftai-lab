@@ -7,7 +7,8 @@ import '../../../core/storage/storage_providers.dart';
 import '../domain/pending_action.dart';
 import '../domain/tool_definition.dart';
 import '../domain/tool_grant.dart';
-import '../../calendar/application/calendar_controller.dart';
+import '../../calendar/application/calendar_providers.dart';
+import '../../calendar/application/calendar_reminder_controller.dart';
 import '../domain/tools_dispatcher.dart';
 import '../infrastructure/builder_calendar_adapter.dart';
 import '../domain/tools_registry.dart';
@@ -40,6 +41,11 @@ final toolsDispatcherProvider = Provider<ToolsDispatcher>((ref) {
         : BuilderCalendarAdapter(
             repository: ref.watch(calendarRepositoryProvider),
             client: calendarClient,
+            onEventSaved: (ownerId) async {
+              await ref
+                  .read(calendarReminderServiceProvider)
+                  .sync(ownerId, kk: localeIsKazakh(ref));
+            },
           ),
     searchAdapter: ref.watch(searchAdapterProvider),
   );

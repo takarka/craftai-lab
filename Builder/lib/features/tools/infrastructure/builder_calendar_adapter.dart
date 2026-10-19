@@ -15,9 +15,16 @@ class ToolExecutionException implements Exception {
 /// Calendar tools backed by the server calendar through the owner-scoped
 /// cache. Times are wall-clock values plus an IANA zone, as on the server.
 class BuilderCalendarAdapter {
-  const BuilderCalendarAdapter({required this.repository, this.client});
+  const BuilderCalendarAdapter({
+    required this.repository,
+    this.client,
+    this.onEventSaved,
+  });
   final CalendarRepository repository;
   final BuilderCalendarClient? client;
+
+  /// Called after a create reached the server, so phone reminders follow it.
+  final Future<void> Function(String ownerId)? onEventSaved;
 
   /// A model run receives at most this many occurrences.
   static const maxEvents = 100;
@@ -95,6 +102,7 @@ class BuilderCalendarAdapter {
     String? timeZone,
     bool allDay = false,
     String? notes,
+    List<int> reminderMinutes = const [],
   }) async {
     final api = client;
     if (api == null) {
@@ -112,9 +120,17 @@ class BuilderCalendarAdapter {
       start: allDay ? start.substring(0, 10) : start.substring(0, 19),
       end: allDay ? end.substring(0, 10) : end.substring(0, 19),
       timeZone: allDay ? null : timeZone,
+      reminders: ({...reminderMinutes}.toList()..sort()),
     );
     final outcome = await CalendarSyncService(client: api, repository: repository)
         .create(ownerId, event.toInputJson());
+    if (outcome == CalendarCreateOutcome.saved) {
+      try {
+        await onEventSaved?.call(ownerId);
+      } catch (_) {
+        // The event is saved; reminders are rebuilt on the next sync.
+      }
+    }
     return switch (outcome) {
       CalendarCreateOutcome.saved => {'status': 'saved', 'message': 'Событие «$title» сохранено на сервере'},
       CalendarCreateOutcome.queued => {

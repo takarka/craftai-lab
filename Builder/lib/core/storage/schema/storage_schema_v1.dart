@@ -28,6 +28,7 @@ abstract final class StorageSchemaV1 {
   static const String tableCalendarOverrides = 'calendar_overrides';
   static const String tableCalendarSync = 'calendar_sync_state';
   static const String tableCalendarPending = 'calendar_pending_creates';
+  static const String tableCalendarReminderSettings = 'calendar_reminder_settings';
   static const String tableDocumentWork = 'document_work';
 
   static const List<String> createStatements = [
@@ -100,6 +101,14 @@ abstract final class StorageSchemaV1 {
       input_json TEXT NOT NULL,
       created_at_utc TEXT NOT NULL,
       PRIMARY KEY (owner_id, idempotency_key),
+      FOREIGN KEY (owner_id) REFERENCES $tableWorkspaces(owner_id) ON DELETE CASCADE
+    );
+    ''',
+    // Whether the owner wants local notifications for calendar reminders (EF-06).
+    '''
+    CREATE TABLE IF NOT EXISTS $tableCalendarReminderSettings (
+      owner_id TEXT PRIMARY KEY,
+      enabled INTEGER NOT NULL,
       FOREIGN KEY (owner_id) REFERENCES $tableWorkspaces(owner_id) ON DELETE CASCADE
     );
     ''',

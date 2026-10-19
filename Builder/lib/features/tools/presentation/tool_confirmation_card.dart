@@ -182,6 +182,8 @@ class _ToolConfirmationCardState extends State<ToolConfirmationCard> {
         return 'Место';
       case 'notes':
         return 'Заметки';
+      case 'reminder_minutes':
+        return 'Напомнить за (мин)';
       default:
         return key;
     }

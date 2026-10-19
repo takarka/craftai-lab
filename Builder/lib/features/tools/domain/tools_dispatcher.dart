@@ -306,6 +306,10 @@ class ToolsDispatcher {
           timeZone: args['time_zone'] as String?,
           allDay: args['is_all_day'] as bool? ?? false,
           notes: args['notes'] as String?,
+          reminderMinutes: [
+            for (final minutes in (args['reminder_minutes'] as List?) ?? const [])
+              minutes as int,
+          ],
         );
 
       case ToolsRegistry.createNote:

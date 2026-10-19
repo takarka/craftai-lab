@@ -72,6 +72,13 @@ class ToolsRegistry {
             'type': 'string',
             'description': 'Дополнительные заметки к событию',
           },
+          'reminder_minutes': {
+            'type': 'array',
+            'description':
+                'За сколько минут до начала напомнить (до 3 значений от 0 до 10080); телефон покажет уведомление, если учитель включил напоминания в календаре',
+            'items': {'type': 'integer', 'minimum': 0, 'maximum': 10080},
+            'maxItems': 3,
+          },
         },
         'required': ['title', 'start_time', 'end_time'],
       },
