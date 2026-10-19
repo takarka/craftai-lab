@@ -533,12 +533,12 @@ void main() {
         const GlossaryPage(fromLessonId: 'L3.2', initialQuery: 'RAG'),
       );
 
-      expect(find.text('Вернуться к уроку L3.2'), findsOneWidget);
+      expect(find.text('Вернуться к уроку L4.2'), findsOneWidget);
       expect(find.byKey(const Key('glossary.returnBtn')), findsOneWidget);
 
       expect(find.byKey(const Key('glossary.searchField')), findsOneWidget);
       expect(find.textContaining('RAG'), findsWidgets);
-      expect(find.text('Уровень 3'), findsOneWidget);
+      expect(find.text('Уровень 4'), findsOneWidget);
 
       final clearIcon = find.byIcon(Icons.clear);
       expect(clearIcon, findsOneWidget);

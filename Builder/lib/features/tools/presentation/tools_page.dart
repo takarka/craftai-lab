@@ -7,6 +7,7 @@ import 'd07_os_permission_dialog.dart';
 import 'tool_confirmation_card.dart';
 import 'tools_providers.dart';
 import '../../mcp/presentation/mcp_page.dart';
+import '../../course/domain/course_topic.dart';
 
 /// Screen S43: Assistant Tools Management (F14-02, F14-04, F14-09, F14-13).
 class ToolsPage extends ConsumerStatefulWidget {
@@ -51,7 +52,9 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
         scrolledUnderElevation: 0,
         title: Text(
           widget.isLearnMode
-              ? 'Уровень 5: Инструменты'
+              ? (Localizations.localeOf(context).languageCode == 'kk'
+                    ? '${CourseTopic.tools.displayOrder}-деңгей: Құралдар'
+                    : 'Уровень ${CourseTopic.tools.displayOrder}: Инструменты')
               : 'Инструменты ассистента',
           style: BuilderTypography.titleMedium.copyWith(
             color: BuilderColors.ink,
@@ -137,9 +140,8 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Любые действия, изменяющие данные (создание уроков, удаление заметок, звонки), '
-                                'всегда требуют вашего явного подтверждения в диалоге. '
-                                'Ассистент никогда не звонит и не отправляет сообщения автоматически.',
+                                'Действия, изменяющие данные (создание событий, удаление заметок), '
+                                'требуют вашего явного подтверждения в диалоге.',
                                 style: BuilderTypography.bodySmall.copyWith(
                                   color: BuilderColors.inkSecondary,
                                   height: 1.35,
@@ -179,14 +181,11 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                   const SizedBox(height: BuilderSpace.md),
 
                   _buildGroupSection(
-                    title: '3 · Связь и поиск',
-                    category: ToolCategory.communication,
+                    title: '3 · Поиск в интернете',
+                    category: ToolCategory.search,
                     items: state.toolItems
                         .where(
-                          (i) =>
-                              i.definition.category ==
-                                  ToolCategory.communication ||
-                              i.definition.category == ToolCategory.search,
+                          (i) => i.definition.category == ToolCategory.search,
                         )
                         .toList(),
                     controller: controller,

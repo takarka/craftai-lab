@@ -18,6 +18,17 @@ enum CourseTopic {
   final int storageId;
   final int displayOrder;
 
+  static int highestCompletedOrder(Iterable<int> storageIds) {
+    final completed = storageIds.toSet();
+    return values
+        .where((topic) => completed.contains(topic.storageId))
+        .fold(
+          0,
+          (highest, topic) =>
+              topic.displayOrder > highest ? topic.displayOrder : highest,
+        );
+  }
+
   String get contentId => 'course.topic.$name';
 
   /// Topics with a working lesson, in the order a learner passes them.

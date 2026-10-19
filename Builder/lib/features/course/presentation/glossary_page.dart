@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../ui_kit/ui_kit.dart';
+import '../domain/course_topic.dart';
 
 class GlossaryTerm {
   const GlossaryTerm({
@@ -21,6 +22,7 @@ class GlossaryTerm {
   final String? definitionKk;
   final int levelId;
   final String category;
+  int get displayLevel => CourseTopic.fromStorageId(levelId).displayOrder;
 
   String localizedTerm(bool isKk) => (isKk && termKk != null) ? termKk! : term;
   String localizedDefinition(bool isKk) =>
@@ -94,6 +96,17 @@ class GlossaryPage extends StatefulWidget {
           'Нейрожелі үшін мәтіннің ең кіші бірлігі (шамамен 3–4 таңба не сөз түбірі). Токендер шығыны жұмыс құны мен жылдамдығын анықтайды.',
       levelId: 2,
       category: 'Архитектура',
+    ),
+    GlossaryTerm(
+      id: 'glossary.skill',
+      term: 'Навык (Skill)',
+      termKk: 'Дағды (Skill)',
+      definition:
+          'Сохранённый сценарий одной задачи: цель, входные данные, шаги, формат и ограничения. Запускается вручную с новыми данными.',
+      definitionKk:
+          'Бір тапсырманың сақталған сценарийі: мақсат, кіріс деректері, қадамдар, пішім және шектеулер. Жаңа деректермен қолмен іске қосылады.',
+      levelId: 10,
+      category: 'Настройка',
     ),
     GlossaryTerm(
       id: 'glossary.rag',
@@ -171,6 +184,20 @@ class _GlossaryPageState extends State<GlossaryPage> {
   late final TextEditingController _searchController;
   late String _searchQuery;
 
+  String? get _lessonDisplayLabel {
+    final original = widget.fromLessonId;
+    if (original == null) return null;
+    final match = RegExp(r'^L(\d+)(\..*)?$').firstMatch(original);
+    if (match == null) return original;
+    final id = int.tryParse(match.group(1)!);
+    final topic = CourseTopic.values
+        .where((topic) => topic.storageId == id)
+        .firstOrNull;
+    return topic == null
+        ? original
+        : 'L${topic.displayOrder}${match.group(2) ?? ''}';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -232,8 +259,8 @@ class _GlossaryPageState extends State<GlossaryPage> {
                       child: Text(
                         widget.fromLessonId != null
                             ? (isKk
-                                  ? '${widget.fromLessonId} сабағына оралу'
-                                  : 'Вернуться к уроку ${widget.fromLessonId}')
+                                  ? '$_lessonDisplayLabel сабағына оралу'
+                                  : 'Вернуться к уроку $_lessonDisplayLabel')
                             : (isKk
                                   ? '${widget.fromTraceId} трейсіне оралу'
                                   : 'Вернуться к трейсу ${widget.fromTraceId}'),
@@ -327,8 +354,8 @@ class _GlossaryPageState extends State<GlossaryPage> {
                                     ),
                                     child: Text(
                                       isKk
-                                          ? 'Деңгей ${t.levelId}'
-                                          : 'Уровень ${t.levelId}',
+                                          ? 'Деңгей ${t.displayLevel}'
+                                          : 'Уровень ${t.displayLevel}',
                                       style: BuilderType.small.copyWith(
                                         color: BuilderColors.primary,
                                         fontWeight: FontWeight.w700,

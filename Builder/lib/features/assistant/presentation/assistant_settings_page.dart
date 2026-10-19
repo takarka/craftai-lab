@@ -7,6 +7,8 @@ import '../../../ui_kit/ui_kit.dart';
 import '../../onboarding/domain/assistant_setup.dart';
 import '../../onboarding/presentation/onboarding_labels.dart';
 import '../../profile/profile_providers.dart';
+import '../../course/domain/course_topic.dart';
+import '../../course/presentation/course_character.dart';
 import '../assistant_providers.dart';
 import '../domain/assistant_config.dart';
 import 'reset_confirmation_dialog.dart';
@@ -32,9 +34,6 @@ class AssistantSettingsPage extends ConsumerWidget {
     final currentVersionNumber = versions.isNotEmpty
         ? versions.first.versionNumber
         : 1;
-    final highestLevel = completedLevels
-        .where((id) => id >= 1 && id <= 5)
-        .fold<int>(0, (max, lvl) => lvl > max ? lvl : max);
     final preferences = ref
         .watch(teacherPreferencesProvider(ownerId))
         .asData
@@ -61,8 +60,8 @@ class AssistantSettingsPage extends ConsumerWidget {
               BuilderCard(
                 child: Row(
                   children: [
-                    BuilderCharacter(
-                      level: highestLevel,
+                    CourseCharacter(
+                      completedLevels: completedLevels,
                       size: 56,
                       compact: true,
                     ),
@@ -79,7 +78,11 @@ class AssistantSettingsPage extends ConsumerWidget {
                           ),
                           const SizedBox(height: 4),
                           BuilderBadge(
-                            s.assistantLevelBadge(highestLevel),
+                            s.assistantLevelBadge(
+                              CourseTopic.highestCompletedOrder(
+                                completedLevels,
+                              ),
+                            ),
                             icon: BuilderGlyph.course,
                           ),
                         ],

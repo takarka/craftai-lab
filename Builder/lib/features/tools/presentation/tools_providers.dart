@@ -114,7 +114,11 @@ class ToolsNotifier extends Notifier<ToolsState> {
 
       state = state.copyWith(
         toolItems: items,
-        pendingActions: pending,
+        pendingActions: pending
+            .where(
+              (action) => ToolsRegistry.getByName(action.actionName) != null,
+            )
+            .toList(),
         isLoading: false,
       );
     } catch (e) {

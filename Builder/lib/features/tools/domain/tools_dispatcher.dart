@@ -1,5 +1,4 @@
 import '../infrastructure/calendar_adapter.dart';
-import '../infrastructure/communication_adapter.dart';
 import '../infrastructure/notes_adapter.dart';
 import '../infrastructure/search_adapter.dart';
 import 'pending_action.dart';
@@ -66,7 +65,6 @@ class ToolsDispatcher {
   final ToolsRepository repository;
   final CalendarAdapter calendarAdapter;
   final NotesAdapter notesAdapter;
-  final CommunicationAdapter communicationAdapter;
   final SearchAdapter searchAdapter;
   final PendingActionStateMachine stateMachine;
 
@@ -74,13 +72,10 @@ class ToolsDispatcher {
     required this.repository,
     CalendarAdapter? calendarAdapter,
     NotesAdapter? notesAdapter,
-    CommunicationAdapter? communicationAdapter,
     SearchAdapter? searchAdapter,
     PendingActionStateMachine? stateMachine,
   }) : calendarAdapter = calendarAdapter ?? CalendarAdapter(),
        notesAdapter = notesAdapter ?? NotesAdapter(),
-       communicationAdapter =
-           communicationAdapter ?? const CommunicationAdapter(),
        searchAdapter = searchAdapter ?? const SearchAdapter(),
        stateMachine = stateMachine ?? const PendingActionStateMachine();
 
@@ -213,6 +208,13 @@ class ToolsDispatcher {
     }
 
     // State machine check & transitions (F14-12: double tap guard)
+    if (ToolsRegistry.getByName(action.actionName) == null) {
+      return ToolExecutionResult.failure(
+        toolName: action.actionName,
+        errorMessage: 'Инструмент больше не доступен',
+        errorCode: 'TOOL_NOT_FOUND',
+      );
+    }
     try {
       final approved = stateMachine.approve(action);
       await repository.updatePendingActionStatus(
@@ -342,17 +344,6 @@ class ToolsDispatcher {
           noteId: noteId,
         );
         return {'deleted': deleted, 'note_id': noteId};
-
-      case ToolsRegistry.prepareCall:
-        final phone = args['phone_number'] as String;
-        final name = args['recipient_name'] as String?;
-        final body = args['message_body'] as String?;
-        final prep = await communicationAdapter.prepareCallOrMessage(
-          phoneNumber: phone,
-          recipientName: name,
-          messageBody: body,
-        );
-        return prep.toMap();
 
       case ToolsRegistry.webSearch:
         final query = args['query'] as String;

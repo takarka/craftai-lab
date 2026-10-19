@@ -111,6 +111,47 @@ void main() {
     });
 
     test(
+      'Reset rolls back progress deletion when quiz cleanup fails',
+      () async {
+        await database.db.execute('''
+        CREATE TRIGGER fail_quiz_cleanup BEFORE DELETE ON quiz_attempts
+        BEGIN SELECT RAISE(ABORT, 'simulated cleanup failure'); END;
+      ''');
+        await repository.recordQuizAttempt(
+          ownerId: 'existing',
+          levelId: 1,
+          selectedAnswers: [0, 0, 0],
+          threshold: 0.66,
+        );
+        final before = await database.db.query(
+          StorageSchemaV1.tableCourseProgress,
+        );
+        await expectLater(
+          repository.resetCourseProgress('existing'),
+          throwsA(isA<DatabaseException>()),
+        );
+        expect(
+          await database.db.query(StorageSchemaV1.tableCourseProgress),
+          before,
+        );
+        expect(
+          await database.db.query(StorageSchemaV1.tableQuizAttempts),
+          hasLength(1),
+        );
+        await database.db.execute('DROP TRIGGER fail_quiz_cleanup');
+        await repository.resetCourseProgress('existing');
+        expect(
+          await database.db.query(StorageSchemaV1.tableCourseProgress),
+          isEmpty,
+        );
+        expect(
+          await database.db.query(StorageSchemaV1.tableQuizAttempts),
+          isEmpty,
+        );
+      },
+    );
+
+    test(
       'Old achievements survive reopening without rewriting stored rows',
       () async {
         final before = await database.db.query(
@@ -162,6 +203,44 @@ void main() {
             'other',
           )).every((p) => !p.isCompleted),
           isTrue,
+        );
+      },
+    );
+
+    test(
+      'All nine legacy topics retain achievements without completing new topics',
+      () async {
+        for (var id = 6; id <= 9; id++) {
+          await database.db.insert(StorageSchemaV1.tableCourseProgress, {
+            'owner_id': 'existing',
+            'level_id': '$id',
+            'content_version': '1.0.0',
+            'current_step': 5,
+            'completed_checkpoints_json': '[1,2,3,4,5]',
+            'attempts_count': 2,
+            'is_completed': 1,
+            'updated_at_utc': '2026-10-18T12:00:00.000Z',
+          });
+        }
+        final before = await database.db.query(
+          StorageSchemaV1.tableCourseProgress,
+        );
+        await database.close();
+        await database.open();
+        final progress = await repository.getAllProgress('existing');
+        expect(
+          progress.where((p) => p.isCompleted).map((p) => p.levelId).toSet(),
+          {1, 2, 3, 4, 5, 6, 7, 8, 9},
+        );
+        expect(
+          progress
+              .where((p) => p.levelId == 10 || p.levelId == 11)
+              .every((p) => !p.isCompleted),
+          isTrue,
+        );
+        expect(
+          await database.db.query(StorageSchemaV1.tableCourseProgress),
+          before,
         );
       },
     );

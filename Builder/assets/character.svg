@@ -27,4 +27,32 @@
 <circle cx="172" cy="112" r="6" fill="#E8772E"/>
 <line x1="172" y1="94" x2="172" y2="100" stroke="#0B1B33" stroke-width="3" stroke-linecap="round"/>
 </g>
+<!-- Skills: repeatable steps (stable topic ID 10). -->
+<g opacity="{{o10}}" fill="none" stroke="#0047BA" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+<rect x="13" y="146" width="30" height="31" rx="7" fill="#E3ECFB"/>
+<path d="M20 154h15m-15 7h15m-15 7h9"/>
+</g>
+<!-- Automation: clock. -->
+<g opacity="{{o11}}" stroke="#A23B00" stroke-width="3" stroke-linecap="round">
+<circle cx="172" cy="162" r="15" fill="#FFB27A"/>
+<path d="M172 153v9l6 4" fill="none"/>
+</g>
+<!-- Voice, vision, security and agent remain silhouettes until completed. -->
+<g opacity="{{o6}}" stroke="#0B1B33" stroke-width="3" fill="#E3ECFB" stroke-linecap="round">
+<rect x="22" y="46" width="10" height="18" rx="5"/>
+<path d="M18 57v3a9 9 0 0 0 18 0v-3m-9 12v7" fill="none"/>
+</g>
+<g opacity="{{o7}}" stroke="#0B1B33" stroke-width="3" fill="#E3ECFB">
+<path d="M155 60q17-21 34 0-17 21-34 0Z"/>
+<circle cx="172" cy="60" r="5" fill="#E8772E"/>
+</g>
+<g opacity="{{o8}}" stroke="#0B1B33" stroke-width="3" stroke-linejoin="round">
+<path d="M51 12l13 5v12q-2 10-13 15-11-5-13-15V17Z" fill="#E3ECFB"/>
+<path d="m44 27 5 5 9-11" fill="none"/>
+</g>
+<g opacity="{{o9}}" stroke="#0B1B33" stroke-width="3" stroke-linecap="round" fill="#E8772E">
+<path d="m138 18 17 17m-17 0 17-17"/>
+<circle cx="138" cy="18" r="4"/><circle cx="155" cy="35" r="4"/>
+<circle cx="138" cy="35" r="4"/><circle cx="155" cy="18" r="4"/>
+</g>
 </svg>

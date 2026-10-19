@@ -74,19 +74,25 @@ class BuilderCharacter extends StatelessWidget {
     this.mood = CharacterMood.idle,
     this.disabledModules = const {},
     this.compact = false,
+    this.unlockedModules,
+    this.semanticLabel,
   }) : assert(level >= 0 && level <= 5);
   final int level;
   final double size;
   final CharacterMood mood;
   final Set<int> disabledModules;
   final bool compact;
+
+  /// Explicit module IDs for the curriculum; null keeps the gallery's 0–5 mode.
+  final Set<int>? unlockedModules;
+  final String? semanticLabel;
   static final Future<String> _source = rootBundle.loadString(
     'assets/character.svg',
   );
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: 'ИИ-ассистент, уровень $level из 5, ${mood.label}',
+    label: semanticLabel ?? 'ИИ-ассистент, уровень $level из 5, ${mood.label}',
     image: true,
     child: SizedBox(
       width: size,
@@ -96,12 +102,13 @@ class BuilderCharacter extends StatelessWidget {
         builder: (context, snapshot) {
           if (!snapshot.hasData) return const SizedBox.shrink();
           var svg = snapshot.data!;
-          for (var n = 1; n <= 5; n++) {
+          for (var n = 1; n <= 11; n++) {
+            final unlocked = unlockedModules?.contains(n) ?? (n <= level);
             svg = svg.replaceAll(
               '{{o$n}}',
-              compact
+              compact || (unlockedModules == null && n > 5)
                   ? '0'
-                  : level < n
+                  : !unlocked
                   ? '0.14'
                   : disabledModules.contains(n)
                   ? '0.35'

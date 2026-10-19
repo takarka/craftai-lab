@@ -13,6 +13,7 @@ import '../../skills/presentation/skills_page.dart';
 import '../../skills/skills_providers.dart';
 import '../../skills/domain/skill_practice_evidence.dart';
 import '../../chat/chat_providers.dart';
+import '../../assistant/assistant_providers.dart';
 import '../../tools/presentation/tools_page.dart';
 import '../../tools/presentation/tools_providers.dart';
 import '../course_providers.dart';
@@ -20,6 +21,7 @@ import '../domain/course_catalog.dart';
 import '../domain/course_models.dart';
 import '../domain/course_topic.dart';
 import 'course_strings.dart';
+import 'course_character.dart';
 
 class LessonPlayerPage extends ConsumerStatefulWidget {
   const LessonPlayerPage({
@@ -1422,7 +1424,16 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
         Center(
           child: Column(
             children: [
-              const BuilderCharacter(size: 80, compact: false),
+              CourseCharacter(
+                completedLevels: {
+                  ...?ref
+                      .watch(completedCourseLevelsProvider(widget.ownerId))
+                      .asData
+                      ?.value,
+                  if (_quizPassed) level.id,
+                },
+                size: 80,
+              ),
               const SizedBox(height: 16),
               Text(
                 cs.levelCompletedTitle(level.displayOrder),

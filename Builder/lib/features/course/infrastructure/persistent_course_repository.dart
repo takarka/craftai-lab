@@ -394,7 +394,7 @@ class PersistentCourseRepository implements CourseRepository {
           selectedCategory: config.selectedCategory,
           enabledSkills: updatedSkills,
           systemRules: config.systemRules,
-          reason: 'Завершение уровня $levelId: ${level.title}',
+          reason: 'Завершение уровня ${level.displayOrder}: ${level.title}',
         );
       }
     }
@@ -404,16 +404,17 @@ class PersistentCourseRepository implements CourseRepository {
   Future<void> resetCourseProgress(String ownerId) async {
     await _ensureOpen();
 
-    await database.db.delete(
-      StorageSchemaV1.tableCourseProgress,
-      where: 'owner_id = ?',
-      whereArgs: [ownerId],
-    );
-
-    await database.db.delete(
-      StorageSchemaV1.tableQuizAttempts,
-      where: 'owner_id = ?',
-      whereArgs: [ownerId],
-    );
+    await database.transaction((txn) async {
+      await txn.delete(
+        StorageSchemaV1.tableCourseProgress,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      await txn.delete(
+        StorageSchemaV1.tableQuizAttempts,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+    });
   }
 }

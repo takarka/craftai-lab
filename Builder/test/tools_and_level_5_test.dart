@@ -62,45 +62,88 @@ void main() {
 
   group('F14-01: Tool Registry & Schema Validation', () {
     test(
-      'contains all 7 standard tools with appropriate capabilities and categories',
-      () {
-        expect(ToolsRegistry.allTools.length, 7);
-
-        final calendarRead = ToolsRegistry.getByName(
-          ToolsRegistry.readCalendar,
-        )!;
-        expect(calendarRead.category, ToolCategory.calendar);
-        expect(calendarRead.capability, ToolCapability.readOnly);
-        expect(calendarRead.requiresConfirmation, isFalse);
-
-        final calendarCreate = ToolsRegistry.getByName(
-          ToolsRegistry.createCalendarEvent,
-        )!;
-        expect(calendarCreate.category, ToolCategory.calendar);
-        expect(calendarCreate.capability, ToolCapability.requiresConfirmation);
-        expect(calendarCreate.requiresConfirmation, isTrue);
-
-        final noteCreate = ToolsRegistry.getByName(ToolsRegistry.createNote)!;
-        expect(noteCreate.category, ToolCategory.notes);
-        expect(noteCreate.requiresConfirmation, isTrue);
-
-        final noteRead = ToolsRegistry.getByName(ToolsRegistry.readNotes)!;
-        expect(noteRead.category, ToolCategory.notes);
-        expect(noteRead.requiresConfirmation, isFalse);
-
-        final noteDelete = ToolsRegistry.getByName(ToolsRegistry.deleteNote)!;
-        expect(noteDelete.category, ToolCategory.notes);
-        expect(noteDelete.requiresConfirmation, isTrue);
-
-        final prepCall = ToolsRegistry.getByName(ToolsRegistry.prepareCall)!;
-        expect(prepCall.category, ToolCategory.communication);
-        expect(prepCall.requiresConfirmation, isTrue);
-
-        final search = ToolsRegistry.getByName(ToolsRegistry.webSearch)!;
-        expect(search.category, ToolCategory.search);
-        expect(search.requiresConfirmation, isFalse);
+      'Historical communication grants and confirmations cannot execute',
+      () async {
+        final repo = InMemoryToolsRepository();
+        await repo.setGrant(
+          ownerId: testOwnerId,
+          toolName: ToolsRegistry.prepareCall,
+          isEnabled: true,
+        );
+        final now = DateTime.now().toUtc();
+        await repo.createPendingAction(
+          PendingAction(
+            invocationId: 'legacy-call',
+            ownerId: testOwnerId,
+            workspaceEpoch: 1,
+            actionName: ToolsRegistry.prepareCall,
+            paramsHash: PendingAction.computeParamsHash({
+              'phone_number': '+70000000000',
+            }),
+            params: const {'phone_number': '+70000000000'},
+            createdAtUtc: now,
+            expiresAtUtc: now.add(const Duration(minutes: 5)),
+          ),
+        );
+        final dispatcher = ToolsDispatcher(repository: repo);
+        final result = await dispatcher.confirmAndExecutePendingAction(
+          ownerId: testOwnerId,
+          invocationId: 'legacy-call',
+        );
+        expect(result.success, isFalse);
+        expect(result.errorCode, 'TOOL_NOT_FOUND');
+        expect(
+          (await repo.getPendingAction('legacy-call'))!.status,
+          PendingActionStatus.pending,
+        );
+        expect(await repo.getInvocations(testOwnerId), isEmpty);
+        final container = ProviderContainer(
+          overrides: [toolsRepositoryProvider.overrideWithValue(repo)],
+        );
+        addTearDown(container.dispose);
+        container.read(toolsControllerProvider(testOwnerId));
+        await container
+            .read(toolsControllerProvider(testOwnerId).notifier)
+            .load();
+        expect(
+          container.read(toolsControllerProvider(testOwnerId)).pendingActions,
+          isEmpty,
+        );
       },
     );
+    test('contains six release tools and excludes communication', () {
+      expect(ToolsRegistry.allTools.length, 6);
+
+      final calendarRead = ToolsRegistry.getByName(ToolsRegistry.readCalendar)!;
+      expect(calendarRead.category, ToolCategory.calendar);
+      expect(calendarRead.capability, ToolCapability.readOnly);
+      expect(calendarRead.requiresConfirmation, isFalse);
+
+      final calendarCreate = ToolsRegistry.getByName(
+        ToolsRegistry.createCalendarEvent,
+      )!;
+      expect(calendarCreate.category, ToolCategory.calendar);
+      expect(calendarCreate.capability, ToolCapability.requiresConfirmation);
+      expect(calendarCreate.requiresConfirmation, isTrue);
+
+      final noteCreate = ToolsRegistry.getByName(ToolsRegistry.createNote)!;
+      expect(noteCreate.category, ToolCategory.notes);
+      expect(noteCreate.requiresConfirmation, isTrue);
+
+      final noteRead = ToolsRegistry.getByName(ToolsRegistry.readNotes)!;
+      expect(noteRead.category, ToolCategory.notes);
+      expect(noteRead.requiresConfirmation, isFalse);
+
+      final noteDelete = ToolsRegistry.getByName(ToolsRegistry.deleteNote)!;
+      expect(noteDelete.category, ToolCategory.notes);
+      expect(noteDelete.requiresConfirmation, isTrue);
+
+      expect(ToolsRegistry.getByName(ToolsRegistry.prepareCall), isNull);
+
+      final search = ToolsRegistry.getByName(ToolsRegistry.webSearch)!;
+      expect(search.category, ToolCategory.search);
+      expect(search.requiresConfirmation, isFalse);
+    });
 
     test(
       'validates parameter types and required fields against JSON schema',
@@ -152,7 +195,7 @@ void main() {
 
         await repo.ensureDefaultGrants(testOwnerId);
         final grants = await repo.getGrants(testOwnerId);
-        expect(grants.length, 7);
+        expect(grants.length, 6);
 
         final searchGrant = grants.firstWhere(
           (g) => g.toolName == ToolsRegistry.webSearch,
@@ -594,12 +637,9 @@ void main() {
             'message_body': 'Напоминание о собрании',
           },
         );
-        expect(r4.requiresConfirmation, isTrue);
-        final c4 = await dispatcher.confirmAndExecutePendingAction(
-          ownerId: testOwnerId,
-          invocationId: r4.pendingAction!.invocationId,
-        );
-        expect(c4.success, isTrue);
+        expect(r4.success, isFalse);
+        expect(r4.errorCode, 'TOOL_NOT_FOUND');
+        expect(r4.pendingAction, isNull);
       },
     );
   });
@@ -637,7 +677,8 @@ void main() {
         expect(find.text('Инструменты ассистента'), findsOneWidget);
         expect(find.textContaining('Календарь и расписание'), findsOneWidget);
         expect(find.textContaining('Личные заметки'), findsOneWidget);
-        expect(find.textContaining('Связь и поиск'), findsOneWidget);
+        expect(find.textContaining('3 · Поиск в интернете'), findsOneWidget);
+        expect(find.textContaining('Подготовить звонок'), findsNothing);
 
         // 2. Verify D07 Dialog Open via Permission Chip
         final permChip = find.byKey(

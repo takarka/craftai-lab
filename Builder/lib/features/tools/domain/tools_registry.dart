@@ -7,6 +7,7 @@ class ToolsRegistry {
   static const String createNote = 'create_note';
   static const String readNotes = 'read_notes';
   static const String deleteNote = 'delete_note';
+  // Retained only to identify historical records; excluded from this release.
   static const String prepareCall = 'prepare_call';
   static const String webSearch = 'web_search';
 
@@ -132,34 +133,7 @@ class ToolsRegistry {
       },
     ),
 
-    // 3. Communication & Search
-    const ToolDefinition(
-      name: prepareCall,
-      displayName: 'Подготовить звонок / SMS',
-      description:
-          'Подготовить черновик вызова или сообщения и открыть системный диалог набора номера (без автовызова).',
-      category: ToolCategory.communication,
-      capability: ToolCapability.requiresConfirmation,
-      defaultOsPermission: OsPermissionStatus.notRequired,
-      parametersSchema: {
-        'type': 'object',
-        'properties': {
-          'phone_number': {
-            'type': 'string',
-            'description': 'Номер телефона для набора',
-          },
-          'recipient_name': {
-            'type': 'string',
-            'description': 'Имя контакта (например: «Родитель Иванова А.»)',
-          },
-          'message_body': {
-            'type': 'string',
-            'description': 'Текст черновика SMS (если отправляется сообщение)',
-          },
-        },
-        'required': ['phone_number'],
-      },
-    ),
+    // 3. Search
     const ToolDefinition(
       name: webSearch,
       displayName: 'Поиск в интернете',
