@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../chat/domain/context_assembler.dart';
+import '../../skills/domain/skill_request.dart';
 
 enum TraceLayerType {
   instruction,
@@ -145,6 +146,17 @@ class TraceUsage {
 
 @immutable
 class RequestTrace {
+  /// Decode only this request's user layer, never prior chat history. Existing
+  /// trace JSON stays compatible and contains the original submitted revision.
+  SkillRequest? get skillRequest {
+    for (final layer in layers) {
+      if (layer.type == TraceLayerType.userPrompt) {
+        return SkillRequest.tryParse(layer.contentSnippet);
+      }
+    }
+    return null;
+  }
+
   final String requestId;
   final String ownerId;
   final String conversationId;
