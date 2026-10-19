@@ -73,6 +73,14 @@ class CraftAiClient {
     String path, {
     Map<String, String>? headers,
     Duration timeout = const Duration(seconds: 15),
+  }) => requestJson('GET', path, headers: headers, timeout: timeout);
+
+  Future<Map<String, dynamic>> requestJson(
+    String method,
+    String path, {
+    Map<String, dynamic>? body,
+    Map<String, String>? headers,
+    Duration timeout = const Duration(seconds: 15),
   }) async {
     final requestId = generateRequestId();
     final url = baseUri.resolve(path);
@@ -80,6 +88,7 @@ class CraftAiClient {
     final requestHeaders = <String, String>{
       'Accept': 'application/json',
       'X-Request-Id': requestId,
+      if (body != null) 'Content-Type': 'application/json',
       if (headers != null) ...headers,
     };
 
@@ -90,9 +99,14 @@ class CraftAiClient {
       if (tokens != null) {
         requestHeaders['Authorization'] = 'Bearer ${tokens.accessToken}';
       }
-      var response = await _httpClient
-          .get(url, headers: requestHeaders)
-          .timeout(timeout);
+      Future<http.Response> send() async {
+        final request = http.Request(method, url)
+          ..headers.addAll(requestHeaders);
+        if (body != null) request.body = jsonEncode(body);
+        return http.Response.fromStream(await _httpClient.send(request));
+      }
+
+      var response = await send().timeout(timeout);
 
       // A request is retried once after the shared refresh operation. This is
       // required even when a server invalidates a token before its expiry.
@@ -100,9 +114,7 @@ class CraftAiClient {
         tokens = await tokenStorage!.refreshTokens();
         if (tokens != null) {
           requestHeaders['Authorization'] = 'Bearer ${tokens.accessToken}';
-          response = await _httpClient
-              .get(url, headers: requestHeaders)
-              .timeout(timeout);
+          response = await send().timeout(timeout);
         }
       }
 

@@ -479,14 +479,13 @@ void main() {
     );
   });
 
-  group('F14-09: Web Search Adapter & Educational Fixtures', () {
-    test('returns educational search hits for educational queries', () async {
+  group('F14-09: Web Search Adapter', () {
+    test('unconfigured search fails without fictional results', () async {
       const adapter = SearchAdapter();
-      final hits = await adapter.search('ФГОС математика 7 класс');
-      expect(hits, isNotEmpty);
-      expect(hits.first.title, contains('ФГОС'));
-      expect(hits.first.snippet, contains('математик'));
-      expect(hits.first.url, startsWith('https://'));
+      await expectLater(
+        adapter.search('ФГОС математика 7 класс'),
+        throwsException,
+      );
     });
   });
 

@@ -1,4 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../app/providers.dart';
+import '../../models/model_providers.dart';
+import '../infrastructure/search_adapter.dart';
 
 import '../../../core/storage/storage_providers.dart';
 import '../domain/pending_action.dart';
@@ -19,7 +22,13 @@ final toolsRepositoryProvider = Provider<ToolsRepository>((ref) {
 /// Global provider for ToolsDispatcher.
 final toolsDispatcherProvider = Provider<ToolsDispatcher>((ref) {
   final repo = ref.watch(toolsRepositoryProvider);
-  return ToolsDispatcher(repository: repo);
+  return ToolsDispatcher(
+    repository: repo,
+    searchAdapter: SearchAdapter(
+      client: ref.watch(craftAiClientProvider),
+      language: ref.watch(appLocaleProvider)?.languageCode ?? 'ru',
+    ),
+  );
 });
 
 /// View-model item for Screen S43.

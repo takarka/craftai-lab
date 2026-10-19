@@ -8,6 +8,7 @@ import 'tool_confirmation_card.dart';
 import 'tools_providers.dart';
 import '../../mcp/presentation/mcp_page.dart';
 import '../../course/domain/course_topic.dart';
+import '../../calendar/presentation/builder_calendar_page.dart';
 
 /// Screen S43: Assistant Tools Management (F14-02, F14-04, F14-09, F14-13).
 class ToolsPage extends ConsumerStatefulWidget {
@@ -156,6 +157,19 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                   const SizedBox(height: BuilderSpace.md),
 
                   // 3. Three Tool Groups (F14-02)
+                  ListTile(
+                    leading: const Icon(Icons.calendar_month),
+                    title: Text(
+                      Localizations.localeOf(context).languageCode == 'kk'
+                          ? 'Builder күнтізбесі'
+                          : 'Календарь Builder',
+                    ),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const BuilderCalendarPage(),
+                      ),
+                    ),
+                  ),
                   _buildGroupSection(
                     title: '1 · Календарь и расписание',
                     category: ToolCategory.calendar,
