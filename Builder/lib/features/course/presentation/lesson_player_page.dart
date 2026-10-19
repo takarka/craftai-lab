@@ -1342,19 +1342,25 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
         ),
         const SizedBox(height: 24),
 
+        // Combined Changes & Test in Chat Card (S26 / Step 5)
         BuilderCard(
+          key: const Key('lesson.testInChatCard'),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(cs.whatChangedTitle, style: BuilderType.title),
-              const SizedBox(height: 8),
+              const SizedBox(height: 10),
               if (level.targetSkillName != null) ...[
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const BuilderIcon(
-                      BuilderGlyph.check,
-                      size: 16,
-                      color: BuilderColors.primary,
+                    const Padding(
+                      padding: EdgeInsets.only(top: 2),
+                      child: BuilderIcon(
+                        BuilderGlyph.check,
+                        size: 16,
+                        color: BuilderColors.primary,
+                      ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -1365,14 +1371,18 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
               ],
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const BuilderIcon(
-                    BuilderGlyph.check,
-                    size: 16,
-                    color: BuilderColors.primary,
+                  const Padding(
+                    padding: EdgeInsets.only(top: 2),
+                    child: BuilderIcon(
+                      BuilderGlyph.check,
+                      size: 16,
+                      color: BuilderColors.primary,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -1380,13 +1390,17 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 8),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const BuilderIcon(
-                    BuilderGlyph.check,
-                    size: 16,
-                    color: BuilderColors.primary,
+                  const Padding(
+                    padding: EdgeInsets.only(top: 2),
+                    child: BuilderIcon(
+                      BuilderGlyph.check,
+                      size: 16,
+                      color: BuilderColors.primary,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -1394,17 +1408,9 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Test in Chat Card (S26 / Step 5)
-        BuilderCard(
-          key: const Key('lesson.testInChatCard'),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+              const SizedBox(height: 16),
+              const Divider(height: 1),
+              const SizedBox(height: 16),
               Row(
                 children: [
                   const BuilderIconTile(BuilderGlyph.robot),
@@ -1451,49 +1457,6 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   // Bottom Navigation Bar
   // --------------------------------------------------------------------------
   Widget _buildBottomBar(CourseLevel level, CourseStrings cs) {
-    if (_currentStep == LessonStep.summary) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          border: Border(top: BorderSide(color: BuilderColors.surfaceDisabled)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: double.infinity,
-              child: BuilderButton(
-                key: const Key('lesson.summaryChatBtn'),
-                label: cs.testInChatBtn,
-                icon: BuilderGlyph.robot,
-                variant: BuilderButtonVariant.secondary,
-                onPressed: () => _openChat(context),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                BuilderButton(
-                  key: const Key('lesson.backBtn'),
-                  label: cs.previousStep,
-                  variant: BuilderButtonVariant.secondary,
-                  onPressed: () => _moveToStep(LessonStep.quiz),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: BuilderButton(
-                    key: const Key('lesson.summaryFinishBtn'),
-                    label: level.id < 5 ? cs.nextLevelBtn : cs.finishCourseBtn,
-                    onPressed: () => _completeLevelAndAdvance(context),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    }
 
     return Container(
       padding: const EdgeInsets.all(16),

@@ -607,12 +607,12 @@ void main() {
         );
         await tester.pump();
 
-        // Verify Test in Chat card and buttons
+        // Verify combined changes & Test in Chat card and finish button
         expect(find.byKey(const Key('lesson.testInChatCard')), findsOneWidget);
         expect(find.byKey(const Key('lesson.testInChatBtn')), findsOneWidget);
-        expect(find.byKey(const Key('lesson.summaryChatBtn')), findsOneWidget);
+        expect(find.byKey(const Key('lesson.summaryChatBtn')), findsNothing);
         expect(find.byKey(const Key('lesson.summaryFinishBtn')), findsOneWidget);
-        expect(find.text('Протестировать в чате'), findsWidgets);
+        expect(find.text('Протестировать в чате'), findsOneWidget);
       },
     );
 
