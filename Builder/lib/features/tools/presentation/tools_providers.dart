@@ -21,6 +21,14 @@ final toolsRepositoryProvider = Provider<ToolsRepository>((ref) {
   return PersistentToolsRepository(database: db);
 });
 
+/// CraftAI search for the chosen app language; shared by the search page and tool.
+final searchAdapterProvider = Provider<SearchAdapter>(
+  (ref) => SearchAdapter(
+    client: ref.watch(craftAiClientProvider),
+    language: ref.watch(appLocaleProvider)?.languageCode ?? 'ru',
+  ),
+);
+
 /// Global provider for ToolsDispatcher.
 final toolsDispatcherProvider = Provider<ToolsDispatcher>((ref) {
   final repo = ref.watch(toolsRepositoryProvider);
@@ -33,10 +41,7 @@ final toolsDispatcherProvider = Provider<ToolsDispatcher>((ref) {
             repository: ref.watch(calendarRepositoryProvider),
             client: calendarClient,
           ),
-    searchAdapter: SearchAdapter(
-      client: ref.watch(craftAiClientProvider),
-      language: ref.watch(appLocaleProvider)?.languageCode ?? 'ru',
-    ),
+    searchAdapter: ref.watch(searchAdapterProvider),
   );
 });
 

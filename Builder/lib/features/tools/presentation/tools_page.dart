@@ -5,6 +5,7 @@ import '../../../ui_kit/ui_kit.dart';
 import '../domain/tool_definition.dart';
 import 'd07_os_permission_dialog.dart';
 import 'tool_confirmation_card.dart';
+import 'search_page.dart';
 import 'tools_providers.dart';
 import '../../mcp/presentation/mcp_page.dart';
 import '../../course/domain/course_topic.dart';
@@ -167,6 +168,20 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => BuilderCalendarPage(ownerId: widget.ownerId),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    key: const Key('tools.openSearch'),
+                    leading: const Icon(Icons.search),
+                    title: Text(
+                      Localizations.localeOf(context).languageCode == 'kk'
+                          ? 'CraftAI іздеуі'
+                          : 'Поиск CraftAI',
+                    ),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const SearchPage(),
                       ),
                     ),
                   ),

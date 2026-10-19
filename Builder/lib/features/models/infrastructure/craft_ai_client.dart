@@ -40,6 +40,11 @@ final class CraftAiServerException extends CraftAiException {
   });
 }
 
+/// The caller aborted the request; nothing is wrong with the connection.
+final class CraftAiCancelledException extends CraftAiException {
+  const CraftAiCancelledException(super.message, {super.requestId});
+}
+
 final class CraftAiNetworkException extends CraftAiException {
   const CraftAiNetworkException(
     super.message, {
@@ -81,6 +86,7 @@ class CraftAiClient {
     Map<String, dynamic>? body,
     Map<String, String>? headers,
     Duration timeout = const Duration(seconds: 15),
+    Future<void>? abortTrigger,
   }) async {
     final requestId = generateRequestId();
     final url = baseUri.resolve(path);
@@ -100,8 +106,11 @@ class CraftAiClient {
         requestHeaders['Authorization'] = 'Bearer ${tokens.accessToken}';
       }
       Future<http.Response> send() async {
-        final request = http.Request(method, url)
-          ..headers.addAll(requestHeaders);
+        final request = http.AbortableRequest(
+          method,
+          url,
+          abortTrigger: abortTrigger,
+        )..headers.addAll(requestHeaders);
         if (body != null) request.body = jsonEncode(body);
         return http.Response.fromStream(await _httpClient.send(request));
       }
@@ -123,7 +132,21 @@ class CraftAiClient {
 
       if (status >= 200 && status < 300) {
         if (bodyText.isEmpty) return <String, dynamic>{};
-        return jsonDecode(bodyText) as Map<String, dynamic>;
+        try {
+          return jsonDecode(bodyText) as Map<String, dynamic>;
+        } on FormatException {
+          throw CraftAiServerException(
+            'Response is not valid JSON.',
+            statusCode: status,
+            requestId: requestId,
+          );
+        } on TypeError {
+          throw CraftAiServerException(
+            'Response is not a JSON object.',
+            statusCode: status,
+            requestId: requestId,
+          );
+        }
       }
 
       if (status == 401) {
@@ -155,6 +178,8 @@ class CraftAiClient {
         statusCode: status,
         requestId: requestId,
       );
+    } on http.RequestAbortedException {
+      throw CraftAiCancelledException('Request cancelled.', requestId: requestId);
     } on SocketException {
       throw CraftAiNetworkException(
         'Network unavailable or connection failed.',
