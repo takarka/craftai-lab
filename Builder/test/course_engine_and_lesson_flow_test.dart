@@ -154,7 +154,7 @@ void main() {
       });
 
       test(
-        'Initial statuses: L1 is available, L2..5 are locked, L6..9 are comingSoon',
+        'Initial statuses: L1 is available, the rest of the sequence is locked, voice onwards are comingSoon',
         () async {
           final s1 = await courseRepo.getLevelStatus(testOwner, 1);
           expect(s1, LevelStatus.available);
@@ -167,7 +167,7 @@ void main() {
 
           final overall = await courseRepo.getOverallProgress(testOwner);
           expect(overall.completedLevelsCount, 0);
-          expect(overall.totalActiveLevels, 5);
+          expect(overall.totalActiveLevels, 6);
           expect(overall.activeLevelId, 1);
           expect(overall.isAllCompleted, isFalse);
         },
@@ -282,14 +282,14 @@ void main() {
       );
 
       test(
-        'Completing all 5 levels updates overall progress to isAllCompleted (F10-02, F10-10)',
+        'Completing all 6 enabled topics updates overall progress to isAllCompleted (F10-02, F10-10)',
         () async {
-          for (int i = 1; i <= 5; i++) {
+          for (final i in [1, 2, 10, 3, 4, 5]) {
             await courseRepo.completeLevel(ownerId: testOwner, levelId: i);
           }
 
           final overall = await courseRepo.getOverallProgress(testOwner);
-          expect(overall.completedLevelsCount, 5);
+          expect(overall.completedLevelsCount, 6);
           expect(overall.isAllCompleted, isTrue);
           expect(overall.activeLevelId, isNull);
         },

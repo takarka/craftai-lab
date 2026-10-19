@@ -8,6 +8,7 @@ import 'package:builder/features/assistant/domain/assistant_config.dart';
 import 'package:builder/features/course/domain/course_catalog.dart';
 import 'package:builder/features/course/domain/course_models.dart';
 import 'package:builder/features/course/domain/course_topic.dart';
+import 'package:builder/features/course/infrastructure/in_memory_course_repository.dart';
 import 'package:builder/features/course/infrastructure/persistent_course_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
@@ -29,13 +30,44 @@ void main() {
       expect(knowledge.id, 3);
       expect(knowledge.displayOrder, 4);
       expect(knowledge.targetSkillId, AssistantSkillId.knowledge);
-      expect(CourseCatalog.getLevel(10)!.comingSoon, isTrue);
+      expect(CourseCatalog.getLevel(10)!.comingSoon, isFalse);
       expect(CourseCatalog.getLevel(11)!.comingSoon, isTrue);
     }
     expect(AssistantSkillId.knowledge.level, 3);
     expect(AssistantSkillId.knowledge.displayLevel, 4);
     expect(AssistantSkillId.tools.displayLevel, 6);
   });
+
+  test(
+    'New learner passes topics in the visible order, Skills third',
+    () async {
+      final repository = InMemoryCourseRepository();
+      Future<List<LevelStatus>> statuses() async => [
+        for (final id in [1, 2, 10, 3, 4, 5])
+          await repository.getLevelStatus('new', id),
+      ];
+
+      expect(await statuses(), [
+        LevelStatus.available,
+        LevelStatus.locked,
+        LevelStatus.locked,
+        LevelStatus.locked,
+        LevelStatus.locked,
+        LevelStatus.locked,
+      ]);
+      await repository.completeLevel(ownerId: 'new', levelId: 1);
+      await repository.completeLevel(ownerId: 'new', levelId: 2);
+      expect((await statuses()).sublist(2, 4), [
+        LevelStatus.available,
+        LevelStatus.locked,
+      ]);
+      expect((await repository.getOverallProgress('new')).activeLevelId, 10);
+      await repository.completeLevel(ownerId: 'new', levelId: 10);
+      expect(await repository.getLevelStatus('new', 3), LevelStatus.available);
+      expect((await repository.getOverallProgress('new')).activeLevelId, 3);
+      expect((await repository.getOverallProgress('new')).totalActiveLevels, 6);
+    },
+  );
 
   group('Upgrade from stored nine-level progress', () {
     late Directory temp;
@@ -94,16 +126,22 @@ void main() {
           expect(knowledge.attemptsCount, 2);
           expect(knowledge.contentVersion, '1.0.0');
           expect(knowledge.completedCheckpoints, [1, 2, 3, 4, 5]);
-          for (final id in [10, 11]) {
-            expect(
-              progress.singleWhere((p) => p.levelId == id).isCompleted,
-              isFalse,
-            );
-            expect(
-              await repository.getLevelStatus('existing', id),
-              LevelStatus.comingSoon,
-            );
-          }
+          expect(
+            progress.singleWhere((p) => p.levelId == 10).isCompleted,
+            isFalse,
+          );
+          expect(
+            progress.singleWhere((p) => p.levelId == 11).isCompleted,
+            isFalse,
+          );
+          expect(
+            await repository.getLevelStatus('existing', 10),
+            LevelStatus.available,
+          );
+          expect(
+            await repository.getLevelStatus('existing', 11),
+            LevelStatus.comingSoon,
+          );
           expect(
             await repository.getLevelStatus('existing', 3),
             LevelStatus.completed,
@@ -129,7 +167,7 @@ void main() {
     );
 
     test(
-      'Inserted topics do not relock the next previously available lesson',
+      'Skills sits between Instructions and Knowledge in the unlock order',
       () async {
         await database.db.update(
           StorageSchemaV1.tableCourseProgress,
@@ -141,26 +179,35 @@ void main() {
           where: 'owner_id = ? AND level_id = ?',
           whereArgs: ['existing', '3'],
         );
+        // One curriculum order applies to every account, including test data.
+        await repository.saveCheckpoint(
+          ownerId: 'existing',
+          levelId: 2,
+          step: 5,
+        );
         expect(
           await repository.getLevelStatus('existing', 3),
-          LevelStatus.available,
+          LevelStatus.locked,
         );
         expect(
           await repository.getLevelStatus('existing', 10),
-          LevelStatus.comingSoon,
+          LevelStatus.available,
+        );
+        await repository.completeLevel(ownerId: 'existing', levelId: 10);
+        expect(
+          await repository.getLevelStatus('existing', 3),
+          LevelStatus.available,
         );
       },
     );
 
     test(
-      'New topics cannot be completed and reset remains owner scoped',
+      'Unavailable topics cannot be completed and reset remains owner scoped',
       () async {
-        for (final id in [10, 11]) {
-          await expectLater(
-            repository.completeLevel(ownerId: 'existing', levelId: id),
-            throwsStateError,
-          );
-        }
+        await expectLater(
+          repository.completeLevel(ownerId: 'existing', levelId: 11),
+          throwsStateError,
+        );
         await repository.resetCourseProgress('other');
         expect(
           (await repository.getOverallProgress(

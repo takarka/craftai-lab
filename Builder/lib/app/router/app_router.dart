@@ -24,6 +24,7 @@ import '../../features/onboarding/application/onboarding_controller.dart';
 import '../../features/onboarding/presentation/onboarding_pages.dart';
 import '../../features/course/presentation/course_page.dart';
 import '../../features/course/presentation/lesson_player_page.dart';
+import '../../features/course/presentation/lesson_access_gate.dart';
 import '../../features/course/presentation/glossary_page.dart';
 import '../../features/profile/presentation/profile_pages.dart';
 import '../localization/app_localizations.dart';
@@ -276,9 +277,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                             state.pathParameters['levelId'] ?? '1',
                           ) ??
                           1;
-                      return LessonPlayerPage(
+                      return LessonAccessGate(
                         ownerId: ownerId!,
                         levelId: levelId,
+                        child: LessonPlayerPage(
+                          ownerId: ownerId,
+                          levelId: levelId,
+                        ),
                       );
                     },
                   ),

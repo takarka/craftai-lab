@@ -389,6 +389,8 @@ void main() {
         // Navigated to /assistant in local mode!
         expect(find.byType(AssistantPage), findsOneWidget);
         expect(find.byKey(const Key('assistant.cloudAction')), findsNothing);
+        await tester.tap(find.byKey(const Key('assistant.newChatFab')));
+        await tester.pumpAndSettle();
         await tester.enterText(
           find.byKey(const Key('chat.inputField')),
           'Hello',

@@ -28,7 +28,7 @@ void main() {
     });
 
     test(
-      'CourseCatalog levels bilingual parity: identical IDs and counts (5 active, 6 comingSoon)',
+      'CourseCatalog levels bilingual parity: identical IDs and counts (6 active, 5 comingSoon)',
       () {
         final ruLevels = CourseCatalog.levelsRu;
         final kkLevels = CourseCatalog.levelsKk;
@@ -50,8 +50,8 @@ void main() {
             .where((l) => !l.comingSoon)
             .map((l) => l.id)
             .toList();
-        expect(activeRu, [1, 2, 3, 4, 5]);
-        expect(activeKk, [1, 2, 3, 4, 5]);
+        expect(activeRu, [1, 2, 10, 3, 4, 5]);
+        expect(activeKk, [1, 2, 10, 3, 4, 5]);
       },
     );
 

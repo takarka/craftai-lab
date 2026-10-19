@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 import '../../../core/storage/database/storage_database.dart';
 import '../../../core/storage/schema/storage_schema_v1.dart';
 import '../../assistant/domain/assistant_repository.dart';
+import '../domain/course_access.dart';
 import '../domain/course_catalog.dart';
 import '../domain/course_models.dart';
 import '../domain/course_topic.dart';
@@ -137,47 +138,16 @@ class PersistentCourseRepository implements CourseRepository {
 
   @override
   Future<LevelStatus> getLevelStatus(String ownerId, int levelId) async {
-    if (!CourseTopic.isEnabledStorageId(levelId)) {
-      return LevelStatus.comingSoon;
-    }
-
-    final all = await getAllProgress(ownerId);
-    final current = all.firstWhere(
-      (p) => p.levelId == levelId,
-      orElse: () => all.first,
-    );
-
-    if (current.isCompleted) return LevelStatus.completed;
-
-    // Level 1 is always unlocked
-    if (levelId == 1) {
-      return current.currentStep > 1
-          ? LevelStatus.inProgress
-          : LevelStatus.available;
-    }
-
-    // A topic requires the previous enabled topic to be completed
-    final prerequisite = CourseTopic.fromStorageId(levelId).prerequisite;
-    if (prerequisite != null) {
-      final prev = all.firstWhere(
-        (p) => p.levelId == prerequisite.storageId,
-        orElse: () => all.first,
-      );
-      if (!prev.isCompleted) {
-        return LevelStatus.locked;
-      }
-    }
-
-    return current.currentStep > 1
-        ? LevelStatus.inProgress
-        : LevelStatus.available;
+    return CourseAccess.status(levelId, await getAllProgress(ownerId));
   }
 
   @override
   Future<OverallCourseProgress> getOverallProgress(String ownerId) async {
     final all = await getAllProgress(ownerId);
     final completed = all
-        .where((p) => CourseTopic.isEnabledStorageId(p.levelId) && p.isCompleted)
+        .where(
+          (p) => CourseTopic.isEnabledStorageId(p.levelId) && p.isCompleted,
+        )
         .map((p) => p.levelId)
         .toSet();
 
@@ -245,7 +215,9 @@ class PersistentCourseRepository implements CourseRepository {
     await database.db.insert(StorageSchemaV1.tableCourseProgress, {
       'owner_id': ownerId,
       'level_id': levelId.toString(),
-      'content_version': CourseCatalog.currentContentVersion,
+      'content_version': rows.isNotEmpty
+          ? rows.first['content_version']
+          : CourseCatalog.currentContentVersion,
       'current_step': isAlreadyCompleted ? 5 : step.clamp(1, 5),
       'completed_checkpoints_json': jsonEncode(checkpoints),
       'attempts_count': rows.isNotEmpty
@@ -331,7 +303,9 @@ class PersistentCourseRepository implements CourseRepository {
     await database.db.insert(StorageSchemaV1.tableCourseProgress, {
       'owner_id': ownerId,
       'level_id': levelId.toString(),
-      'content_version': CourseCatalog.currentContentVersion,
+      'content_version': progressRows.isNotEmpty
+          ? progressRows.first['content_version']
+          : CourseCatalog.currentContentVersion,
       'current_step': passed ? 5 : 4,
       'completed_checkpoints_json': jsonEncode(checkpoints),
       'attempts_count': currentAttempts + 1,
@@ -388,7 +362,9 @@ class PersistentCourseRepository implements CourseRepository {
     await database.db.insert(StorageSchemaV1.tableCourseProgress, {
       'owner_id': ownerId,
       'level_id': levelId.toString(),
-      'content_version': CourseCatalog.currentContentVersion,
+      'content_version': existingRows.isNotEmpty
+          ? existingRows.first['content_version']
+          : CourseCatalog.currentContentVersion,
       'current_step': 5,
       'completed_checkpoints_json': jsonEncode(checkpoints),
       'attempts_count': existingRows.isNotEmpty

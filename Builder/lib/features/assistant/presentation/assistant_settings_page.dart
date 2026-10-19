@@ -32,10 +32,9 @@ class AssistantSettingsPage extends ConsumerWidget {
     final currentVersionNumber = versions.isNotEmpty
         ? versions.first.versionNumber
         : 1;
-    final highestLevel = completedLevels.fold<int>(
-      0,
-      (max, lvl) => lvl > max ? lvl : max,
-    );
+    final highestLevel = completedLevels
+        .where((id) => id >= 1 && id <= 5)
+        .fold<int>(0, (max, lvl) => lvl > max ? lvl : max);
     final preferences = ref
         .watch(teacherPreferencesProvider(ownerId))
         .asData

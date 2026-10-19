@@ -1,3 +1,4 @@
+import '../domain/course_access.dart';
 import '../domain/course_catalog.dart';
 import '../domain/course_models.dart';
 import '../domain/course_topic.dart';
@@ -35,45 +36,16 @@ final class InMemoryCourseRepository implements CourseRepository {
 
   @override
   Future<LevelStatus> getLevelStatus(String ownerId, int levelId) async {
-    if (!CourseTopic.isEnabledStorageId(levelId)) {
-      return LevelStatus.comingSoon;
-    }
-
-    final all = await getAllProgress(ownerId);
-    final current = all.firstWhere(
-      (p) => p.levelId == levelId,
-      orElse: () => all.first,
-    );
-
-    if (current.isCompleted) return LevelStatus.completed;
-
-    if (levelId == 1) {
-      return current.currentStep > 1
-          ? LevelStatus.inProgress
-          : LevelStatus.available;
-    }
-
-    final prerequisite = CourseTopic.fromStorageId(levelId).prerequisite;
-    if (prerequisite != null) {
-      final prev = all.firstWhere(
-        (p) => p.levelId == prerequisite.storageId,
-        orElse: () => all.first,
-      );
-      if (!prev.isCompleted) {
-        return LevelStatus.locked;
-      }
-    }
-
-    return current.currentStep > 1
-        ? LevelStatus.inProgress
-        : LevelStatus.available;
+    return CourseAccess.status(levelId, await getAllProgress(ownerId));
   }
 
   @override
   Future<OverallCourseProgress> getOverallProgress(String ownerId) async {
     final all = await getAllProgress(ownerId);
     final completed = all
-        .where((p) => CourseTopic.isEnabledStorageId(p.levelId) && p.isCompleted)
+        .where(
+          (p) => CourseTopic.isEnabledStorageId(p.levelId) && p.isCompleted,
+        )
         .map((p) => p.levelId)
         .toSet();
 

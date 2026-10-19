@@ -9,11 +9,16 @@ import '../../knowledge/presentation/knowledge_page.dart';
 import '../../knowledge/presentation/knowledge_providers.dart';
 import '../../memory/presentation/memory_page.dart';
 import '../../memory/presentation/memory_providers.dart';
+import '../../skills/presentation/skills_page.dart';
+import '../../skills/skills_providers.dart';
+import '../../skills/domain/skill_practice_evidence.dart';
+import '../../chat/chat_providers.dart';
 import '../../tools/presentation/tools_page.dart';
 import '../../tools/presentation/tools_providers.dart';
 import '../course_providers.dart';
 import '../domain/course_catalog.dart';
 import '../domain/course_models.dart';
+import '../domain/course_topic.dart';
 import 'course_strings.dart';
 
 class LessonPlayerPage extends ConsumerStatefulWidget {
@@ -201,9 +206,10 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
     }
 
     if (context.mounted) {
-      if (widget.levelId < 5) {
+      final nextTopic = CourseTopic.fromStorageId(widget.levelId).next;
+      if (nextTopic != null) {
         // Navigate to next level
-        context.pushReplacement('/course/lesson/${widget.levelId + 1}');
+        context.pushReplacement('/course/lesson/${nextTopic.storageId}');
       } else {
         // Course finished! Return to course page
         context.go('/course');
@@ -756,6 +762,96 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           const SizedBox(height: 16),
         ],
 
+        if (level.id == 10) ...[
+          BuilderCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const BuilderIcon(
+                      BuilderGlyph.bolt,
+                      size: 20,
+                      color: BuilderColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        cs.t('Навыки ассистента', 'Ассистент дағдылары'),
+                        style: BuilderType.title,
+                      ),
+                    ),
+                    if (_practiceEvidenceMet)
+                      BuilderBadge(
+                        cs.practiceCompleted,
+                        icon: BuilderGlyph.check,
+                      )
+                    else
+                      BuilderBadge(cs.practiceRequired, neutral: true),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  cs.t(
+                    'Сохраните навык, получите полные ответы на двух разных входах. Улучшите шаги или критерии качества и запустите сохранённую версию. Для проверки нужна сохранённая история чата. После возвращения из экрана навыков практика проверится автоматически.',
+                    'Дағдыны сақтап, екі түрлі дерекпен толық жауап алыңыз. Қадамдарды немесе сапа өлшемдерін жақсартып, сақталған нұсқаны іске қосыңыз. Тексеру үшін сақталған чат тарихы қажет. Дағдылар экранынан қайтқанда тәжірибе автоматты тексеріледі.',
+                  ),
+                  style: BuilderType.small,
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: BuilderButton(
+                    key: const Key('practice.openSkillsBtn'),
+                    label: _practiceEvidenceMet
+                        ? cs.t('Открыть навыки снова', 'Дағдыларды қайта ашу')
+                        : cs.t('Открыть навыки', 'Дағдыларды ашу'),
+                    icon: BuilderGlyph.chevron,
+                    onPressed: () async {
+                      await Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (ctx) => SkillsPage(ownerId: widget.ownerId),
+                        ),
+                      );
+                      final repository = ref.read(skillsRepositoryProvider);
+                      final skills = await repository?.getSkills(
+                        widget.ownerId,
+                      );
+                      if (!mounted) return;
+                      final evidence =
+                          skills != null &&
+                          await SkillPracticeEvidence.check(
+                            widget.ownerId,
+                            skills,
+                            ref.read(chatRepositoryProvider),
+                          );
+                      if (!mounted) return;
+                      if (evidence) {
+                        setState(() {
+                          _practiceEvidenceMet = true;
+                          _showComparison = true;
+                        });
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              cs.t(
+                                'Нужны завершённые ответы на двух разных входах и запуск улучшенных шагов или критериев.',
+                                'Екі түрлі дерекпен толық жауап және жақсартылған қадамдармен немесе өлшемдермен іске қосу қажет.',
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+
         // Interactive Case Study: Before / After Comparison
         BuilderCard(
           child: Column(
@@ -848,7 +944,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                       : BuilderButtonVariant.primary,
                   onPressed: () {
                     setState(() {
-                      _practiceEvidenceMet = true; // Evidence met (F10-07)
+                      if (level.id != 10) _practiceEvidenceMet = true;
                       _showComparison = true;
                     });
                   },
@@ -1556,7 +1652,9 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
       case LessonStep.summary:
         return BuilderButton(
           key: const Key('lesson.summaryFinishBtn'),
-          label: level.id < 5 ? cs.nextLevelBtn : cs.finishCourseBtn,
+          label: level.topic.next != null
+              ? cs.nextLevelBtn
+              : cs.finishCourseBtn,
           onPressed: () => _completeLevelAndAdvance(context),
         );
     }

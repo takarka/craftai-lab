@@ -6,6 +6,7 @@ import '../../../ui_kit/ui_kit.dart';
 import '../course_providers.dart';
 import '../domain/course_catalog.dart';
 import '../domain/course_models.dart';
+import '../domain/course_access.dart';
 import 'course_strings.dart';
 import 'glossary_page.dart';
 
@@ -52,6 +53,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
 
   void _showLockedLevelPreview(BuildContext context, CourseLevel level) {
     final cs = CourseStrings.of(context);
+    final prerequisite = CourseAccess.prerequisite(level.id);
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -85,8 +87,8 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                 ),
                 child: Text(
                   cs.t(
-                    'Откроется после прохождения Уровня ${CourseCatalog.getLevel(level.id - 1)!.displayOrder}. Ниже доступна теория для ознакомления:',
-                    '${CourseCatalog.getLevel(level.id - 1)!.displayOrder}-деңгейді аяқтағаннан кейін ашылады. Төменде танысу үшін теория қолжетімді:',
+                    'Откроется после прохождения Уровня ${prerequisite?.displayOrder ?? 1}. Ниже доступна теория для ознакомления:',
+                    '${prerequisite?.displayOrder ?? 1}-деңгейді аяқтағаннан кейін ашылады. Төменде танысу үшін теория қолжетімді:',
                   ),
                   style: BuilderType.small.copyWith(
                     color: BuilderColors.primary,
@@ -190,19 +192,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                         ),
                       );
 
-                      // Calculate locked status if prev not completed
-                      LevelStatus status = lvl.comingSoon
-                          ? LevelStatus.comingSoon
-                          : p.status;
-                      if (lvl.id > 1 && lvl.id <= 5 && !p.isCompleted) {
-                        final prev = progressList.firstWhere(
-                          (item) => item.levelId == lvl.id - 1,
-                          orElse: () => p,
-                        );
-                        if (!prev.isCompleted) {
-                          status = LevelStatus.locked;
-                        }
-                      }
+                      final status = CourseAccess.status(lvl.id, progressList);
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
