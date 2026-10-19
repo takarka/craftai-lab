@@ -11,6 +11,7 @@ import 'tools_providers.dart';
 import '../../mcp/presentation/mcp_page.dart';
 import '../../course/domain/course_topic.dart';
 import '../../calendar/presentation/builder_calendar_page.dart';
+import '../../schedules/presentation/schedules_page.dart';
 
 /// Screen S43: Assistant Tools Management (F14-02, F14-04, F14-09, F14-13).
 class ToolsPage extends ConsumerStatefulWidget {
@@ -109,6 +110,19 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                     const SizedBox(height: BuilderSpace.md),
                   ],
 
+                  ListTile(
+                    leading: const Icon(Icons.schedule),
+                    title: Text(
+                      Localizations.localeOf(context).languageCode == 'kk'
+                          ? 'AI кестелері'
+                          : 'AI-расписания',
+                    ),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => SchedulesPage(ownerId: widget.ownerId),
+                      ),
+                    ),
+                  ),
                   // 2. Info / Safety Banner (F14-05, F14-08)
                   Container(
                     key: const Key('tools.safetyBanner'),
@@ -168,7 +182,8 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                     ),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
-                        builder: (_) => BuilderCalendarPage(ownerId: widget.ownerId),
+                        builder: (_) =>
+                            BuilderCalendarPage(ownerId: widget.ownerId),
                       ),
                     ),
                   ),

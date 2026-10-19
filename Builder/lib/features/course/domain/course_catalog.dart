@@ -1,5 +1,6 @@
 import '../../assistant/domain/assistant_config.dart';
 import 'course_models.dart';
+import 'course_automation_lesson.dart';
 
 abstract final class CourseCatalog {
   static const String currentContentVersion = '1.2.0';
@@ -14,11 +15,8 @@ abstract final class CourseCatalog {
   );
 
   static List<CourseLevel> _buildCurriculum(List<CourseLevel> legacy, bool kk) {
-    final levels = [
-      ...legacy,
-      _skillsLevel(kk),
-      _plannedLevel(11, kk ? 'Автоматтандыру' : 'Автоматизация', kk),
-    ]..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
+    final levels = [...legacy, _skillsLevel(kk), AutomationLesson.level(kk)]
+      ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
     return List.unmodifiable(levels);
   }
 
@@ -184,29 +182,6 @@ abstract final class CourseCatalog {
             ),
           ],
         );
-
-  // These entries reserve the agreed curriculum positions. They do not claim
-  // implementation or award progress before EF-01 / EF-07 are accepted.
-  static CourseLevel _plannedLevel(int id, String title, bool kk) =>
-      CourseLevel(
-        id: id,
-        title: title,
-        subtitle: kk
-            ? 'Келесі жаңартуда қолжетімді болады'
-            : 'Будет доступно в следующем обновлении',
-        estimatedMinutes: 0,
-        comingSoon: true,
-        ideaTitle: title,
-        ideaText: kk ? 'Деңгей әзірленуде.' : 'Уровень готовится.',
-        ideaExampleTemplate: '',
-        practiceTask: '',
-        practiceDefaultInput: '',
-        practiceExpectedAnswer: '',
-        underTheHoodConcept: '',
-        underTheHoodExplanation: '',
-        underTheHoodLayers: const [],
-        quizQuestions: const [],
-      );
 
   static CourseLevel? getLevelByContentId(
     String contentId, {

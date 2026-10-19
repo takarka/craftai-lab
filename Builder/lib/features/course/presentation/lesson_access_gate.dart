@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../course_providers.dart';
 import '../domain/course_catalog.dart';
 import '../domain/course_models.dart';
+import 'automation_lesson_preview.dart';
 
 /// Apply the same curriculum policy to direct links as to the course cards.
 class LessonAccessGate extends ConsumerWidget {
@@ -44,6 +45,11 @@ class LessonAccessGate extends ConsumerWidget {
               levelId,
               locale: kk ? 'kk' : 'ru',
             );
+            if (status == LevelStatus.comingSoon &&
+                levelId == 11 &&
+                level != null) {
+              return AutomationLessonPreview(level: level, ownerId: ownerId);
+            }
             return Scaffold(
               appBar: AppBar(title: Text(level?.title ?? '')),
               body: ListView(

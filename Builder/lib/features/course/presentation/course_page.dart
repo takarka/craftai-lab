@@ -28,6 +28,10 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   ) {
     final cs = CourseStrings.of(context);
     if (status == LevelStatus.comingSoon) {
+      if (level.id == 11) {
+        context.push('/course/lesson/${level.id}');
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
