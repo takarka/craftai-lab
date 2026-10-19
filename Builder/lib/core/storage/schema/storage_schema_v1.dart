@@ -28,8 +28,38 @@ abstract final class StorageSchemaV1 {
   static const String tableCalendarOverrides = 'calendar_overrides';
   static const String tableCalendarSync = 'calendar_sync_state';
   static const String tableCalendarPending = 'calendar_pending_creates';
+  static const String tableDocumentWork = 'document_work';
 
   static const List<String> createStatements = [
+    // Additive document task state (EF-04); owner-scoped, removed with the owner.
+    '''
+    CREATE TABLE IF NOT EXISTS $tableDocumentWork (
+      owner_id TEXT NOT NULL,
+      id TEXT NOT NULL,
+      file_name TEXT NOT NULL,
+      size_bytes INTEGER NOT NULL,
+      skill TEXT NOT NULL,
+      params_json TEXT NOT NULL,
+      outputs_json TEXT NOT NULL,
+      consent_revision TEXT NOT NULL,
+      upload_key TEXT NOT NULL,
+      job_key TEXT NOT NULL,
+      stage TEXT NOT NULL,
+      staged_path TEXT,
+      attachment_id TEXT,
+      job_id TEXT,
+      remote_status TEXT,
+      progress INTEGER,
+      cancel_requested INTEGER NOT NULL,
+      waiting INTEGER NOT NULL,
+      problem_code TEXT,
+      artifacts_json TEXT NOT NULL,
+      created_at_utc TEXT NOT NULL,
+      updated_at_utc TEXT NOT NULL,
+      PRIMARY KEY (owner_id, id),
+      FOREIGN KEY (owner_id) REFERENCES $tableWorkspaces(owner_id) ON DELETE CASCADE
+    );
+    ''',
     // Additive calendar cache (EF-02); onOpen upgrades existing installations.
     '''
     CREATE TABLE IF NOT EXISTS $tableCalendarEvents (
@@ -379,6 +409,7 @@ abstract final class StorageSchemaV1 {
     'CREATE INDEX IF NOT EXISTS idx_facts_owner ON $tableMemoryFacts(owner_id, is_enabled);',
     'CREATE INDEX IF NOT EXISTS idx_calendar_events_owner ON $tableCalendarEvents(owner_id);',
     'CREATE INDEX IF NOT EXISTS idx_calendar_overrides_owner ON $tableCalendarOverrides(owner_id, event_id);',
+    'CREATE INDEX IF NOT EXISTS idx_document_work_owner ON $tableDocumentWork(owner_id, created_at_utc);',
     'CREATE INDEX IF NOT EXISTS idx_staging_status ON $tableFileStagingJournal(status);',
   ];
 }

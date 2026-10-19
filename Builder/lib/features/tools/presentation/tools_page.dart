@@ -5,6 +5,7 @@ import '../../../ui_kit/ui_kit.dart';
 import '../domain/tool_definition.dart';
 import 'd07_os_permission_dialog.dart';
 import 'tool_confirmation_card.dart';
+import '../../documents/presentation/documents_page.dart';
 import 'search_page.dart';
 import 'tools_providers.dart';
 import '../../mcp/presentation/mcp_page.dart';
@@ -168,6 +169,20 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => BuilderCalendarPage(ownerId: widget.ownerId),
+                      ),
+                    ),
+                  ),
+                  ListTile(
+                    key: const Key('tools.openDocuments'),
+                    leading: const Icon(Icons.upload_file),
+                    title: Text(
+                      Localizations.localeOf(context).languageCode == 'kk'
+                          ? 'DOCX және PDF құжаттары'
+                          : 'Документы DOCX и PDF',
+                    ),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => DocumentsPage(ownerId: widget.ownerId),
                       ),
                     ),
                   ),

@@ -762,7 +762,7 @@ void main() {
     testWidgets(
       'renders S43 with 3 tool groups, grant toggles, D07 dialog and 44x44 targets',
       (tester) async {
-        tester.view.physicalSize = const Size(800, 1400);
+        tester.view.physicalSize = const Size(800, 2200);
         tester.view.devicePixelRatio = 1.0;
         addTearDown(() {
           tester.view.resetPhysicalSize();

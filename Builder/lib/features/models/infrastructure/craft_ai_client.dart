@@ -3,13 +3,22 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart' show MediaType;
 import '../../session/infrastructure/secure_token_storage.dart';
 
 sealed class CraftAiException implements Exception {
-  const CraftAiException(this.message, {this.statusCode, this.requestId});
+  const CraftAiException(
+    this.message, {
+    this.statusCode,
+    this.requestId,
+    this.code,
+  });
   final String message;
   final int? statusCode;
   final String? requestId;
+
+  /// Domain error code from the `ErrorResponse` body, e.g. `file.no-text-layer`.
+  final String? code;
 
   @override
   String toString() =>
@@ -21,6 +30,7 @@ final class CraftAiAuthException extends CraftAiException {
     super.message, {
     super.statusCode,
     super.requestId,
+    super.code,
   });
 }
 
@@ -29,6 +39,7 @@ final class CraftAiForbiddenException extends CraftAiException {
     super.message, {
     super.statusCode,
     super.requestId,
+    super.code,
   });
 }
 
@@ -37,6 +48,7 @@ final class CraftAiServerException extends CraftAiException {
     super.message, {
     super.statusCode,
     super.requestId,
+    super.code,
   });
 }
 
@@ -50,7 +62,22 @@ final class CraftAiNetworkException extends CraftAiException {
     super.message, {
     super.statusCode,
     super.requestId,
+    super.code,
   });
+}
+
+/// A file sent as `multipart/form-data`; rebuilt for the token-refresh retry.
+class UploadFile {
+  const UploadFile({
+    required this.field,
+    required this.fileName,
+    required this.bytes,
+    required this.contentType,
+  });
+  final String field;
+  final String fileName;
+  final List<int> bytes;
+  final String contentType;
 }
 
 class CraftAiClient {
@@ -87,6 +114,8 @@ class CraftAiClient {
     Map<String, String>? headers,
     Duration timeout = const Duration(seconds: 15),
     Future<void>? abortTrigger,
+    UploadFile? upload,
+    Map<String, String>? fields,
   }) async {
     final requestId = generateRequestId();
     final url = baseUri.resolve(path);
@@ -106,6 +135,25 @@ class CraftAiClient {
         requestHeaders['Authorization'] = 'Bearer ${tokens.accessToken}';
       }
       Future<http.Response> send() async {
+        if (upload != null) {
+          final request =
+              http.AbortableMultipartRequest(
+                  method,
+                  url,
+                  abortTrigger: abortTrigger,
+                )
+                ..headers.addAll(requestHeaders)
+                ..fields.addAll(fields ?? const {})
+                ..files.add(
+                  http.MultipartFile.fromBytes(
+                    upload.field,
+                    upload.bytes,
+                    filename: upload.fileName,
+                    contentType: MediaType.parse(upload.contentType),
+                  ),
+                );
+          return http.Response.fromStream(await _httpClient.send(request));
+        }
         final request = http.AbortableRequest(
           method,
           url,
@@ -149,11 +197,13 @@ class CraftAiClient {
         }
       }
 
+      final errorCode = _errorCode(bodyText);
       if (status == 401) {
         throw CraftAiAuthException(
           'Unauthorized: session expired or token missing.',
           statusCode: status,
           requestId: requestId,
+          code: errorCode,
         );
       }
 
@@ -162,6 +212,7 @@ class CraftAiClient {
           'Access forbidden.',
           statusCode: status,
           requestId: requestId,
+          code: errorCode,
         );
       }
 
@@ -170,6 +221,7 @@ class CraftAiClient {
           'CraftAI server error occurred.',
           statusCode: status,
           requestId: requestId,
+          code: errorCode,
         );
       }
 
@@ -177,6 +229,7 @@ class CraftAiClient {
         'Unexpected response status $status',
         statusCode: status,
         requestId: requestId,
+        code: errorCode,
       );
     } on http.RequestAbortedException {
       throw CraftAiCancelledException('Request cancelled.', requestId: requestId);
@@ -199,6 +252,16 @@ class CraftAiClient {
       rethrow;
     } catch (e) {
       throw CraftAiNetworkException('Network error: $e', requestId: requestId);
+    }
+  }
+
+  static String? _errorCode(String bodyText) {
+    try {
+      final decoded = jsonDecode(bodyText);
+      final code = decoded is Map ? decoded['code'] : null;
+      return code is String && code.length <= 100 ? code : null;
+    } catch (_) {
+      return null;
     }
   }
 
