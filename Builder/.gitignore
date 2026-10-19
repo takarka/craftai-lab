@@ -32,6 +32,9 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+/android/app/google-services.json
+/android/.kotlin/
+/ios/Runner/GoogleService-Info.plist
 
 # Symbolication related
 app.*.symbols

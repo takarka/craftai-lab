@@ -13,7 +13,7 @@ Map<String, dynamic> run({
   'trigger': trigger,
   'status': status,
   'delivery': delivery,
-  'result': {
+  'result': <String, dynamic>{
     'generatedAtUtc': '2026-10-19T03:00:00Z',
     'dataSnapshotAtUtc': '2026-10-19T02:59:00Z',
     'sections': [

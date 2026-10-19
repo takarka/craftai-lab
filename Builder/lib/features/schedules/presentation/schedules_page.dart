@@ -9,6 +9,7 @@ import '../../session/session_repository.dart';
 import '../infrastructure/builder_schedules_client.dart';
 import 'schedule_editor.dart';
 import 'schedule_labels.dart';
+import '../push/push_settings_card.dart';
 
 final builderSchedulesClientProvider = Provider<BuilderSchedulesClient?>((ref) {
   final api = ref.watch(craftAiClientProvider);
@@ -16,8 +17,9 @@ final builderSchedulesClientProvider = Provider<BuilderSchedulesClient?>((ref) {
 });
 
 class SchedulesPage extends ConsumerStatefulWidget {
-  const SchedulesPage({super.key, required this.ownerId});
+  const SchedulesPage({super.key, required this.ownerId, this.initialRunId});
   final String ownerId;
+  final String? initialRunId;
   @override
   ConsumerState<SchedulesPage> createState() => _SchedulesPageState();
 }
@@ -84,7 +86,7 @@ class _SchedulesPageState extends ConsumerState<SchedulesPage>
               run['id'] as String,
         };
         for (final schedule in schedules) {
-          if (schedule['id'] == _scheduleId) {
+          if (schedule['id'] == _scheduleId && widget.initialRunId == null) {
             final last = schedule['lastRun'] as Map?;
             if (last != null &&
                 !(_runs ?? <Json>[]).any((r) => r['id'] == last['runId'])) {
@@ -124,7 +126,12 @@ class _SchedulesPageState extends ConsumerState<SchedulesPage>
       await action();
     } catch (e) {
       if (mounted && generation == _generation && _authorized) {
-        _error = e is CraftAiException && e.statusCode == 412
+        _error = e is CraftAiException && e.statusCode == 404
+            ? t(
+                'Результат недоступен: он мог быть удалён, срок хранения истёк или он принадлежит другому аккаунту.',
+                'Нәтиже қолжетімсіз: ол жойылған, сақтау мерзімі өткен немесе басқа аккаунтқа тиесілі болуы мүмкін.',
+              )
+            : e is CraftAiException && e.statusCode == 412
             ? t(
                 'Расписание изменилось. Обновите список и откройте редактор заново.',
                 'Кесте өзгерді. Тізімді жаңартып, редакторды қайта ашыңыз.',
@@ -158,6 +165,13 @@ class _SchedulesPageState extends ConsumerState<SchedulesPage>
     final schedules = await client.list();
     if (!_alive) return;
     _schedules = schedules;
+    if (widget.initialRunId != null) {
+      final run = await client.run(widget.initialRunId!);
+      if (!_alive) return;
+      _scheduleId = run['scheduleId'] as String;
+      _runs = [run];
+      return;
+    }
     if (_scheduleId != null) await _history(_scheduleId!);
   });
 
@@ -266,6 +280,8 @@ class _SchedulesPageState extends ConsumerState<SchedulesPage>
                   ),
                 ),
                 if (_busy) const LinearProgressIndicator(),
+                if (widget.initialRunId == null)
+                  PushSettingsCard(ownerId: widget.ownerId),
                 if (_error != null)
                   Text(
                     _error!,
@@ -273,8 +289,9 @@ class _SchedulesPageState extends ConsumerState<SchedulesPage>
                       color: Theme.of(context).colorScheme.error,
                     ),
                   ),
-                for (final template in ['daily-brief', 'idea-generator'])
-                  _card(template),
+                if (widget.initialRunId == null)
+                  for (final template in ['daily-brief', 'idea-generator'])
+                    _card(template),
                 if (_runs != null) ...[
                   const Divider(),
                   Text(
@@ -294,6 +311,9 @@ class _SchedulesPageState extends ConsumerState<SchedulesPage>
                       child: Text(t('Ещё', 'Тағы')),
                     ),
                 ],
+                if (widget.initialRunId != null)
+                  for (final template in ['daily-brief', 'idea-generator'])
+                    _card(template),
               ],
             ),
     );

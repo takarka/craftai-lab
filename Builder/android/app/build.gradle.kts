@@ -5,6 +5,11 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// A checkout without a Firebase project must remain buildable.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "kz.craftai.builder"
     compileSdk = flutter.compileSdkVersion

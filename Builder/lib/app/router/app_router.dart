@@ -30,6 +30,7 @@ import '../../features/profile/presentation/profile_pages.dart';
 import '../localization/app_localizations.dart';
 import '../presentation/foundation_pages.dart';
 import '../providers.dart';
+import '../../features/schedules/presentation/schedules_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   // Replace navigation stacks when account ownership changes.
@@ -103,6 +104,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       message: AppLocalizations.of(context).featurePending,
     ),
     routes: [
+      GoRoute(
+        path: '/automation/runs/:runId',
+        builder: (context, state) => SchedulesPage(
+          ownerId: ownerId!,
+          initialRunId: state.pathParameters['runId'],
+        ),
+      ),
       GoRoute(
         path: '/startup',
         builder: (context, state) => const StartupPage(),

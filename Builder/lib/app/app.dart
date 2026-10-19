@@ -8,6 +8,7 @@ import 'localization/app_localizations.dart';
 import 'presentation/foundation_pages.dart';
 import 'providers.dart';
 import 'router/app_router.dart';
+import '../features/schedules/push/push_providers.dart';
 
 class BuilderApp extends ConsumerWidget {
   const BuilderApp({super.key});
@@ -16,6 +17,7 @@ class BuilderApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.watch(profileLocaleRestoreProvider);
     ref.watch(calendarReminderAutoSyncProvider);
+    ref.watch(pushLifecycleProvider);
     final locale = ref.watch(appLocaleProvider);
     final configured = ref.watch(appConfigProvider) != null;
     if (!configured) {
@@ -34,6 +36,7 @@ class BuilderApp extends ConsumerWidget {
       );
     }
     return MaterialApp.router(
+      scaffoldMessengerKey: ref.watch(pushMessengerKeyProvider),
       debugShowCheckedModeBanner: false,
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       theme: BuilderTheme.light,

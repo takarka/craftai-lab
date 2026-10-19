@@ -20,6 +20,7 @@ class CraftAiAuthGateway implements AuthGateway {
     http.Client? httpClient,
     this.sessionRepository,
     this.tokenStorage,
+    this.beforeLogout,
   }) : _httpClient = httpClient ?? _createClient(baseUri) {
     _initDefaultDocuments();
   }
@@ -41,6 +42,7 @@ class CraftAiAuthGateway implements AuthGateway {
   final http.Client _httpClient;
   final SessionRepository? sessionRepository;
   final SecureTokenStorage? tokenStorage;
+  final Future<void> Function()? beforeLogout;
 
   final Map<String, AuthLegalDocuments> _cachedDocuments = {};
 
@@ -321,6 +323,7 @@ class CraftAiAuthGateway implements AuthGateway {
 
   @override
   Future<void> logout() async {
+    await beforeLogout?.call();
     final tokens = tokenStorage == null
         ? null
         : await tokenStorage!.readTokens();

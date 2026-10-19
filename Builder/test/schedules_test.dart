@@ -16,6 +16,10 @@ void main() {
   testWidgets(
     'poll completes a queued run and confirmed deletion removes its result',
     (tester) async {
+      tester.view.physicalSize = const Size(1000, 2600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       var deleted = false;
       final run = <String, dynamic>{
         'id': 'r1',
@@ -92,6 +96,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('История').first);
       await tester.tap(find.text('История').first);
       await tester.pumpAndSettle();
       expect(find.textContaining('В очереди'), findsOneWidget);
@@ -324,6 +329,10 @@ void main() {
   testWidgets(
     'failed run never displays an old result and delivery stays separate',
     (tester) async {
+      tester.view.physicalSize = const Size(1000, 2600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final client = BuilderSchedulesClient(
         CraftAiClient(
           baseUri: Uri.parse('https://example.test'),
@@ -387,6 +396,7 @@ void main() {
       // Session restoration may complete after the initial microtask.
       await tester.tap(find.byIcon(Icons.refresh));
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('История').first);
       await tester.tap(find.text('История').first);
       await tester.pumpAndSettle();
       expect(
