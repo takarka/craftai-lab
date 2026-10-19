@@ -20,19 +20,18 @@ class ToolsRegistry {
           'Просмотреть события и расписание уроков за указанный период времени.',
       category: ToolCategory.calendar,
       capability: ToolCapability.readOnly,
-      defaultOsPermission: OsPermissionStatus.notRequested,
       parametersSchema: {
         'type': 'object',
         'properties': {
           'start_date': {
             'type': 'string',
             'description':
-                'Начало периода (ISO-8601, например 2026-10-20T08:00:00Z)',
+                'Первый день периода, дата календаря Builder (например 2026-10-20)',
           },
           'end_date': {
             'type': 'string',
             'description':
-                'Конец периода (ISO-8601, например 2026-10-20T18:00:00Z)',
+                'Последний день периода включительно (например 2026-10-26), не более 62 дней',
           },
         },
         'required': ['start_date', 'end_date'],
@@ -45,7 +44,6 @@ class ToolsRegistry {
           'Создать новое событие, урок или консультацию в календаре (требует подтверждения учителя).',
       category: ToolCategory.calendar,
       capability: ToolCapability.requiresConfirmation,
-      defaultOsPermission: OsPermissionStatus.notRequested,
       parametersSchema: {
         'type': 'object',
         'properties': {
@@ -56,17 +54,20 @@ class ToolsRegistry {
           },
           'start_time': {
             'type': 'string',
-            'description': 'Время начала (ISO-8601)',
+            'description':
+                'Местное время начала без часового пояса, yyyy-MM-ddTHH:mm:ss (для всего дня — yyyy-MM-dd)',
           },
           'end_time': {
             'type': 'string',
-            'description': 'Время окончания (ISO-8601)',
+            'description':
+                'Местное время окончания без часового пояса, yyyy-MM-ddTHH:mm:ss (для всего дня — yyyy-MM-dd)',
+          },
+          'time_zone': {
+            'type': 'string',
+            'description':
+                'Часовой пояс IANA, например Asia/Almaty; нужен, если событие не на весь день',
           },
           'is_all_day': {'type': 'boolean', 'description': 'Весь день'},
-          'location': {
-            'type': 'string',
-            'description': 'Кабинет или место проведения',
-          },
           'notes': {
             'type': 'string',
             'description': 'Дополнительные заметки к событию',

@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:builder/app/localization/app_localizations.dart';
@@ -12,7 +15,10 @@ import 'package:builder/features/tools/domain/pending_action.dart';
 import 'package:builder/features/tools/domain/tool_definition.dart';
 import 'package:builder/features/tools/domain/tools_dispatcher.dart';
 import 'package:builder/features/tools/domain/tools_registry.dart';
-import 'package:builder/features/tools/infrastructure/calendar_adapter.dart';
+import 'package:builder/features/calendar/infrastructure/builder_calendar_client.dart';
+import 'package:builder/features/calendar/infrastructure/calendar_repository.dart';
+import 'package:builder/features/models/infrastructure/craft_ai_client.dart';
+import 'package:builder/features/tools/infrastructure/builder_calendar_adapter.dart';
 import 'package:builder/features/tools/infrastructure/communication_adapter.dart';
 import 'package:builder/features/tools/infrastructure/notes_adapter.dart';
 import 'package:builder/features/tools/infrastructure/persistent_tools_repository.dart';
@@ -21,6 +27,73 @@ import 'package:builder/features/tools/presentation/d07_os_permission_dialog.dar
 import 'package:builder/features/tools/presentation/tool_confirmation_card.dart';
 import 'package:builder/features/tools/presentation/tools_page.dart';
 import 'package:builder/features/tools/presentation/tools_providers.dart';
+
+/// Server calendar double: one lesson on 2026-10-20; records created bodies.
+BuilderCalendarAdapter _calendarAdapter({
+  bool serverDown = false,
+  List<Map<String, dynamic>>? created,
+  CalendarRepository? repository,
+}) {
+  const event = {
+    'id': 'e1',
+    'version': 1,
+    'title': 'Урок математики 7Б',
+    'allDay': false,
+    'start': '2026-10-20T09:00:00',
+    'end': '2026-10-20T09:45:00',
+    'timeZone': 'Asia/Almaty',
+    'reminders': <int>[],
+  };
+  final server = MockClient((request) async {
+    if (serverDown) return http.Response('{}', 503);
+    final headers = {'content-type': 'application/json; charset=utf-8'};
+    if (request.method == 'POST') {
+      created?.add(jsonDecode(request.body) as Map<String, dynamic>);
+      return http.Response('{}', 201, headers: headers);
+    }
+    if (request.url.path.endsWith('/changes')) {
+      return http.Response(
+        jsonEncode({
+          'items': [
+            {'type': 'upsert', 'eventId': 'e1', 'event': event},
+          ],
+          'nextCursor': 'c1',
+          'hasMore': false,
+        }),
+        200,
+        headers: headers,
+      );
+    }
+    return http.Response(
+      jsonEncode({
+        'from': request.url.queryParameters['from'],
+        'to': request.url.queryParameters['to'],
+        'items': [
+          {
+            'eventId': 'e1',
+            'occurrenceDate': '2026-10-20',
+            'title': 'Урок математики 7Б',
+            'allDay': false,
+            'start': '2026-10-20T09:00:00',
+            'end': '2026-10-20T09:45:00',
+            'timeZone': 'Asia/Almaty',
+          },
+        ],
+      }),
+      200,
+      headers: headers,
+    );
+  });
+  return BuilderCalendarAdapter(
+    repository: repository ?? InMemoryCalendarRepository(),
+    client: BuilderCalendarClient(
+      CraftAiClient(
+        baseUri: Uri.parse('https://api.example.test'),
+        httpClient: server,
+      ),
+    ),
+  );
+}
 
 void main() {
   sqfliteFfiInit();
@@ -240,57 +313,98 @@ void main() {
     );
   });
 
-  group('F14-03 & F14-04: Calendar Adapter & Permission Verification', () {
-    test('reads educational calendar events within date range', () async {
-      final adapter = CalendarAdapter();
-      final events = await adapter.readEvents(
-        startDate: DateTime(2026, 1, 1),
-        endDate: DateTime(2026, 12, 31),
+  group('EF-02: calendar tools use the server calendar', () {
+    test('reads occurrences from the synced server calendar', () async {
+      final result = await _calendarAdapter().read(
+        testOwnerId,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
       );
-      expect(events.length, 2);
-      expect(events.first.title, contains('Урок математики'));
-      expect(events.last.title, contains('Педсовет'));
+      expect(result['count'], 1);
+      final event = (result['events'] as List).single as Map;
+      expect(event['title'], contains('Урок математики'));
+      expect(event['time_zone'], 'Asia/Almaty');
     });
 
-    test('creates new calendar event and stores in adapter', () async {
-      final adapter = CalendarAdapter();
-      final newEvt = await adapter.createEvent(
+    test('never invents events when offline and never synced', () async {
+      expect(
+        () => _calendarAdapter(serverDown: true).read(
+          testOwnerId,
+          startDate: '2026-10-01',
+          endDate: '2026-10-31',
+        ),
+        throwsA(isA<ToolExecutionException>()),
+      );
+    });
+
+    test('reads the cached copy when the server becomes unreachable', () async {
+      final repository = InMemoryCalendarRepository();
+      await _calendarAdapter(repository: repository).read(
+        testOwnerId,
+        startDate: '2026-10-01',
+        endDate: '2026-10-31',
+      );
+      final offline = await _calendarAdapter(
+        serverDown: true,
+        repository: repository,
+      ).read(testOwnerId, startDate: '2026-10-01', endDate: '2026-10-31');
+      expect(offline['count'], 1);
+    });
+
+    test('creates wall-clock events with an IANA zone', () async {
+      final created = <Map<String, dynamic>>[];
+      final result = await _calendarAdapter(created: created).create(
+        testOwnerId,
         title: 'Родительское собрание 7Б',
-        startTime: DateTime(2026, 10, 20, 18, 0),
-        endTime: DateTime(2026, 10, 20, 19, 30),
-        location: 'Кабинет 304',
+        start: '2026-10-20T18:00:00',
+        end: '2026-10-20T19:30:00',
+        timeZone: 'Asia/Almaty',
       );
-      expect(newEvt.id, isNotEmpty);
-      expect(newEvt.title, 'Родительское собрание 7Б');
-
-      final queried = await adapter.readEvents(
-        startDate: DateTime(2026, 10, 20),
-        endDate: DateTime(2026, 10, 21),
-      );
-      expect(queried.any((e) => e.title == 'Родительское собрание 7Б'), isTrue);
+      expect(result['status'], 'saved');
+      expect(created.single['start'], '2026-10-20T18:00:00');
+      expect(created.single['timeZone'], 'Asia/Almaty');
     });
 
-    test(
-      'throws ToolExecutionException with denied status if OS permission denied',
-      () async {
-        final adapter = CalendarAdapter(
-          permissionStatus: OsPermissionStatus.denied,
-        );
-        expect(
-          () => adapter.readEvents(
-            startDate: DateTime(2026, 1, 1),
-            endDate: DateTime(2026, 12, 31),
-          ),
-          throwsA(
-            isA<ToolExecutionException>().having(
-              (e) => e.status,
-              'status',
-              OsPermissionStatus.denied,
-            ),
-          ),
-        );
-      },
-    );
+    test('queues a create whose outcome is unknown', () async {
+      final repository = InMemoryCalendarRepository();
+      final result =
+          await _calendarAdapter(
+            serverDown: true,
+            repository: repository,
+          ).create(
+            testOwnerId,
+            title: 'Совещание',
+            start: '2026-10-20T10:00:00',
+            end: '2026-10-20T11:00:00',
+            timeZone: 'Asia/Almaty',
+          );
+      expect(result['status'], 'queued');
+      expect(await repository.pendingCreates(testOwnerId), hasLength(1));
+    });
+
+    test('requires a time zone for timed events', () async {
+      expect(
+        () => _calendarAdapter().create(
+          testOwnerId,
+          title: 'Совещание',
+          start: '2026-10-20T10:00:00',
+          end: '2026-10-20T11:00:00',
+        ),
+        throwsA(isA<ToolExecutionException>()),
+      );
+    });
+
+    test('dispatcher without a calendar fails, no sample data', () async {
+      final repo = InMemoryToolsRepository();
+      await repo.ensureDefaultGrants(testOwnerId);
+      final result = await ToolsDispatcher(repository: repo).dispatch(
+        ownerId: testOwnerId,
+        toolName: ToolsRegistry.readCalendar,
+        args: {'start_date': '2026-10-01', 'end_date': '2026-10-31'},
+      );
+      expect(result.success, isFalse);
+      expect(result.errorCode, 'EXECUTION_ERROR');
+    });
   });
 
   group('F14-05 & F14-12: PendingAction State Machine & Deterministic Hash', () {
@@ -512,19 +626,19 @@ void main() {
       () async {
         final repo = PersistentToolsRepository(database: storageDb);
         await repo.ensureDefaultGrants(testOwnerId);
-        final dispatcher = ToolsDispatcher(repository: repo);
+        final dispatcher = ToolsDispatcher(
+          repository: repo,
+          calendarAdapter: _calendarAdapter(),
+        );
 
         final result = await dispatcher.dispatch(
           ownerId: testOwnerId,
           toolName: ToolsRegistry.readCalendar,
-          args: {
-            'start_date': '2026-01-01T00:00:00Z',
-            'end_date': '2026-12-31T23:59:59Z',
-          },
+          args: {'start_date': '2026-10-01', 'end_date': '2026-10-31'},
         );
 
         expect(result.success, isTrue);
-        expect(result.data!['count'], 2);
+        expect(result.data!['count'], 1);
 
         final logs = await repo.getInvocations(testOwnerId);
         expect(logs.length, 1);
@@ -580,16 +694,16 @@ void main() {
       () async {
         final repo = InMemoryToolsRepository();
         await repo.ensureDefaultGrants(testOwnerId);
-        final dispatcher = ToolsDispatcher(repository: repo);
+        final dispatcher = ToolsDispatcher(
+          repository: repo,
+          calendarAdapter: _calendarAdapter(),
+        );
 
         // Scenario 1: Timetable query
         final r1 = await dispatcher.dispatch(
           ownerId: testOwnerId,
           toolName: ToolsRegistry.readCalendar,
-          args: {
-            'start_date': '2026-01-01T00:00:00Z',
-            'end_date': '2026-12-31T23:59:59Z',
-          },
+          args: {'start_date': '2026-10-01', 'end_date': '2026-10-31'},
         );
         expect(r1.success, isTrue);
 
@@ -599,8 +713,9 @@ void main() {
           toolName: ToolsRegistry.createCalendarEvent,
           args: {
             'title': 'Родительское собрание 7Б',
-            'start_time': '2026-10-20T18:00:00Z',
-            'end_time': '2026-10-20T19:30:00Z',
+            'start_time': '2026-10-20T18:00:00',
+            'end_time': '2026-10-20T19:30:00',
+            'time_zone': 'Asia/Almaty',
           },
         );
         expect(r2.requiresConfirmation, isTrue);
@@ -679,24 +794,12 @@ void main() {
         expect(find.textContaining('3 · Поиск в интернете'), findsOneWidget);
         expect(find.textContaining('Подготовить звонок'), findsNothing);
 
-        // 2. Verify D07 Dialog Open via Permission Chip
-        final permChip = find.byKey(
-          Key('tool.osPermBtn.${ToolsRegistry.readCalendar}'),
-        );
-        expect(permChip, findsOneWidget);
-        await tester.tap(permChip);
-        await tester.pumpAndSettle();
-
-        // D07 dialog should appear
-        expect(find.byType(D07OsPermissionDialog), findsOneWidget);
+        // 2. The server calendar needs no phone-calendar permission.
         expect(
-          find.textContaining('Системный доступ: Чтение календаря'),
-          findsOneWidget,
+          find.byKey(Key('tool.osPermBtn.${ToolsRegistry.readCalendar}')),
+          findsNothing,
         );
-
-        // Dismiss dialog
-        await tester.tap(find.byKey(const Key('d07.proceedBtn')));
-        await tester.pumpAndSettle();
+        expect(find.byType(D07OsPermissionDialog), findsNothing);
 
         // 3. Verify min 44x44 touch targets for action buttons
         final testEventBtn = find.byKey(const Key('tools.createTestEventBtn'));

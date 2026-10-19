@@ -7,7 +7,9 @@ import '../../../core/storage/storage_providers.dart';
 import '../domain/pending_action.dart';
 import '../domain/tool_definition.dart';
 import '../domain/tool_grant.dart';
+import '../../calendar/application/calendar_controller.dart';
 import '../domain/tools_dispatcher.dart';
+import '../infrastructure/builder_calendar_adapter.dart';
 import '../domain/tools_registry.dart';
 import '../domain/tools_repository.dart';
 import '../infrastructure/persistent_tools_repository.dart';
@@ -22,8 +24,15 @@ final toolsRepositoryProvider = Provider<ToolsRepository>((ref) {
 /// Global provider for ToolsDispatcher.
 final toolsDispatcherProvider = Provider<ToolsDispatcher>((ref) {
   final repo = ref.watch(toolsRepositoryProvider);
+  final calendarClient = ref.watch(builderCalendarClientProvider);
   return ToolsDispatcher(
     repository: repo,
+    calendarAdapter: calendarClient == null
+        ? null
+        : BuilderCalendarAdapter(
+            repository: ref.watch(calendarRepositoryProvider),
+            client: calendarClient,
+          ),
     searchAdapter: SearchAdapter(
       client: ref.watch(craftAiClientProvider),
       language: ref.watch(appLocaleProvider)?.languageCode ?? 'ru',
@@ -211,15 +220,15 @@ class ToolsNotifier extends Notifier<ToolsState> {
       actionName: ToolsRegistry.createCalendarEvent,
       paramsHash: PendingAction.computeParamsHash({
         'title': 'Родительское собрание 7Б',
-        'start_time': '2026-10-20T18:00:00Z',
-        'end_time': '2026-10-20T19:30:00Z',
-        'location': 'Кабинет 304',
+        'start_time': '2026-10-20T18:00:00',
+        'end_time': '2026-10-20T19:30:00',
+        'time_zone': 'Asia/Almaty',
       }),
       params: {
         'title': 'Родительское собрание 7Б',
-        'start_time': '2026-10-20T18:00:00Z',
-        'end_time': '2026-10-20T19:30:00Z',
-        'location': 'Кабинет 304',
+        'start_time': '2026-10-20T18:00:00',
+        'end_time': '2026-10-20T19:30:00',
+        'time_zone': 'Asia/Almaty',
       },
       status: PendingActionStatus.pending,
       expiresAtUtc: now.add(const Duration(minutes: 15)),

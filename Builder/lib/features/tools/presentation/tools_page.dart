@@ -166,7 +166,7 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                     ),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
-                        builder: (_) => const BuilderCalendarPage(),
+                        builder: (_) => BuilderCalendarPage(ownerId: widget.ownerId),
                       ),
                     ),
                   ),

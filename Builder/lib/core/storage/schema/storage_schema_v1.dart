@@ -24,8 +24,55 @@ abstract final class StorageSchemaV1 {
 
   static const String tableAccountSnapshots = 'account_snapshots';
   static const String tableSkillScenarios = 'skill_scenarios';
+  static const String tableCalendarEvents = 'calendar_events';
+  static const String tableCalendarOverrides = 'calendar_overrides';
+  static const String tableCalendarSync = 'calendar_sync_state';
+  static const String tableCalendarPending = 'calendar_pending_creates';
 
   static const List<String> createStatements = [
+    // Additive calendar cache (EF-02); onOpen upgrades existing installations.
+    '''
+    CREATE TABLE IF NOT EXISTS $tableCalendarEvents (
+      owner_id TEXT NOT NULL,
+      id TEXT NOT NULL,
+      version INTEGER NOT NULL,
+      event_json TEXT NOT NULL,
+      PRIMARY KEY (owner_id, id),
+      FOREIGN KEY (owner_id) REFERENCES $tableWorkspaces(owner_id) ON DELETE CASCADE
+    );
+    ''',
+    '''
+    CREATE TABLE IF NOT EXISTS $tableCalendarOverrides (
+      owner_id TEXT NOT NULL,
+      event_id TEXT NOT NULL,
+      occurrence_date TEXT NOT NULL,
+      canceled INTEGER NOT NULL,
+      title TEXT,
+      notes TEXT,
+      start_local TEXT,
+      end_local TEXT,
+      PRIMARY KEY (owner_id, event_id, occurrence_date),
+      FOREIGN KEY (owner_id) REFERENCES $tableWorkspaces(owner_id) ON DELETE CASCADE
+    );
+    ''',
+    '''
+    CREATE TABLE IF NOT EXISTS $tableCalendarSync (
+      owner_id TEXT PRIMARY KEY,
+      cursor TEXT NOT NULL,
+      synced_at_utc TEXT NOT NULL,
+      FOREIGN KEY (owner_id) REFERENCES $tableWorkspaces(owner_id) ON DELETE CASCADE
+    );
+    ''',
+    '''
+    CREATE TABLE IF NOT EXISTS $tableCalendarPending (
+      owner_id TEXT NOT NULL,
+      idempotency_key TEXT NOT NULL,
+      input_json TEXT NOT NULL,
+      created_at_utc TEXT NOT NULL,
+      PRIMARY KEY (owner_id, idempotency_key),
+      FOREIGN KEY (owner_id) REFERENCES $tableWorkspaces(owner_id) ON DELETE CASCADE
+    );
+    ''',
     // Additive, idempotent upgrade for existing v1 workspaces on open.
     '''
     CREATE TABLE IF NOT EXISTS $tableSkillScenarios (
@@ -330,6 +377,8 @@ abstract final class StorageSchemaV1 {
     'CREATE INDEX IF NOT EXISTS idx_docs_owner ON $tableKnowledgeDocuments(owner_id);',
     'CREATE INDEX IF NOT EXISTS idx_chunks_rev ON $tableKnowledgeChunks(revision_id);',
     'CREATE INDEX IF NOT EXISTS idx_facts_owner ON $tableMemoryFacts(owner_id, is_enabled);',
+    'CREATE INDEX IF NOT EXISTS idx_calendar_events_owner ON $tableCalendarEvents(owner_id);',
+    'CREATE INDEX IF NOT EXISTS idx_calendar_overrides_owner ON $tableCalendarOverrides(owner_id, event_id);',
     'CREATE INDEX IF NOT EXISTS idx_staging_status ON $tableFileStagingJournal(status);',
   ];
 }

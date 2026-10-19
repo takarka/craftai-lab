@@ -1,4 +1,4 @@
-import '../infrastructure/calendar_adapter.dart';
+import '../infrastructure/builder_calendar_adapter.dart';
 import '../infrastructure/notes_adapter.dart';
 import '../infrastructure/search_adapter.dart';
 import 'pending_action.dart';
@@ -63,19 +63,19 @@ class ToolExecutionResult {
 /// and confirmation state machine enforcement (F14-01, F14-05, F14-10, F14-11, F14-12).
 class ToolsDispatcher {
   final ToolsRepository repository;
-  final CalendarAdapter calendarAdapter;
+  /// Null without a signed-in API: calendar tools then fail instead of inventing data.
+  final BuilderCalendarAdapter? calendarAdapter;
   final NotesAdapter notesAdapter;
   final SearchAdapter searchAdapter;
   final PendingActionStateMachine stateMachine;
 
   ToolsDispatcher({
     required this.repository,
-    CalendarAdapter? calendarAdapter,
+    this.calendarAdapter,
     NotesAdapter? notesAdapter,
     SearchAdapter? searchAdapter,
     PendingActionStateMachine? stateMachine,
-  }) : calendarAdapter = calendarAdapter ?? CalendarAdapter(),
-       notesAdapter = notesAdapter ?? NotesAdapter(),
+  }) : notesAdapter = notesAdapter ?? NotesAdapter(),
        searchAdapter = searchAdapter ?? const SearchAdapter(),
        stateMachine = stateMachine ?? const PendingActionStateMachine();
 
@@ -278,6 +278,12 @@ class ToolsDispatcher {
     );
   }
 
+  BuilderCalendarAdapter _calendar() =>
+      calendarAdapter ??
+      (throw const ToolExecutionException(
+        'Календарь Builder недоступен: нет входа в аккаунт.',
+      ));
+
   Future<Map<String, dynamic>> _executeToolImplementation(
     String ownerId,
     String toolName,
@@ -285,36 +291,22 @@ class ToolsDispatcher {
   ) async {
     switch (toolName) {
       case ToolsRegistry.readCalendar:
-        final start = DateTime.parse(args['start_date'] as String);
-        final end = DateTime.parse(args['end_date'] as String);
-        final events = await calendarAdapter.readEvents(
-          startDate: start,
-          endDate: end,
+        return _calendar().read(
+          ownerId,
+          startDate: args['start_date'] as String,
+          endDate: args['end_date'] as String,
         );
-        return {
-          'events': events.map((e) => e.toMap()).toList(),
-          'count': events.length,
-        };
 
       case ToolsRegistry.createCalendarEvent:
-        final title = args['title'] as String;
-        final start = DateTime.parse(args['start_time'] as String);
-        final end = DateTime.parse(args['end_time'] as String);
-        final isAllDay = args['is_all_day'] as bool? ?? false;
-        final location = args['location'] as String?;
-        final notes = args['notes'] as String?;
-        final event = await calendarAdapter.createEvent(
-          title: title,
-          startTime: start,
-          endTime: end,
-          isAllDay: isAllDay,
-          location: location,
-          notes: notes,
+        return _calendar().create(
+          ownerId,
+          title: args['title'] as String,
+          start: args['start_time'] as String,
+          end: args['end_time'] as String,
+          timeZone: args['time_zone'] as String?,
+          allDay: args['is_all_day'] as bool? ?? false,
+          notes: args['notes'] as String?,
         );
-        return {
-          'created_event': event.toMap(),
-          'message': 'Событие «$title» успешно добавлено в календарь',
-        };
 
       case ToolsRegistry.createNote:
         final title = args['title'] as String;
