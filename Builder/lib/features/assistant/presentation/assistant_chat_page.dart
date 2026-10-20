@@ -19,6 +19,7 @@ import '../../course/domain/course_catalog.dart';
 import '../../skills/domain/skill_scenario.dart';
 import '../../skills/domain/skill_preparation.dart';
 import '../../skills/skills_providers.dart';
+import '../../skills/presentation/skill_picker_sheet.dart';
 import '../../skills/presentation/skill_request_summary.dart';
 
 class SkillRunDraft {
@@ -42,6 +43,7 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
+  late SkillRunDraft? _run = widget.skillRun;
   bool _skillSent = false;
   bool _skillSending = false;
 
@@ -136,8 +138,21 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
     return true;
   }
 
+  Future<void> _pickSkill() async {
+    final picked = await showSkillPickerSheet(
+      context,
+      ownerId: widget.ownerId,
+      onOpenSkills: () => context.push('/assistant/skills'),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _run = SkillRunDraft(skill: picked.skill, inputs: picked.inputs);
+      _skillSent = false;
+    });
+  }
+
   Future<void> _sendSkill() async {
-    final draft = widget.skillRun;
+    final draft = _run;
     if (draft == null || _skillSending || _skillSent) return;
     setState(() => _skillSending = true);
     try {
@@ -258,39 +273,22 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
       body: SafeArea(
         child: Column(
           children: [
-            if (widget.skillRun != null && !_skillSent)
+            if (_run != null && !_skillSent)
               ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 240),
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.45,
+                ),
                 child: SingleChildScrollView(
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.skillRun!.skill.name,
-                          style: BuilderType.h3,
-                        ),
-                        for (final input in widget.skillRun!.inputs.entries)
-                          Text('${input.key}: ${input.value}'),
-                        Text(
-                          '${Localizations.localeOf(context).languageCode == 'kk' ? 'Мәлімделген дереккөздер' : 'Заявленные источники'}: ${widget.skillRun!.skill.sources.join('; ')}',
-                        ),
-                        FilledButton(
-                          key: const Key('skill.send'),
-                          onPressed:
-                              chatState.isLoading ||
-                                  chatState.isGenerating ||
-                                  _skillSending
-                              ? null
-                              : _sendSkill,
-                          child: Text(
-                            Localizations.localeOf(context).languageCode == 'kk'
-                                ? 'Дағдыны іске қосу'
-                                : 'Запустить навык',
-                          ),
-                        ),
-                      ],
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                    child: _SkillRunCard(
+                      draft: _run!,
+                      onCancel: () => setState(() => _run = null),
+                      busy:
+                          chatState.isLoading ||
+                          chatState.isGenerating ||
+                          _skillSending,
+                      onRun: _sendSkill,
                     ),
                   ),
                 ),
@@ -726,6 +724,17 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          IconButton(
+            key: const Key('chat.skillsBtn'),
+            icon: const BuilderIcon(
+              BuilderGlyph.bolt,
+              color: BuilderColors.primary,
+            ),
+            tooltip: Localizations.localeOf(context).languageCode == 'kk'
+                ? 'Дағдылар'
+                : 'Навыки',
+            onPressed: _pickSkill,
+          ),
           Expanded(
             child: TextField(
               key: const Key('chat.inputField'),
@@ -873,6 +882,93 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
         );
       },
       orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+/// Ready-to-run card shown above the chat before a skill request is sent.
+class _SkillRunCard extends StatelessWidget {
+  const _SkillRunCard({
+    required this.draft,
+    required this.busy,
+    required this.onRun,
+    required this.onCancel,
+  });
+  final SkillRunDraft draft;
+  final bool busy;
+  final VoidCallback onRun;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final kk = Localizations.localeOf(context).languageCode == 'kk';
+    String t(String ru, String kz) => kk ? kz : ru;
+    final skill = draft.skill;
+    return BuilderCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const BuilderIconTile(BuilderGlyph.bolt),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(skill.name, style: BuilderType.h3),
+                    Text(
+                      t('Готов к запуску', 'Іске қосуға дайын'),
+                      style: BuilderType.small,
+                    ),
+                  ],
+                ),
+              ),
+              BuilderIconButton(
+                icon: BuilderGlyph.close,
+                label: t('Отменить', 'Бас тарту'),
+                onPressed: busy ? null : onCancel,
+              ),
+            ],
+          ),
+          if (draft.inputs.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final input in draft.inputs.entries)
+                  Chip(
+                    label: Text(
+                      '${input.key}: ${input.value}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 12),
+          Text(
+            skill.sources.isEmpty
+                ? t(
+                    'Ассистент использует только то, что вы указали выше.',
+                    'Көмекші тек жоғарыда көрсеткеніңізді пайдаланады.',
+                  )
+                : '${t('Заявленные источники', 'Мәлімделген дереккөздер')}: ${skill.sources.join('; ')}. ${t('Их содержимое не загружается — ассистент видит только указанное выше.', 'Олардың мазмұны жүктелмейді — көмекші тек жоғарыда көрсетілгенді көреді.')}',
+            style: BuilderType.small,
+          ),
+          const SizedBox(height: 12),
+          BuilderButton(
+            key: const Key('skill.send'),
+            label: busy
+                ? t('Запускаем…', 'Іске қосылуда…')
+                : t('Запустить', 'Іске қосу'),
+            icon: BuilderGlyph.send,
+            onPressed: busy ? null : onRun,
+          ),
+        ],
+      ),
     );
   }
 }

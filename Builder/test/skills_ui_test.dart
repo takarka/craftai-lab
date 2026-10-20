@@ -148,6 +148,12 @@ void main() {
   testWidgets('Empty list offers all four templates in RU and KK', (
     tester,
   ) async {
+    tester.view.physicalSize = const Size(800, 3000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
     for (final language in ['ru', 'kk']) {
       await tester.pumpWidget(
         _app(const SkillsPage(ownerId: 'alice'), locale: language),
@@ -160,7 +166,7 @@ void main() {
     }
   });
 
-  testWidgets('Editor refuses blank fields and duplicate input names', (
+  testWidgets('Guided editor validates each step and rejects duplicate inputs', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(800, 3000);
@@ -173,40 +179,72 @@ void main() {
     await tester.pumpWidget(
       _app(const SkillEditorPage(ownerId: 'alice'), repository: repository),
     );
-    await tester.scrollUntilVisible(
-      find.byKey(const Key('skill.save')),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
+    await tester.tap(find.byKey(const Key('skill.next')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('skill.save')));
-    await tester.pumpAndSettle();
-    expect(repository.saved, isNull);
-    expect(find.text('Заполните поле'), findsWidgets);
-    await tester.scrollUntilVisible(
-      find.byKey(const Key('skill.field.2')),
-      -300,
-      scrollable: find.byType(Scrollable).first,
-    );
-    await tester.pumpAndSettle();
+    expect(find.text('Заполните поле'), findsOneWidget);
     await tester.enterText(
-      find.byKey(const Key('skill.field.2')),
-      'Тема\nТема',
+      find.byKey(const Key('skill.field.1')),
+      'Составить план урока по теме',
     );
-    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.tap(find.byKey(const Key('skill.next')));
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.byKey(const Key('skill.save')),
-      300,
-      scrollable: find.byType(Scrollable).first,
+    // Step 2: inputs. A suggestion chip adds it once; the same name is refused.
+    await tester.tap(find.text('+ Тема'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('skill.input.Тема')), findsOneWidget);
+    await tester.enterText(find.byKey(const Key('skill.input.draft')), 'Тема');
+    await tester.tap(find.byTooltip('Добавить'));
+    await tester.pumpAndSettle();
+    expect(find.text('Названия входов должны различаться'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('skill.next')));
+    await tester.pumpAndSettle();
+    // Step 3: result and steps are required.
+    await tester.tap(find.byKey(const Key('skill.next')));
+    await tester.pumpAndSettle();
+    expect(find.text('Заполните поле'), findsWidgets);
+    expect(repository.saved, isNull);
+    await tester.tap(find.text('План'));
+    await tester.enterText(
+      find.byKey(const Key('skill.step.0')),
+      'Сформулируй цель',
     );
+    await tester.tap(find.byKey(const Key('skill.next')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('skill.save')));
     await tester.pumpAndSettle();
-    expect(repository.saved, isNull);
+    final saved = repository.saved!;
+    expect(saved.name, 'Составить план урока по теме');
+    expect(saved.requiredInputs, ['Тема']);
+    expect(saved.steps, ['Сформулируй цель']);
+    expect(saved.qualityCriteria, isNotEmpty);
   });
 
-  testWidgets('Template creates a distinct scenario for the current owner', (
+  testWidgets('Editor steps fit 360 px with 130% text', (tester) async {
+    tester.view.physicalSize = const Size(360, 740);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(
+          size: Size(360, 740),
+          textScaler: TextScaler.linear(1.3),
+        ),
+        child: _app(const SkillEditorPage(ownerId: 'alice')),
+      ),
+    );
+    await tester.enterText(find.byKey(const Key('skill.field.1')), 'Цель');
+    for (var i = 0; i < 2; i++) {
+      await tester.ensureVisible(find.byKey(const Key('skill.next')));
+      await tester.tap(find.byKey(const Key('skill.next')));
+      await tester.pumpAndSettle();
+    }
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Template opens on review and creates a distinct scenario', (
     tester,
   ) async {
     final repository = _Repository();
@@ -229,6 +267,7 @@ void main() {
     expect(repository.saved!.id, isNot(template.id));
     expect(repository.saved!.steps, template.steps);
     expect(repository.saved!.sources, template.sources);
+    expect(repository.saved!.qualityCriteria, template.qualityCriteria);
   });
 
   testWidgets(

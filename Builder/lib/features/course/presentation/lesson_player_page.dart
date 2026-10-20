@@ -42,6 +42,7 @@ class LessonPlayerPage extends ConsumerStatefulWidget {
 class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   LessonStep _currentStep = LessonStep.idea;
   bool _practiceEvidenceMet = false;
+  SkillPracticeProgress? _skillProgress;
   bool _initialized = false;
 
   // S23 Practice interactive state
@@ -800,6 +801,10 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   ),
                   style: BuilderType.small,
                 ),
+                if (_skillProgress != null && !_practiceEvidenceMet) ...[
+                  const SizedBox(height: 12),
+                  _SkillPracticeChecklist(progress: _skillProgress!, cs: cs),
+                ],
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
@@ -820,31 +825,21 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                         widget.ownerId,
                       );
                       if (!mounted) return;
-                      final evidence =
-                          skills != null &&
-                          await SkillPracticeEvidence.check(
-                            widget.ownerId,
-                            skills,
-                            ref.read(chatRepositoryProvider),
-                          );
+                      final progress = skills == null
+                          ? null
+                          : await SkillPracticeEvidence.checkProgress(
+                              widget.ownerId,
+                              skills,
+                              ref.read(chatRepositoryProvider),
+                            );
                       if (!mounted) return;
-                      if (evidence) {
-                        setState(() {
+                      setState(() {
+                        _skillProgress = progress;
+                        if (progress?.isMet ?? false) {
                           _practiceEvidenceMet = true;
                           _showComparison = true;
-                        });
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              cs.t(
-                                'Нужны завершённые ответы на двух разных входах и запуск улучшенных шагов или критериев.',
-                                'Екі түрлі дерекпен толық жауап және жақсартылған қадамдармен немесе өлшемдермен іске қосу қажет.',
-                              ),
-                            ),
-                          ),
-                        );
-                      }
+                        }
+                      });
                     },
                   ),
                 ),
@@ -1769,6 +1764,71 @@ class _StepIndicator extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SkillPracticeChecklist extends StatelessWidget {
+  const _SkillPracticeChecklist({required this.progress, required this.cs});
+  final SkillPracticeProgress progress;
+  final CourseStrings cs;
+
+  @override
+  Widget build(BuildContext context) {
+    String t(String ru, String kz) => cs.t(ru, kz);
+    final items = <(bool, String)>[
+      (progress.hasSkill, t('Навык сохранён', 'Дағды сақталды')),
+      (
+        progress.hasInputs,
+        t(
+          'У навыка есть поля для данных (добавьте хотя бы одно, например «Тема»)',
+          'Дағдыда деректер өрісі бар (кемінде біреуін қосыңыз, мысалы «Тақырып»)',
+        ),
+      ),
+      (
+        progress.twoInputs,
+        t(
+          'Полный ответ на двух разных данных: ${progress.distinctInputRuns} из 2',
+          'Екі түрлі дерекке толық жауап: ${progress.distinctInputRuns} / 2',
+        ),
+      ),
+      (
+        progress.improved,
+        t(
+          'Изменены шаги или «как понять, что получилось хорошо» и навык сохранён',
+          'Қадамдар немесе «жақсы нәтиже өлшемі» өзгертіліп, дағды сақталды',
+        ),
+      ),
+      (
+        progress.currentWasRun,
+        t(
+          'Запущена последняя сохранённая версия и получен ответ',
+          'Соңғы сақталған нұсқа іске қосылып, жауап алынды',
+        ),
+      ),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final (done, label) in items)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                BuilderIcon(
+                  done ? BuilderGlyph.check : BuilderGlyph.plus,
+                  size: 18,
+                  color: done
+                      ? BuilderColors.primary
+                      : BuilderColors.inkSecondary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: Text(label, style: BuilderType.small)),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

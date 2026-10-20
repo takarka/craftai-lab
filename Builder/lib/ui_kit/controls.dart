@@ -308,6 +308,12 @@ class BuilderField extends StatelessWidget {
     this.maxLines = 1,
     this.keyboardType,
     this.enabled = true,
+    this.controller,
+    this.validator,
+    this.fieldKey,
+    this.minLines,
+    this.maxLength,
+    this.textInputAction,
   });
   final String label;
   final String? hint;
@@ -318,6 +324,16 @@ class BuilderField extends StatelessWidget {
   final int maxLines;
   final TextInputType? keyboardType;
   final bool enabled;
+
+  /// Optional controller; when set, [initialValue] must be null.
+  final TextEditingController? controller;
+  final FormFieldValidator<String>? validator;
+
+  /// Key given to the inner text field (for tests and form lookups).
+  final Key? fieldKey;
+  final int? minLines;
+  final int? maxLength;
+  final TextInputAction? textInputAction;
   @override
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,6 +341,12 @@ class BuilderField extends StatelessWidget {
       Text(label, style: BuilderType.title),
       const SizedBox(height: 8),
       TextFormField(
+        key: fieldKey,
+        controller: controller,
+        validator: validator,
+        minLines: minLines,
+        maxLength: maxLength,
+        textInputAction: textInputAction,
         initialValue: initialValue,
         onChanged: onChanged,
         enabled: enabled,

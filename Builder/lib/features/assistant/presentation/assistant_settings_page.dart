@@ -9,6 +9,7 @@ import '../../onboarding/presentation/onboarding_labels.dart';
 import '../../profile/profile_providers.dart';
 import '../../course/domain/course_topic.dart';
 import '../../course/presentation/course_character.dart';
+import '../../schedules/presentation/schedules_page.dart';
 import '../assistant_providers.dart';
 import '../domain/assistant_config.dart';
 import 'reset_confirmation_dialog.dart';
@@ -152,6 +153,21 @@ class AssistantSettingsPage extends ConsumerWidget {
                 icon: BuilderGlyph.code,
                 onTap: () => context.push('/assistant/skills'),
               ),
+              // Test builds only: opens AI schedules without the level-6 unlock.
+              if (const bool.fromEnvironment('DEV_SCHEDULES_ENTRY')) ...[
+                const SizedBox(height: 12),
+                BuilderLinkRow(
+                  key: const Key('assistantSettings.devSchedulesLink'),
+                  title: 'AI-расписания (тест)',
+                  subtitle: 'Только для тестовой сборки',
+                  icon: BuilderGlyph.bolt,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => SchedulesPage(ownerId: ownerId),
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               Text(s.assistantSkillsHeader, style: BuilderType.h3),
               const SizedBox(height: 12),

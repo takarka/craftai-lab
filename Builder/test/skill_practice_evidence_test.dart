@@ -164,4 +164,25 @@ void main() {
       isFalse,
     );
   });
+
+  test('progress names the missing condition instead of a generic refusal', () {
+    final renamed = changed(nameOnly: true);
+    final progress = SkillPracticeEvidence.progress(
+      'alice',
+      [renamed],
+      [run(original, 'Дроби'), run(renamed, 'Уравнения')],
+    );
+    expect(progress.isMet, isFalse);
+    expect(progress.twoInputs, isTrue);
+    expect(progress.currentWasRun, isTrue);
+    expect(progress.improved, isFalse);
+
+    final noInputs = SkillScenario.fromJson({
+      ...original.toJson(),
+      'required_inputs': <String>[],
+    });
+    final empty = SkillPracticeEvidence.progress('alice', [noInputs], []);
+    expect(empty.hasSkill, isTrue);
+    expect(empty.hasInputs, isFalse);
+  });
 }

@@ -1,4 +1,8 @@
 import 'dart:io';
+import 'package:builder/features/chat/chat_providers.dart';
+import 'package:builder/features/chat/infrastructure/chat_stream_client.dart';
+import 'package:builder/features/chat/domain/chat_stream_event.dart';
+import 'package:builder/features/session/infrastructure/secure_token_storage.dart';
 
 import 'package:builder/app/localization/app_localizations.dart';
 import 'package:builder/core/storage/database/storage_database.dart';
@@ -9,9 +13,12 @@ import 'package:builder/features/assistant/assistant_providers.dart';
 import 'package:builder/features/assistant/infrastructure/persistent_assistant_repository.dart';
 import 'package:builder/features/chat/domain/context_assembler.dart';
 import 'package:builder/features/instructions/domain/instruction_models.dart';
+import 'package:builder/features/instructions/instructions_providers.dart';
 import 'package:builder/features/instructions/infrastructure/persistent_instructions_repository.dart';
 import 'package:builder/features/instructions/presentation/instructions_page.dart';
 import 'package:builder/features/models/domain/model_category.dart';
+import 'package:builder/features/models/model_providers.dart';
+import 'package:builder/features/models/domain/model_catalog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -460,12 +467,20 @@ void main() {
       }
     });
 
+    late _TestChatClient testClient;
+
     Widget createTestWidget({
       required SkillScreenMode mode,
       VoidCallback? onPracticeCompleted,
     }) {
       return ProviderScope(
         overrides: [
+          modelCatalogFutureProvider.overrideWith(
+            (ref) async => ModelCatalog.defaultCatalog(),
+          ),
+          chatStreamClientProvider.overrideWithValue(
+            testClient = _TestChatClient(),
+          ),
           storageDatabaseProvider.overrideWithValue(db),
           assistantRepositoryProvider.overrideWithValue(assistantRepo),
         ],
@@ -574,14 +589,24 @@ void main() {
       });
       await tester.pumpAndSettle();
 
-      // Tap test button
       await tester.runAsync(() async {
-        await tester.tap(
-          find.byKey(const Key('instructions.testBeforeAfterBtn')),
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(InstructionsPage)),
         );
+        await container
+            .read(instructionDraftProvider(testOwner).notifier)
+            .runBeforeAfterTest(
+              question: 'Test question',
+              category: ModelCategory.standard,
+            );
       });
       await tester.pumpAndSettle();
 
+      expect(testClient.requests, hasLength(2));
+      expect(testClient.requests.first.last['content'], 'Test question');
+      expect(testClient.requests.first, testClient.requests.last);
+      expect(tester.takeException(), isNull);
+      expect(find.byKey(const Key('instructions.testError')), findsNothing);
       // Comparison cards should be visible
       expect(find.byKey(const Key('instructions.beforeCard')), findsOneWidget);
       expect(find.byKey(const Key('instructions.afterCard')), findsOneWidget);
@@ -651,17 +676,33 @@ void main() {
           }
 
           // Enable 3 rules
-          final switches = find.byType(Switch);
-          for (int i = 0; i < 3; i++) {
-            await tester.tap(switches.at(i));
-            await tester.pumpAndSettle();
+          final draftContainer = ProviderScope.containerOf(
+            tester.element(find.byType(InstructionsPage)),
+          );
+          for (final rule
+              in draftContainer
+                  .read(instructionDraftProvider(testOwner))
+                  .config
+                  .rules
+                  .take(3)) {
+            draftContainer
+                .read(instructionDraftProvider(testOwner).notifier)
+                .toggleRule(rule.id, true);
           }
+          await tester.pumpAndSettle();
 
           // Run test
           await tester.runAsync(() async {
-            await tester.tap(
-              find.byKey(const Key('instructions.testBeforeAfterBtn')),
+            final container = ProviderScope.containerOf(
+              tester.element(find.byType(InstructionsPage)),
             );
+            await container
+                .read(instructionDraftProvider(testOwner).notifier)
+                .runBeforeAfterTest(
+                  question: 'Test question',
+                  category: ModelCategory.standard,
+                );
+            await Future<void>.delayed(const Duration(milliseconds: 300));
           });
           await tester.pumpAndSettle();
 
@@ -699,4 +740,36 @@ void main() {
       );
     }
   });
+}
+
+class _TestChatClient extends ChatStreamClient {
+  _TestChatClient() : super(tokenStorage: PlatformSecureTokenStorage());
+
+  final requests = <List<Map<String, String>>>[];
+
+  @override
+  Stream<StreamEvent> streamCompletion({
+    required String ownerId,
+    required String category,
+    required String catalogRevision,
+    required List<Map<String, String>> messages,
+    List<Map<String, dynamic>> tools = const [],
+    int toolStep = 0,
+    String? requestId,
+    ChatCancellationToken? cancellationToken,
+  }) async* {
+    requests.add(messages);
+    yield TextDeltaStreamEvent(
+      requestId: requestId!,
+      sequence: 1,
+      eventId: 'text',
+      text: 'Answer: ${messages.last['content']}',
+    );
+    yield TerminalStreamEvent(
+      requestId: requestId,
+      sequence: 2,
+      eventId: 'done',
+      state: 'completed',
+    );
+  }
 }

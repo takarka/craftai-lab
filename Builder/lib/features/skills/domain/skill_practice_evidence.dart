@@ -24,7 +24,33 @@ abstract final class SkillPracticeEvidence {
     return isMet(ownerId, skills, threads);
   }
 
+  static Future<SkillPracticeProgress> checkProgress(
+    String ownerId,
+    List<SkillScenario> skills,
+    ChatRepository repository,
+  ) async {
+    final threads = <List<ChatMessage>>[];
+    for (final conversation in await repository.getConversations(
+      ownerId: ownerId,
+    )) {
+      if (conversation.ownerId == ownerId && !conversation.isEphemeral) {
+        threads.add(
+          await repository.getMessages(conversationId: conversation.id),
+        );
+      }
+    }
+    return progress(ownerId, skills, threads);
+  }
+
   static bool isMet(
+    String ownerId,
+    List<SkillScenario> skills,
+    List<List<ChatMessage>> threads,
+  ) => progress(ownerId, skills, threads).isMet;
+
+  /// Explains which practice conditions hold for the closest skill, so the
+  /// lesson can say what is still missing instead of a generic refusal.
+  static SkillPracticeProgress progress(
     String ownerId,
     List<SkillScenario> skills,
     List<List<ChatMessage>> threads,
@@ -52,6 +78,7 @@ abstract final class SkillPracticeEvidence {
         }
       }
     }
+    var best = SkillPracticeProgress(hasSkill: skills.isNotEmpty);
     for (final skill in skills) {
       final matching = runs.where((r) => r.skill.id == skill.id).toList();
       final inputs = matching
@@ -61,19 +88,54 @@ abstract final class SkillPracticeEvidence {
             ]),
           )
           .toSet();
-      if (inputs.length < 2) continue;
-      final currentWasRun = matching.any(
-        (r) => jsonEncode(r.skill.toJson()) == jsonEncode(skill.toJson()),
+      final current = SkillPracticeProgress(
+        hasSkill: true,
+        hasInputs: skill.requiredInputs.isNotEmpty,
+        distinctInputRuns: inputs.length,
+        improved: matching.any(
+          (r) =>
+              r.skill.revision < skill.revision &&
+              (jsonEncode(r.skill.steps) != jsonEncode(skill.steps) ||
+                  jsonEncode(r.skill.qualityCriteria) !=
+                      jsonEncode(skill.qualityCriteria)),
+        ),
+        currentWasRun: matching.any(
+          (r) => jsonEncode(r.skill.toJson()) == jsonEncode(skill.toJson()),
+        ),
       );
-      final improved = matching.any(
-        (r) =>
-            r.skill.revision < skill.revision &&
-            (jsonEncode(r.skill.steps) != jsonEncode(skill.steps) ||
-                jsonEncode(r.skill.qualityCriteria) !=
-                    jsonEncode(skill.qualityCriteria)),
-      );
-      if (currentWasRun && improved) return true;
+      if (current.isMet) return current;
+      if (current.score >= best.score) best = current;
     }
-    return false;
+    return best;
   }
+}
+
+class SkillPracticeProgress {
+  const SkillPracticeProgress({
+    this.hasSkill = false,
+    this.hasInputs = false,
+    this.distinctInputRuns = 0,
+    this.improved = false,
+    this.currentWasRun = false,
+  });
+  final bool hasSkill;
+
+  /// A skill without inputs can never be run on two different inputs.
+  final bool hasInputs;
+  final int distinctInputRuns;
+
+  /// An earlier run used older steps or criteria than the saved version.
+  final bool improved;
+
+  /// The saved (latest) version has its own completed run.
+  final bool currentWasRun;
+
+  bool get twoInputs => distinctInputRuns >= 2;
+  bool get isMet => twoInputs && improved && currentWasRun;
+  int get score =>
+      (hasSkill ? 1 : 0) +
+      (hasInputs ? 1 : 0) +
+      (twoInputs ? 2 : distinctInputRuns) +
+      (improved ? 1 : 0) +
+      (currentWasRun ? 1 : 0);
 }
