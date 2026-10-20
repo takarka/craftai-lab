@@ -46,3 +46,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Local QA session artifacts (screenshots, device logs, recordings)
+/docs/qa/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/
