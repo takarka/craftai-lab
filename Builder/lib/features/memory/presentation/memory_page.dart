@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../course/domain/course_topic.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../ui_kit/controls.dart';
@@ -187,7 +188,9 @@ class _MemoryPageState extends ConsumerState<MemoryPage> {
         scrolledUnderElevation: 0,
         title: Text(
           widget.isLearnMode
-              ? 'Уровень 4: Долгая память'
+              ? (Localizations.localeOf(context).languageCode == 'kk'
+                    ? '${CourseTopic.memory.displayOrder}-деңгей: Ұзақ мерзімді жад'
+                    : 'Уровень ${CourseTopic.memory.displayOrder}: Долгая память')
               : 'Долгая память и факты',
           style: BuilderTypography.titleMedium.copyWith(
             color: BuilderColors.ink,

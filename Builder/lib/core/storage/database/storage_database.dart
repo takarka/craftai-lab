@@ -82,9 +82,12 @@ final class StorageDatabase {
             }
           },
           onOpen: (db) async {
-            for (final statement in StorageSchemaV1.createStatements) {
-              await db.execute(statement);
-            }
+            // Additive compatibility updates must either all succeed or roll back.
+            await db.transaction((txn) async {
+              for (final statement in StorageSchemaV1.createStatements) {
+                await txn.execute(statement);
+              }
+            });
           },
           onUpgrade: (db, oldVersion, newVersion) async {
             await _runMigrations(db, oldVersion, newVersion);

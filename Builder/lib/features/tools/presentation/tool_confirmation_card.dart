@@ -165,8 +165,6 @@ class _ToolConfirmationCardState extends State<ToolConfirmationCard> {
         return 'Запрос на создание события';
       case 'delete_note':
         return 'Запрос на удаление заметки';
-      case 'prepare_call':
-        return 'Запрос на подготовку звонка / SMS';
       default:
         return 'Подтверждение действия: $name';
     }
@@ -184,12 +182,8 @@ class _ToolConfirmationCardState extends State<ToolConfirmationCard> {
         return 'Место';
       case 'notes':
         return 'Заметки';
-      case 'phone_number':
-        return 'Номер телефона';
-      case 'recipient_name':
-        return 'Получатель';
-      case 'message_body':
-        return 'Текст SMS';
+      case 'reminder_minutes':
+        return 'Напомнить за (мин)';
       default:
         return key;
     }

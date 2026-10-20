@@ -9,12 +9,19 @@ import '../../knowledge/presentation/knowledge_page.dart';
 import '../../knowledge/presentation/knowledge_providers.dart';
 import '../../memory/presentation/memory_page.dart';
 import '../../memory/presentation/memory_providers.dart';
+import '../../skills/presentation/skills_page.dart';
+import '../../skills/skills_providers.dart';
+import '../../skills/domain/skill_practice_evidence.dart';
+import '../../chat/chat_providers.dart';
+import '../../assistant/assistant_providers.dart';
 import '../../tools/presentation/tools_page.dart';
 import '../../tools/presentation/tools_providers.dart';
 import '../course_providers.dart';
 import '../domain/course_catalog.dart';
 import '../domain/course_models.dart';
+import '../domain/course_topic.dart';
 import 'course_strings.dart';
+import 'course_character.dart';
 
 class LessonPlayerPage extends ConsumerStatefulWidget {
   const LessonPlayerPage({
@@ -35,6 +42,7 @@ class LessonPlayerPage extends ConsumerStatefulWidget {
 class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   LessonStep _currentStep = LessonStep.idea;
   bool _practiceEvidenceMet = false;
+  SkillPracticeProgress? _skillProgress;
   bool _initialized = false;
 
   // S23 Practice interactive state
@@ -201,9 +209,10 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
     }
 
     if (context.mounted) {
-      if (widget.levelId < 5) {
+      final nextTopic = CourseTopic.fromStorageId(widget.levelId).next;
+      if (nextTopic != null) {
         // Navigate to next level
-        context.pushReplacement('/course/lesson/${widget.levelId + 1}');
+        context.pushReplacement('/course/lesson/${nextTopic.storageId}');
       } else {
         // Course finished! Return to course page
         context.go('/course');
@@ -229,11 +238,15 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
     final level =
         CourseCatalog.getLevel(widget.levelId, locale: locale) ??
         CourseCatalog.getLevel(widget.levelId);
-    if (level == null) {
+    if (level == null || level.comingSoon) {
       return Scaffold(
         appBar: AppBar(),
         body: Center(
-          child: Text(cs.t('Уровень не найден', 'Деңгей табылмады')),
+          child: Text(
+            level == null
+                ? cs.t('Уровень не найден', 'Деңгей табылмады')
+                : cs.t('Этот уровень готовится', 'Бұл деңгей әзірленуде'),
+          ),
         ),
       );
     }
@@ -265,7 +278,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           onPressed: () => _handleClose(context),
         ),
         title: Text(
-          '${cs.levelPrefix(level.id)} · ${level.title}',
+          '${cs.levelPrefix(level.displayOrder)} · ${level.title}',
           style: BuilderType.title,
         ),
         bottom: PreferredSize(
@@ -752,6 +765,90 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           const SizedBox(height: 16),
         ],
 
+        if (level.id == 10) ...[
+          BuilderCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const BuilderIcon(
+                      BuilderGlyph.bolt,
+                      size: 20,
+                      color: BuilderColors.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        cs.t('Навыки ассистента', 'Ассистент дағдылары'),
+                        style: BuilderType.title,
+                      ),
+                    ),
+                    if (_practiceEvidenceMet)
+                      BuilderBadge(
+                        cs.practiceCompleted,
+                        icon: BuilderGlyph.check,
+                      )
+                    else
+                      BuilderBadge(cs.practiceRequired, neutral: true),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  cs.t(
+                    'Сохраните навык, получите полные ответы на двух разных входах. Улучшите шаги или критерии качества и запустите сохранённую версию. Для проверки нужна сохранённая история чата. После возвращения из экрана навыков практика проверится автоматически.',
+                    'Дағдыны сақтап, екі түрлі дерекпен толық жауап алыңыз. Қадамдарды немесе сапа өлшемдерін жақсартып, сақталған нұсқаны іске қосыңыз. Тексеру үшін сақталған чат тарихы қажет. Дағдылар экранынан қайтқанда тәжірибе автоматты тексеріледі.',
+                  ),
+                  style: BuilderType.small,
+                ),
+                if (_skillProgress != null && !_practiceEvidenceMet) ...[
+                  const SizedBox(height: 12),
+                  _SkillPracticeChecklist(progress: _skillProgress!, cs: cs),
+                ],
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: BuilderButton(
+                    key: const Key('practice.openSkillsBtn'),
+                    label: _practiceEvidenceMet
+                        ? cs.t('Открыть навыки снова', 'Дағдыларды қайта ашу')
+                        : cs.t('Открыть навыки', 'Дағдыларды ашу'),
+                    icon: BuilderGlyph.chevron,
+                    onPressed: () async {
+                      await Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (ctx) => SkillsPage(ownerId: widget.ownerId),
+                        ),
+                      );
+                      final repository = ref.read(skillsRepositoryProvider);
+                      final skills = await repository?.getSkills(
+                        widget.ownerId,
+                      );
+                      if (!mounted) return;
+                      final progress = skills == null
+                          ? null
+                          : await SkillPracticeEvidence.checkProgress(
+                              widget.ownerId,
+                              skills,
+                              ref.read(chatRepositoryProvider),
+                            );
+                      if (!mounted) return;
+                      setState(() {
+                        _skillProgress = progress;
+                        if (progress?.isMet ?? false) {
+                          _practiceEvidenceMet = true;
+                          _showComparison = true;
+                        }
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+
         // Interactive Case Study: Before / After Comparison
         BuilderCard(
           child: Column(
@@ -766,10 +863,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      cs.caseStudyTitle,
-                      style: BuilderType.title,
-                    ),
+                    child: Text(cs.caseStudyTitle, style: BuilderType.title),
                   ),
                   const SizedBox(width: 8),
                   if (_practiceEvidenceMet)
@@ -847,7 +941,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                       : BuilderButtonVariant.primary,
                   onPressed: () {
                     setState(() {
-                      _practiceEvidenceMet = true; // Evidence met (F10-07)
+                      if (level.id != 10) _practiceEvidenceMet = true;
                       _showComparison = true;
                     });
                   },
@@ -1092,7 +1186,6 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
         ),
         const SizedBox(height: 16),
 
-
         ...List.generate(totalQuestions, (qIndex) {
           final q = level.quizQuestions[qIndex];
           final selectedOption = _selectedQuizAnswers[qIndex];
@@ -1326,9 +1419,21 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
         Center(
           child: Column(
             children: [
-              const BuilderCharacter(size: 80, compact: false),
+              CourseCharacter(
+                completedLevels: {
+                  ...?ref
+                      .watch(completedCourseLevelsProvider(widget.ownerId))
+                      .asData
+                      ?.value,
+                  if (_quizPassed) level.id,
+                },
+                size: 80,
+              ),
               const SizedBox(height: 16),
-              Text(cs.levelCompletedTitle(level.id), style: BuilderType.h2),
+              Text(
+                cs.levelCompletedTitle(level.displayOrder),
+                style: BuilderType.h2,
+              ),
               const SizedBox(height: 8),
               Text(
                 cs.levelCompletedSubtitle,
@@ -1419,10 +1524,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          cs.testInChatTitle,
-                          style: BuilderType.title,
-                        ),
+                        Text(cs.testInChatTitle, style: BuilderType.title),
                         const SizedBox(height: 2),
                         Text(
                           cs.testInChatSubtitle,
@@ -1457,7 +1559,6 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
   // Bottom Navigation Bar
   // --------------------------------------------------------------------------
   Widget _buildBottomBar(CourseLevel level, CourseStrings cs) {
-
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1557,7 +1658,9 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
       case LessonStep.summary:
         return BuilderButton(
           key: const Key('lesson.summaryFinishBtn'),
-          label: level.id < 5 ? cs.nextLevelBtn : cs.finishCourseBtn,
+          label: level.topic.next != null
+              ? cs.nextLevelBtn
+              : cs.finishCourseBtn,
           onPressed: () => _completeLevelAndAdvance(context),
         );
     }
@@ -1661,6 +1764,71 @@ class _StepIndicator extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SkillPracticeChecklist extends StatelessWidget {
+  const _SkillPracticeChecklist({required this.progress, required this.cs});
+  final SkillPracticeProgress progress;
+  final CourseStrings cs;
+
+  @override
+  Widget build(BuildContext context) {
+    String t(String ru, String kz) => cs.t(ru, kz);
+    final items = <(bool, String)>[
+      (progress.hasSkill, t('Навык сохранён', 'Дағды сақталды')),
+      (
+        progress.hasInputs,
+        t(
+          'У навыка есть поля для данных (добавьте хотя бы одно, например «Тема»)',
+          'Дағдыда деректер өрісі бар (кемінде біреуін қосыңыз, мысалы «Тақырып»)',
+        ),
+      ),
+      (
+        progress.twoInputs,
+        t(
+          'Полный ответ на двух разных данных: ${progress.distinctInputRuns} из 2',
+          'Екі түрлі дерекке толық жауап: ${progress.distinctInputRuns} / 2',
+        ),
+      ),
+      (
+        progress.improved,
+        t(
+          'Изменены шаги или «как понять, что получилось хорошо» и навык сохранён',
+          'Қадамдар немесе «жақсы нәтиже өлшемі» өзгертіліп, дағды сақталды',
+        ),
+      ),
+      (
+        progress.currentWasRun,
+        t(
+          'Запущена последняя сохранённая версия и получен ответ',
+          'Соңғы сақталған нұсқа іске қосылып, жауап алынды',
+        ),
+      ),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final (done, label) in items)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                BuilderIcon(
+                  done ? BuilderGlyph.check : BuilderGlyph.plus,
+                  size: 18,
+                  color: done
+                      ? BuilderColors.primary
+                      : BuilderColors.inkSecondary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(child: Text(label, style: BuilderType.small)),
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

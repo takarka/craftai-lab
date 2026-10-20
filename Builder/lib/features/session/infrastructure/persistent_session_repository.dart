@@ -12,11 +12,13 @@ final class PersistentSessionRepository implements SessionRepository {
     this.database,
     this.workspaceStorageService,
     this.tokenRefresher,
+    this.beforeSessionChange,
   }) {
     _controller = StreamController<SessionSnapshot>.broadcast();
   }
 
   final SecureTokenStorage tokenStorage;
+  final Future<void> Function()? beforeSessionChange;
   final StorageDatabase? database;
   final WorkspaceStorageService? workspaceStorageService;
   final Future<AuthTokens> Function(String refreshToken)? tokenRefresher;
@@ -94,6 +96,9 @@ final class PersistentSessionRepository implements SessionRepository {
       throw ArgumentError('Owner ID is required.');
     }
 
+    if (await tokenStorage.readOwnerId() != ownerId) {
+      await beforeSessionChange?.call();
+    }
     await tokenStorage.writeSession(ownerId: ownerId, tokens: tokens);
 
     if (database != null && !database!.isOpen) {
@@ -145,6 +150,7 @@ final class PersistentSessionRepository implements SessionRepository {
 
   /// Signs out, wipes memory caches, closes active workspace and clears token storage.
   Future<void> signOut() async {
+    await beforeSessionChange?.call();
     await workspaceStorageService?.closeActiveWorkspace();
     await tokenStorage.clearSession();
     _emit(const SignedOut());

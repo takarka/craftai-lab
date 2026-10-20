@@ -10,6 +10,8 @@ import '../../chat/domain/conversation.dart';
 import '../../chat/presentation/conversation_history_sheet.dart';
 import '../../models/domain/model_category.dart';
 import '../../models/model_providers.dart';
+import '../../course/domain/course_topic.dart';
+import '../../course/presentation/course_character.dart';
 
 /// The assistant tab is a home screen. Conversation input lives on /chat.
 class AssistantPage extends ConsumerStatefulWidget {
@@ -62,9 +64,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final conversations = ref.watch(conversationsProvider(ownerId));
     final levelsAsync = ref.watch(completedCourseLevelsProvider(ownerId));
     final levels = levelsAsync.asData?.value;
-    final highestLevel = (levels ?? const <int>{})
-        .where((level) => level >= 1 && level <= 5)
-        .fold<int>(0, (highest, level) => level > highest ? level : highest);
+    final courseLevel = CourseTopic.highestCompletedOrder(levels ?? const {});
     final config = ref.watch(assistantConfigProvider(ownerId)).asData?.value;
     final name = config?.name.trim();
     final category = ref.watch(selectedCategoryProvider(ownerId));
@@ -86,7 +86,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
             t('Знакомимся с ассистентом', 'Ассистентпен танысу'),
             t('Загружаем его текущее состояние…', 'Ағымдағы күйі жүктелуде…'),
           )
-        : switch (highestLevel) {
+        : switch (courseLevel) {
             0 => (
               t('Готов к первым задачам', 'Алғашқы тапсырмаларға дайын'),
               t(
@@ -109,6 +109,13 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
               ),
             ),
             3 => (
+              t('Запускает ваши навыки', 'Дағдыларыңызды іске қосады'),
+              t(
+                'Сохранённый сценарий помогает повторять задачу с новыми входными данными.',
+                'Сақталған сценарий тапсырманы жаңа кіріс деректерімен қайталауға көмектеседі.',
+              ),
+            ),
+            4 => (
               t(
                 'Работает с вашими материалами',
                 'Материалдарыңызбен жұмыс істейді',
@@ -118,7 +125,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                 'Оқу тапсырмаларына көмектесу үшін жүктелген құжаттар мен нұсқауларыңызды пайдаланады.',
               ),
             ),
-            4 => (
+            5 => (
               t('Помнит важный контекст', 'Маңызды контексті есте сақтайды'),
               t(
                 'Сохранённые факты помогают учитывать особенности вашего класса и продолжать работу с нужным контекстом.',
@@ -159,7 +166,10 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                         ],
                       ),
                     ),
-                    child: BuilderCharacter(level: highestLevel, size: 168),
+                    child: CourseCharacter(
+                      completedLevels: levels ?? const {},
+                      size: 168,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),

@@ -837,13 +837,26 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                       final question = _testQuestionController.text.trim();
                       if (question.isEmpty) return;
 
-                      await draftNotifier.runBeforeAfterTest(
-                        question: question,
-                        category: selectedCategory,
-                      );
+                      try {
+                        await draftNotifier.runBeforeAfterTest(
+                          question: question,
+                          category: selectedCategory,
+                        );
+                      } catch (_) {
+                        // The provider exposes the error below the test button.
+                      }
                     },
             ),
           ),
+
+          if (draftState.errorMessage != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              draftState.errorMessage!,
+              key: const Key('instructions.testError'),
+              style: BuilderType.small.copyWith(color: BuilderColors.warning),
+            ),
+          ],
 
           // Test Comparison Results
           if (draftState.testResult != null) ...[
@@ -868,9 +881,8 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                   Row(
                     children: [
                       const BuilderBadge('До (без инструкций)', neutral: true),
-                      const Spacer(),
                       Text(
-                        'Трасса: ${draftState.testResult!.beforeTrace.requestId.substring(0, 18)}...',
+                        'Трасса: ${draftState.testResult!.beforeTrace.requestId.split('').take(18).join()}...',
                         style: BuilderType.mono.copyWith(fontSize: 10),
                       ),
                     ],
@@ -903,9 +915,8 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                         'После (с инструкциями)',
                         icon: BuilderGlyph.check,
                       ),
-                      const Spacer(),
                       Text(
-                        'Трасса: ${draftState.testResult!.afterTrace.requestId.substring(0, 18)}...',
+                        'Трасса: ${draftState.testResult!.afterTrace.requestId.split('').take(18).join()}...',
                         style: BuilderType.mono.copyWith(fontSize: 10),
                       ),
                     ],

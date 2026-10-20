@@ -1,0 +1,52 @@
+name: iOS TestFlight release
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: "Build number — must be higher than the last one uploaded (e.g. 1, 2, 3...)"
+        required: true
+        default: "1"
+      app_env:
+        description: "Application environment"
+        required: true
+        type: choice
+        options:
+          - staging
+          - prod
+        default: staging
+      api_base_url:
+        description: "API base URL (optional override)"
+        required: false
+        default: ""
+
+jobs:
+  build-and-upload:
+    runs-on: macos-14
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: Builder
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: Builder/.fvmrc
+          channel: stable
+          cache: true
+
+      - name: flutter pub get
+        run: flutter pub get --enforce-lockfile
+
+      - name: Build and upload to TestFlight
+        working-directory: Builder/ios
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_CONTENT_BASE64: ${{ secrets.ASC_KEY_CONTENT_BASE64 }}
+        run: |
+          fastlane ios beta \
+            build_number:${{ inputs.build_number }} \
+            app_env:${{ inputs.app_env }} \
+            api_base_url:${{ inputs.api_base_url }}

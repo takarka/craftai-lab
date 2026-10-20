@@ -1,0 +1,22 @@
+{
+  "id": "00000000-0000-4000-8000-000000000031",
+  "attachmentId": "00000000-0000-4000-8000-000000000011",
+  "skill": "quiz",
+  "status": "succeeded",
+  "progress": 100,
+  "artifacts": [
+    {
+      "id": "00000000-0000-4000-8000-000000000021",
+      "jobId": "00000000-0000-4000-8000-000000000031",
+      "format": "docx",
+      "fileName": "example.docx",
+      "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "sizeBytes": 40960,
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "expiresAtUtc": "2026-10-20T09:00:00Z"
+    }
+  ],
+  "createdAtUtc": "2026-10-19T09:00:00Z",
+  "updatedAtUtc": "2026-10-19T09:00:00Z",
+  "expiresAtUtc": "2026-10-20T09:00:00Z"
+}

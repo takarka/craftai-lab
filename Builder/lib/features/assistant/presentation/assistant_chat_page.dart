@@ -16,11 +16,24 @@ import '../../policy/policy_providers.dart';
 import '../../trace/presentation/trace_sheet.dart';
 import '../../course/course_providers.dart';
 import '../../course/domain/course_catalog.dart';
+import '../../skills/domain/skill_scenario.dart';
+import '../../skills/domain/skill_preparation.dart';
+import '../../skills/skills_providers.dart';
+import '../../skills/presentation/skill_picker_sheet.dart';
+import '../../skills/presentation/skill_request_summary.dart';
+
+class SkillRunDraft {
+  SkillRunDraft({required this.skill, required Map<String, String> inputs})
+    : inputs = Map.unmodifiable(inputs);
+  final SkillScenario skill;
+  final Map<String, String> inputs;
+}
 
 class AssistantChatPage extends ConsumerStatefulWidget {
-  const AssistantChatPage({super.key, required this.ownerId});
+  const AssistantChatPage({super.key, required this.ownerId, this.skillRun});
 
   final String ownerId;
+  final SkillRunDraft? skillRun;
 
   @override
   ConsumerState<AssistantChatPage> createState() => _AssistantChatPageState();
@@ -30,6 +43,9 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
   final _focusNode = FocusNode();
+  late SkillRunDraft? _run = widget.skillRun;
+  bool _skillSent = false;
+  bool _skillSending = false;
 
   @override
   void dispose() {
@@ -48,9 +64,12 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
     }
   }
 
-  Future<void> _handleSend([String? presetText]) async {
+  Future<bool> _handleSend([
+    String? presetText,
+    SkillRunDraft? skillDraft,
+  ]) async {
     final text = presetText ?? _textController.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty) return false;
 
     final policyRepo = ref.read(policyRepositoryProvider);
     final ack = await policyRepo.isPolicyAcknowledged(
@@ -59,7 +78,7 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
     );
 
     if (!ack) {
-      if (!mounted) return;
+      if (!mounted) return false;
       final consentGiven = await showD02ConsentSheet(context);
       if (consentGiven == true) {
         await policyRepo.acknowledgePolicy(
@@ -68,7 +87,7 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
           policyVersion: 'v1.0',
         );
       } else {
-        if (!mounted) return;
+        if (!mounted) return false;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -76,16 +95,86 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
             ),
           ),
         );
-        return;
+        return false;
       }
     }
 
+    if (!mounted) return false;
+    if (skillDraft != null) {
+      final repository = ref.read(skillsRepositoryProvider);
+      final current = await repository?.getSkills(widget.ownerId);
+      if (!mounted) return false;
+      if (current == null ||
+          !current.any(
+            (skill) =>
+                skill.id == skillDraft.skill.id &&
+                skill.toJson().toString() ==
+                    skillDraft.skill.toJson().toString(),
+          )) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              Localizations.localeOf(context).languageCode == 'kk'
+                  ? 'Дағды өзгертілген немесе жойылған. Оны тізімнен қайта ашыңыз.'
+                  : 'Навык изменён или удалён. Откройте его заново из списка.',
+            ),
+          ),
+        );
+        return false;
+      }
+    }
+    final state = ref.read(chatSessionProvider(widget.ownerId));
+    if (state.isLoading ||
+        state.isGenerating ||
+        state.activeConversation == null) {
+      return false;
+    }
     if (presetText == null) {
       _textController.clear();
     }
     await ref
         .read(chatSessionProvider(widget.ownerId).notifier)
         .sendMessage(text);
+    return true;
+  }
+
+  Future<void> _pickSkill() async {
+    final picked = await showSkillPickerSheet(
+      context,
+      ownerId: widget.ownerId,
+      onOpenSkills: () => context.push('/assistant/skills'),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _run = SkillRunDraft(skill: picked.skill, inputs: picked.inputs);
+      _skillSent = false;
+    });
+  }
+
+  Future<void> _sendSkill() async {
+    final draft = _run;
+    if (draft == null || _skillSending || _skillSent) return;
+    setState(() => _skillSending = true);
+    try {
+      final prepared = SkillPreparation.prepare(draft.skill, draft.inputs);
+      if (!prepared.isReady) return;
+      final sent = await _handleSend(prepared.userPrompt, draft);
+      if (mounted && sent) setState(() => _skillSent = true);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              Localizations.localeOf(context).languageCode == 'kk'
+                  ? 'Жіберілмеді. Қайталап көріңіз.'
+                  : 'Не удалось отправить. Попробуйте ещё раз.',
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _skillSending = false);
+    }
   }
 
   @override
@@ -184,6 +273,26 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
       body: SafeArea(
         child: Column(
           children: [
+            if (_run != null && !_skillSent)
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.45,
+                ),
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                    child: _SkillRunCard(
+                      draft: _run!,
+                      onCancel: () => setState(() => _run = null),
+                      busy:
+                          chatState.isLoading ||
+                          chatState.isGenerating ||
+                          _skillSending,
+                      onRun: _sendSkill,
+                    ),
+                  ),
+                ),
+              ),
             // Ephemeral mode notice
             if (isEphemeral)
               Container(
@@ -394,7 +503,10 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Text(
-                message.content,
+                skillRequestSummary(
+                  message.content,
+                  isKk: Localizations.localeOf(context).languageCode == 'kk',
+                ),
                 style: BuilderType.body.copyWith(color: Colors.white),
               ),
             ),
@@ -612,6 +724,17 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
+          IconButton(
+            key: const Key('chat.skillsBtn'),
+            icon: const BuilderIcon(
+              BuilderGlyph.bolt,
+              color: BuilderColors.primary,
+            ),
+            tooltip: Localizations.localeOf(context).languageCode == 'kk'
+                ? 'Дағдылар'
+                : 'Навыки',
+            onPressed: _pickSkill,
+          ),
           Expanded(
             child: TextField(
               key: const Key('chat.inputField'),
@@ -759,6 +882,93 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
         );
       },
       orElse: () => const SizedBox.shrink(),
+    );
+  }
+}
+
+/// Ready-to-run card shown above the chat before a skill request is sent.
+class _SkillRunCard extends StatelessWidget {
+  const _SkillRunCard({
+    required this.draft,
+    required this.busy,
+    required this.onRun,
+    required this.onCancel,
+  });
+  final SkillRunDraft draft;
+  final bool busy;
+  final VoidCallback onRun;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final kk = Localizations.localeOf(context).languageCode == 'kk';
+    String t(String ru, String kz) => kk ? kz : ru;
+    final skill = draft.skill;
+    return BuilderCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const BuilderIconTile(BuilderGlyph.bolt),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(skill.name, style: BuilderType.h3),
+                    Text(
+                      t('Готов к запуску', 'Іске қосуға дайын'),
+                      style: BuilderType.small,
+                    ),
+                  ],
+                ),
+              ),
+              BuilderIconButton(
+                icon: BuilderGlyph.close,
+                label: t('Отменить', 'Бас тарту'),
+                onPressed: busy ? null : onCancel,
+              ),
+            ],
+          ),
+          if (draft.inputs.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final input in draft.inputs.entries)
+                  Chip(
+                    label: Text(
+                      '${input.key}: ${input.value}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 12),
+          Text(
+            skill.sources.isEmpty
+                ? t(
+                    'Ассистент использует только то, что вы указали выше.',
+                    'Көмекші тек жоғарыда көрсеткеніңізді пайдаланады.',
+                  )
+                : '${t('Заявленные источники', 'Мәлімделген дереккөздер')}: ${skill.sources.join('; ')}. ${t('Их содержимое не загружается — ассистент видит только указанное выше.', 'Олардың мазмұны жүктелмейді — көмекші тек жоғарыда көрсетілгенді көреді.')}',
+            style: BuilderType.small,
+          ),
+          const SizedBox(height: 12),
+          BuilderButton(
+            key: const Key('skill.send'),
+            label: busy
+                ? t('Запускаем…', 'Іске қосылуда…')
+                : t('Запустить', 'Іске қосу'),
+            icon: BuilderGlyph.send,
+            onPressed: busy ? null : onRun,
+          ),
+        ],
+      ),
     );
   }
 }

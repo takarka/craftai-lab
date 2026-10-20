@@ -6,7 +6,9 @@ import '../../../ui_kit/ui_kit.dart';
 import '../course_providers.dart';
 import '../domain/course_catalog.dart';
 import '../domain/course_models.dart';
+import '../domain/course_access.dart';
 import 'course_strings.dart';
+import 'glossary_page.dart';
 
 class CoursePage extends ConsumerStatefulWidget {
   const CoursePage({super.key, required this.ownerId});
@@ -26,6 +28,10 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   ) {
     final cs = CourseStrings.of(context);
     if (status == LevelStatus.comingSoon) {
+      if (level.id == 11) {
+        context.push('/course/lesson/${level.id}');
+        return;
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -51,6 +57,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
 
   void _showLockedLevelPreview(BuildContext context, CourseLevel level) {
     final cs = CourseStrings.of(context);
+    final prerequisite = CourseAccess.prerequisite(level.id);
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -65,7 +72,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                '${cs.levelPrefix(level.id)} · ${cs.t('Превью теории', 'Теорияға шолу')}',
+                '${cs.levelPrefix(level.displayOrder)} · ${cs.t('Превью теории', 'Теорияға шолу')}',
                 style: BuilderType.title,
               ),
             ),
@@ -84,8 +91,8 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                 ),
                 child: Text(
                   cs.t(
-                    'Откроется после прохождения Уровня ${level.id - 1}. Ниже доступна теория для ознакомления:',
-                    '${level.id - 1}-деңгейді аяқтағаннан кейін ашылады. Төменде танысу үшін теория қолжетімді:',
+                    'Откроется после прохождения Уровня ${prerequisite?.displayOrder ?? 1}. Ниже доступна теория для ознакомления:',
+                    '${prerequisite?.displayOrder ?? 1}-деңгейді аяқтағаннан кейін ашылады. Төменде танысу үшін теория қолжетімді:',
                   ),
                   style: BuilderType.small.copyWith(
                     color: BuilderColors.primary,
@@ -158,7 +165,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
               ),
               const SizedBox(height: 12),
 
-              // 2. The MVP journey contains five active modules. Future
+              // 2. Show the full curriculum; unavailable topics cannot start lessons. Future
               // levels have a dedicated compact notice below the map.
               progressListAsync.when(
                 loading: () => const Center(
@@ -174,7 +181,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                 ),
                 data: (progressList) {
                   return Column(
-                    children: levels.where((lvl) => lvl.id <= 5).map((lvl) {
+                    children: levels.map((lvl) {
                       final p = progressList.firstWhere(
                         (item) => item.levelId == lvl.id,
                         orElse: () => LevelProgress(
@@ -189,17 +196,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                         ),
                       );
 
-                      // Calculate locked status if prev not completed
-                      LevelStatus status = p.status;
-                      if (lvl.id > 1 && lvl.id <= 5 && !p.isCompleted) {
-                        final prev = progressList.firstWhere(
-                          (item) => item.levelId == lvl.id - 1,
-                          orElse: () => p,
-                        );
-                        if (!prev.isCompleted) {
-                          status = LevelStatus.locked;
-                        }
-                      }
+                      final status = CourseAccess.status(lvl.id, progressList);
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
@@ -253,7 +250,13 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            cs.t('3 из 6', '6-дан 3'),
+                            overallAsync.maybeWhen(
+                              data: (value) => cs.levelsCompleted(
+                                value.completedLevelsCount,
+                                value.totalActiveLevels,
+                              ),
+                              orElse: () => '—',
+                            ),
                             style: BuilderType.small.copyWith(
                               color: BuilderColors.inkSecondary,
                             ),
@@ -283,7 +286,10 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            cs.t('5 терминов', '5 термин'),
+                            cs.t(
+                              '${GlossaryPage.terms.length} терминов',
+                              '${GlossaryPage.terms.length} термин',
+                            ),
                             style: BuilderType.small.copyWith(
                               color: BuilderColors.inkSecondary,
                             ),
@@ -342,11 +348,19 @@ class _CourseProgressHeader extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(cs.courseTab, style: BuilderType.h2.copyWith(color: Colors.white)),
+                    Text(
+                      cs.courseTab,
+                      style: BuilderType.h2.copyWith(color: Colors.white),
+                    ),
                     const SizedBox(height: 4),
                     Text(
-                      cs.t('Соберите ассистента модуль за модулем', 'Ассистентті модуль-модульмен жинаңыз'),
-                      style: BuilderType.small.copyWith(color: Colors.white.withValues(alpha: .88)),
+                      cs.t(
+                        'Соберите ассистента модуль за модулем',
+                        'Ассистентті модуль-модульмен жинаңыз',
+                      ),
+                      style: BuilderType.small.copyWith(
+                        color: Colors.white.withValues(alpha: .88),
+                      ),
                     ),
                   ],
                 ),
@@ -360,31 +374,51 @@ class _CourseProgressHeader extends StatelessWidget {
                 ),
                 alignment: Alignment.center,
                 child: const BuilderIcon(
-                  BuilderGlyph.robot, size: 30, color: BuilderColors.primary,
+                  BuilderGlyph.robot,
+                  size: 30,
+                  color: BuilderColors.primary,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Row(
-            children: List.generate(5, (index) {
+            children: List.generate(totalCount, (index) {
               final current = !isAllCompleted && activeLevelId == index + 1;
-              return Expanded(child: Container(
-                height: 7,
-                margin: EdgeInsets.only(right: index == 4 ? 0 : 5),
-                decoration: BoxDecoration(
-                  color: index < completedCount ? Colors.white : current ? BuilderColors.accent : Colors.white.withValues(alpha: .42),
-                  borderRadius: BorderRadius.circular(8),
+              return Expanded(
+                child: Container(
+                  height: 7,
+                  margin: EdgeInsets.only(
+                    right: index == totalCount - 1 ? 0 : 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: index < completedCount
+                        ? Colors.white
+                        : current
+                        ? BuilderColors.accent
+                        : Colors.white.withValues(alpha: .42),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
-              ));
+              );
             }),
           ),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 12,
+            runSpacing: 4,
             children: [
-              Text(cs.t('Уровень ${activeLevelId ?? 1} из 5', '5 деңгейдің ${activeLevelId ?? 1}-деңгейі'), style: BuilderType.small.copyWith(color: Colors.white)),
-              Text(cs.t('пройдено $completedCount', '$completedCount аяқталды'), style: BuilderType.small.copyWith(color: Colors.white)),
+              Text(
+                cs.t(
+                  'Уровень ${CourseCatalog.getLevel(activeLevelId ?? 1)!.displayOrder} из 11',
+                  '11 деңгейдің ${CourseCatalog.getLevel(activeLevelId ?? 1)!.displayOrder}-деңгейі',
+                ),
+                style: BuilderType.small.copyWith(color: Colors.white),
+              ),
+              Text(
+                cs.levelsCompleted(completedCount, totalCount),
+                style: BuilderType.small.copyWith(color: Colors.white),
+              ),
             ],
           ),
           if (activeLevelId != null && !isAllCompleted && onResume != null) ...[
@@ -392,7 +426,10 @@ class _CourseProgressHeader extends StatelessWidget {
             InkWell(
               key: const Key('course.resumeBtn'),
               onTap: onResume,
-              child: Text('${cs.levelPrefix(activeLevelId!)} · ${activeStep.localizedTitle(cs.kk)}', style: BuilderType.small.copyWith(color: Colors.white)),
+              child: Text(
+                '${cs.levelPrefix(CourseCatalog.getLevel(activeLevelId!)!.displayOrder)} · ${activeStep.localizedTitle(cs.kk)}',
+                style: BuilderType.small.copyWith(color: Colors.white),
+              ),
             ),
           ],
         ],
@@ -455,7 +492,7 @@ class _LevelCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        cs.levelPrefix(level.id),
+                        cs.levelPrefix(level.displayOrder),
                         style: BuilderType.small.copyWith(
                           color: _statusTextColor(status),
                           fontWeight: FontWeight.w700,
@@ -477,12 +514,13 @@ class _LevelCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      cs.minutesSuffix(level.estimatedMinutes),
-                      style: BuilderType.small.copyWith(
-                        color: BuilderColors.inkSecondary,
+                    if (level.estimatedMinutes > 0)
+                      Text(
+                        cs.minutesSuffix(level.estimatedMinutes),
+                        style: BuilderType.small.copyWith(
+                          color: BuilderColors.inkSecondary,
+                        ),
                       ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -567,14 +605,13 @@ class _ComingSoonNotice extends StatelessWidget {
     ),
     child: Text(
       cs.t(
-        'После MVP: голос, зрение, безопасность, агент (уровни 6–9) и сравнение моделей.',
-        'MVP-ден кейін: дауыс, көру, қауіпсіздік, агент (6–9 деңгейлер) және модельдерді салыстыру.',
+        'Уровень 7 готовится. Уровни 8–11 запланированы на следующие итерации.',
+        '7-деңгей әзірленуде. 8–11 деңгейлер келесі кезеңдерге жоспарланған.',
       ),
       style: BuilderType.small,
     ),
   );
 }
-
 
 class _StatusBadge extends StatelessWidget {
   const _StatusBadge({required this.status, required this.step});

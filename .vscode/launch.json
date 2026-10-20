@@ -15,6 +15,7 @@
       "args": [
         "--device-connection",
         "attached",
+        "--dart-define=FIREBASE_PUSH_ENABLED=true",
         "--dart-define=APP_ENV=dev",
         "--dart-define=CRAFTAI_API_BASE_URL=https://localhost:5001"
       ]
@@ -30,6 +31,7 @@
       "args": [
         "--device-connection",
         "attached",
+        "--dart-define=FIREBASE_PUSH_ENABLED=true",
         "--dart-define=APP_ENV=dev",
         "--dart-define=CRAFTAI_API_BASE_URL=https://localhost:5001"
       ]

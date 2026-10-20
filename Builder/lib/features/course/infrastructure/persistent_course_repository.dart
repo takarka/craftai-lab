@@ -4,8 +4,10 @@ import 'package:sqflite/sqflite.dart';
 import '../../../core/storage/database/storage_database.dart';
 import '../../../core/storage/schema/storage_schema_v1.dart';
 import '../../assistant/domain/assistant_repository.dart';
+import '../domain/course_access.dart';
 import '../domain/course_catalog.dart';
 import '../domain/course_models.dart';
+import '../domain/course_topic.dart';
 import '../domain/course_repository.dart';
 
 class PersistentCourseRepository implements CourseRepository {
@@ -65,7 +67,7 @@ class PersistentCourseRepository implements CourseRepository {
       }
     }
 
-    // Ensure all 9 levels have a representative representation
+    // Keep stored keys unchanged; the catalog supplies the current display order.
     return CourseCatalog.levels.map((lvl) {
       if (map.containsKey(lvl.id)) {
         return map[lvl.id]!;
@@ -136,42 +138,16 @@ class PersistentCourseRepository implements CourseRepository {
 
   @override
   Future<LevelStatus> getLevelStatus(String ownerId, int levelId) async {
-    if (levelId > 5) return LevelStatus.comingSoon;
-
-    final all = await getAllProgress(ownerId);
-    final current = all.firstWhere(
-      (p) => p.levelId == levelId,
-      orElse: () => all.first,
-    );
-
-    if (current.isCompleted) return LevelStatus.completed;
-
-    // Level 1 is always unlocked
-    if (levelId == 1) {
-      return current.currentStep > 1
-          ? LevelStatus.inProgress
-          : LevelStatus.available;
-    }
-
-    // Level N requires level N-1 to be completed
-    final prev = all.firstWhere(
-      (p) => p.levelId == levelId - 1,
-      orElse: () => all.first,
-    );
-    if (!prev.isCompleted) {
-      return LevelStatus.locked;
-    }
-
-    return current.currentStep > 1
-        ? LevelStatus.inProgress
-        : LevelStatus.available;
+    return CourseAccess.status(levelId, await getAllProgress(ownerId));
   }
 
   @override
   Future<OverallCourseProgress> getOverallProgress(String ownerId) async {
     final all = await getAllProgress(ownerId);
     final completed = all
-        .where((p) => p.levelId <= 5 && p.isCompleted)
+        .where(
+          (p) => CourseTopic.isEnabledStorageId(p.levelId) && p.isCompleted,
+        )
         .map((p) => p.levelId)
         .toSet();
 
@@ -179,7 +155,8 @@ class PersistentCourseRepository implements CourseRepository {
     int? activeLevelId;
     var activeStep = LessonStep.idea;
 
-    for (int i = 1; i <= 5; i++) {
+    for (final topic in CourseTopic.enabledSequence) {
+      final i = topic.storageId;
       final p = all.firstWhere((item) => item.levelId == i);
       if (!p.isCompleted) {
         activeLevelId = i;
@@ -190,7 +167,7 @@ class PersistentCourseRepository implements CourseRepository {
 
     return OverallCourseProgress(
       completedLevelsCount: completed.length,
-      totalActiveLevels: 5,
+      totalActiveLevels: CourseTopic.enabledSequence.length,
       activeLevelId: activeLevelId,
       activeStep: activeStep,
       completedLevelIds: completed,
@@ -238,7 +215,9 @@ class PersistentCourseRepository implements CourseRepository {
     await database.db.insert(StorageSchemaV1.tableCourseProgress, {
       'owner_id': ownerId,
       'level_id': levelId.toString(),
-      'content_version': CourseCatalog.currentContentVersion,
+      'content_version': rows.isNotEmpty
+          ? rows.first['content_version']
+          : CourseCatalog.currentContentVersion,
       'current_step': isAlreadyCompleted ? 5 : step.clamp(1, 5),
       'completed_checkpoints_json': jsonEncode(checkpoints),
       'attempts_count': rows.isNotEmpty
@@ -324,7 +303,9 @@ class PersistentCourseRepository implements CourseRepository {
     await database.db.insert(StorageSchemaV1.tableCourseProgress, {
       'owner_id': ownerId,
       'level_id': levelId.toString(),
-      'content_version': CourseCatalog.currentContentVersion,
+      'content_version': progressRows.isNotEmpty
+          ? progressRows.first['content_version']
+          : CourseCatalog.currentContentVersion,
       'current_step': passed ? 5 : 4,
       'completed_checkpoints_json': jsonEncode(checkpoints),
       'attempts_count': currentAttempts + 1,
@@ -345,6 +326,9 @@ class PersistentCourseRepository implements CourseRepository {
     final level = CourseCatalog.getLevel(levelId);
     if (level == null) {
       throw ArgumentError('Уровень $levelId не найден в каталоге курса');
+    }
+    if (level.comingSoon) {
+      throw StateError('Уровень ещё недоступен');
     }
 
     // 1. Check if level is already completed (F10-11: Idempotency, no repeated grants or version spam)
@@ -378,7 +362,9 @@ class PersistentCourseRepository implements CourseRepository {
     await database.db.insert(StorageSchemaV1.tableCourseProgress, {
       'owner_id': ownerId,
       'level_id': levelId.toString(),
-      'content_version': CourseCatalog.currentContentVersion,
+      'content_version': existingRows.isNotEmpty
+          ? existingRows.first['content_version']
+          : CourseCatalog.currentContentVersion,
       'current_step': 5,
       'completed_checkpoints_json': jsonEncode(checkpoints),
       'attempts_count': existingRows.isNotEmpty
@@ -408,7 +394,7 @@ class PersistentCourseRepository implements CourseRepository {
           selectedCategory: config.selectedCategory,
           enabledSkills: updatedSkills,
           systemRules: config.systemRules,
-          reason: 'Завершение уровня $levelId: ${level.title}',
+          reason: 'Завершение уровня ${level.displayOrder}: ${level.title}',
         );
       }
     }
@@ -418,16 +404,17 @@ class PersistentCourseRepository implements CourseRepository {
   Future<void> resetCourseProgress(String ownerId) async {
     await _ensureOpen();
 
-    await database.db.delete(
-      StorageSchemaV1.tableCourseProgress,
-      where: 'owner_id = ?',
-      whereArgs: [ownerId],
-    );
-
-    await database.db.delete(
-      StorageSchemaV1.tableQuizAttempts,
-      where: 'owner_id = ?',
-      whereArgs: [ownerId],
-    );
+    await database.transaction((txn) async {
+      await txn.delete(
+        StorageSchemaV1.tableCourseProgress,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+      await txn.delete(
+        StorageSchemaV1.tableQuizAttempts,
+        where: 'owner_id = ?',
+        whereArgs: [ownerId],
+      );
+    });
   }
 }

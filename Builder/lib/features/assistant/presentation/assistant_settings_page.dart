@@ -7,6 +7,9 @@ import '../../../ui_kit/ui_kit.dart';
 import '../../onboarding/domain/assistant_setup.dart';
 import '../../onboarding/presentation/onboarding_labels.dart';
 import '../../profile/profile_providers.dart';
+import '../../course/domain/course_topic.dart';
+import '../../course/presentation/course_character.dart';
+import '../../schedules/presentation/schedules_page.dart';
 import '../assistant_providers.dart';
 import '../domain/assistant_config.dart';
 import 'reset_confirmation_dialog.dart';
@@ -32,10 +35,6 @@ class AssistantSettingsPage extends ConsumerWidget {
     final currentVersionNumber = versions.isNotEmpty
         ? versions.first.versionNumber
         : 1;
-    final highestLevel = completedLevels.fold<int>(
-      0,
-      (max, lvl) => lvl > max ? lvl : max,
-    );
     final preferences = ref
         .watch(teacherPreferencesProvider(ownerId))
         .asData
@@ -62,8 +61,8 @@ class AssistantSettingsPage extends ConsumerWidget {
               BuilderCard(
                 child: Row(
                   children: [
-                    BuilderCharacter(
-                      level: highestLevel,
+                    CourseCharacter(
+                      completedLevels: completedLevels,
                       size: 56,
                       compact: true,
                     ),
@@ -80,7 +79,11 @@ class AssistantSettingsPage extends ConsumerWidget {
                           ),
                           const SizedBox(height: 4),
                           BuilderBadge(
-                            s.assistantLevelBadge(highestLevel),
+                            s.assistantLevelBadge(
+                              CourseTopic.highestCompletedOrder(
+                                completedLevels,
+                              ),
+                            ),
                             icon: BuilderGlyph.course,
                           ),
                         ],
@@ -139,6 +142,33 @@ class AssistantSettingsPage extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // 6. Skills domain states (F09-01) - 8 skills (6-9 Скоро)
+              BuilderLinkRow(
+                key: const Key('assistantSettings.skillsLink'),
+                title: Localizations.localeOf(context).languageCode == 'kk'
+                    ? 'Дағдылар'
+                    : 'Навыки',
+                subtitle: Localizations.localeOf(context).languageCode == 'kk'
+                    ? 'Қайталанатын тапсырмалар және қолмен іске қосу'
+                    : 'Повторяемые задачи и ручной запуск',
+                icon: BuilderGlyph.code,
+                onTap: () => context.push('/assistant/skills'),
+              ),
+              // Test builds only: opens AI schedules without the level-6 unlock.
+              if (const bool.fromEnvironment('DEV_SCHEDULES_ENTRY')) ...[
+                const SizedBox(height: 12),
+                BuilderLinkRow(
+                  key: const Key('assistantSettings.devSchedulesLink'),
+                  title: 'AI-расписания (тест)',
+                  subtitle: 'Только для тестовой сборки',
+                  icon: BuilderGlyph.bolt,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => SchedulesPage(ownerId: ownerId),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
               Text(s.assistantSkillsHeader, style: BuilderType.h3),
               const SizedBox(height: 12),
               for (final skill in AssistantSkillId.values)
@@ -244,7 +274,7 @@ class AssistantSettingsPage extends ConsumerWidget {
       subtitle: skill.subtitle,
       icon: skill.glyph,
       status: status,
-      level: skill.level,
+      level: skill.displayLevel,
       onChanged:
           (status == SkillStatus.enabled || status == SkillStatus.disabled)
           ? (val) {

@@ -1,0 +1,14 @@
+{
+  "attachmentId": "00000000-0000-4000-8000-000000000011",
+  "skill": "quiz",
+  "parameters": {
+    "topic": "Example topic",
+    "grade": 7,
+    "itemsCount": 10,
+    "language": "ru"
+  },
+  "outputs": [
+    "docx",
+    "pdf"
+  ]
+}

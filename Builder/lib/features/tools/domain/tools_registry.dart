@@ -7,6 +7,7 @@ class ToolsRegistry {
   static const String createNote = 'create_note';
   static const String readNotes = 'read_notes';
   static const String deleteNote = 'delete_note';
+  // Retained only to identify historical records; excluded from this release.
   static const String prepareCall = 'prepare_call';
   static const String webSearch = 'web_search';
 
@@ -19,19 +20,18 @@ class ToolsRegistry {
           'Просмотреть события и расписание уроков за указанный период времени.',
       category: ToolCategory.calendar,
       capability: ToolCapability.readOnly,
-      defaultOsPermission: OsPermissionStatus.notRequested,
       parametersSchema: {
         'type': 'object',
         'properties': {
           'start_date': {
             'type': 'string',
             'description':
-                'Начало периода (ISO-8601, например 2026-10-20T08:00:00Z)',
+                'Первый день периода, дата календаря Builder (например 2026-10-20)',
           },
           'end_date': {
             'type': 'string',
             'description':
-                'Конец периода (ISO-8601, например 2026-10-20T18:00:00Z)',
+                'Последний день периода включительно (например 2026-10-26), не более 62 дней',
           },
         },
         'required': ['start_date', 'end_date'],
@@ -44,7 +44,6 @@ class ToolsRegistry {
           'Создать новое событие, урок или консультацию в календаре (требует подтверждения учителя).',
       category: ToolCategory.calendar,
       capability: ToolCapability.requiresConfirmation,
-      defaultOsPermission: OsPermissionStatus.notRequested,
       parametersSchema: {
         'type': 'object',
         'properties': {
@@ -55,20 +54,30 @@ class ToolsRegistry {
           },
           'start_time': {
             'type': 'string',
-            'description': 'Время начала (ISO-8601)',
+            'description':
+                'Местное время начала без часового пояса, yyyy-MM-ddTHH:mm:ss (для всего дня — yyyy-MM-dd)',
           },
           'end_time': {
             'type': 'string',
-            'description': 'Время окончания (ISO-8601)',
+            'description':
+                'Местное время окончания без часового пояса, yyyy-MM-ddTHH:mm:ss (для всего дня — yyyy-MM-dd)',
+          },
+          'time_zone': {
+            'type': 'string',
+            'description':
+                'Часовой пояс IANA, например Asia/Almaty; нужен, если событие не на весь день',
           },
           'is_all_day': {'type': 'boolean', 'description': 'Весь день'},
-          'location': {
-            'type': 'string',
-            'description': 'Кабинет или место проведения',
-          },
           'notes': {
             'type': 'string',
             'description': 'Дополнительные заметки к событию',
+          },
+          'reminder_minutes': {
+            'type': 'array',
+            'description':
+                'За сколько минут до начала напомнить (до 3 значений от 0 до 10080); телефон покажет уведомление, если учитель включил напоминания в календаре',
+            'items': {'type': 'integer', 'minimum': 0, 'maximum': 10080},
+            'maxItems': 3,
           },
         },
         'required': ['title', 'start_time', 'end_time'],
@@ -132,34 +141,7 @@ class ToolsRegistry {
       },
     ),
 
-    // 3. Communication & Search
-    const ToolDefinition(
-      name: prepareCall,
-      displayName: 'Подготовить звонок / SMS',
-      description:
-          'Подготовить черновик вызова или сообщения и открыть системный диалог набора номера (без автовызова).',
-      category: ToolCategory.communication,
-      capability: ToolCapability.requiresConfirmation,
-      defaultOsPermission: OsPermissionStatus.notRequired,
-      parametersSchema: {
-        'type': 'object',
-        'properties': {
-          'phone_number': {
-            'type': 'string',
-            'description': 'Номер телефона для набора',
-          },
-          'recipient_name': {
-            'type': 'string',
-            'description': 'Имя контакта (например: «Родитель Иванова А.»)',
-          },
-          'message_body': {
-            'type': 'string',
-            'description': 'Текст черновика SMS (если отправляется сообщение)',
-          },
-        },
-        'required': ['phone_number'],
-      },
-    ),
+    // 3. Search
     const ToolDefinition(
       name: webSearch,
       displayName: 'Поиск в интернете',

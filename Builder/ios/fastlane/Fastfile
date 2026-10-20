@@ -1,0 +1,49 @@
+# Fastlane config for building Craft Builder iOS and uploading to TestFlight.
+# Runs on a macOS CI runner (see .github/workflows/ios-testflight.yml).
+# Signing and upload both authenticate with an App Store Connect API key
+# (ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_CONTENT_BASE64), so no Apple ID
+# password, 2FA session, or manually exported certificate is needed —
+# `-allowProvisioningUpdates` lets Xcode create/renew the distribution
+# certificate and provisioning profile against the account the API key
+# belongs to.
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Build a release IPA and upload it to TestFlight"
+  desc "Options: build_number:<int>  app_env:<staging|prod>  api_base_url:<https url>"
+  lane :beta do |options|
+    build_number = options[:build_number] || UI.user_error!("build_number is required")
+    app_env = options[:app_env] || "staging"
+    api_base_url = options[:api_base_url] || ""
+
+    app_store_connect_api_key(
+      key_id: ENV.fetch("ASC_KEY_ID"),
+      issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+      key_content: ENV.fetch("ASC_KEY_CONTENT_BASE64"),
+      is_key_content_base64: true
+    )
+
+    Dir.chdir("..") do
+      cmd = [
+        "flutter", "build", "ios", "--release", "--no-codesign",
+        "--build-number=#{build_number}",
+        "--dart-define=APP_ENV=#{app_env}"
+      ]
+      cmd << "--dart-define=CRAFTAI_API_BASE_URL=#{api_base_url}" unless api_base_url.to_s.empty?
+      sh(cmd.join(" "))
+    end
+
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "app-store",
+      output_directory: "../build/ios/ipa",
+      xcargs: "-allowProvisioningUpdates"
+    )
+
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true
+    )
+  end
+end

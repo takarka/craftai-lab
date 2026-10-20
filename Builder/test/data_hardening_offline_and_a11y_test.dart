@@ -221,8 +221,8 @@ void main() {
         // 1. All levels load synchronously without internet
         final levelsRu = CourseCatalog.getLevels(locale: 'ru');
         final levelsKk = CourseCatalog.getLevels(locale: 'kk');
-        expect(levelsRu.length, 9);
-        expect(levelsKk.length, 9);
+        expect(levelsRu.length, 11);
+        expect(levelsKk.length, 11);
 
         for (int i = 1; i <= 5; i++) {
           expect(CourseCatalog.getLevel(i, locale: 'ru'), isNotNull);
@@ -500,7 +500,7 @@ void main() {
           await tester.pumpAndSettle();
 
           expect(tester.takeException(), isNull);
-          expect(find.text('Оқу жолы'), findsOneWidget);
+          expect(find.text('Курс'), findsOneWidget);
         },
       );
 

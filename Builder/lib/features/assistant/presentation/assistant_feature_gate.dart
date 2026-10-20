@@ -65,8 +65,8 @@ class AssistantFeatureGate extends ConsumerWidget {
                               ? 'Курс үлгерімі жүктелмеді'
                               : 'Не удалось загрузить прогресс курса')
                         : (isKk
-                              ? '${skill.level}-деңгейді аяқтағаннан кейін ашылады'
-                              : 'Откроется после прохождения уровня ${skill.level}'),
+                              ? '${skill.displayLevel}-деңгейді аяқтағаннан кейін ашылады'
+                              : 'Откроется после прохождения уровня ${skill.displayLevel}'),
                     key: const Key('assistant.featureLocked'),
                     textAlign: TextAlign.center,
                     style: BuilderType.h3,

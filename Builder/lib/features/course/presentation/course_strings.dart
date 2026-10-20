@@ -75,16 +75,17 @@ class CourseStrings {
       t('Тестовый запрос учителя:', 'Мұғалімнің тесттік сұранысы:');
   String get caseStudyAnalyzeBtn =>
       t('Сравнить до и после', 'Дейін және кейін салыстыру');
-  String get caseStudyCompletedBtn =>
-      t('Разбор изучен', 'Талдау қаралды');
+  String get caseStudyCompletedBtn => t('Разбор изучен', 'Талдау қаралды');
   String get beforeSettingLabel =>
       t('Базовая модель (без настройки):', 'Базалық модель (баптаусыз):');
   String get beforeSettingProblem => t(
     'Ответ грамматически верный, но слишком общий: нет контекста класса, предмета и требований школы.',
     'Жауап грамматикалық жағынан дұрыс, бірақ тым жалпылама: сыныптың, пәннің және мектеп талаптарының мән-жайы жоқ.',
   );
-  String get afterSettingLabel =>
-      t('Настроенный ассистент (целевой результат):', 'Бапталған ассистент (мақсатты нәтиже):');
+  String get afterSettingLabel => t(
+    'Настроенный ассистент (целевой результат):',
+    'Бапталған ассистент (мақсатты нәтиже):',
+  );
 
   String get comparisonTitle =>
       t('Сравнение до и после', 'Дейін және кейін салыстыру');
@@ -124,23 +125,20 @@ class CourseStrings {
     'Отвечено: $answered из $total',
     'Жауап берілді: $total сұрақтың $answered-і',
   );
-  String quizQuestionHeader(int current, int total) => t(
-    'Вопрос $current из $total',
-    '$total сұрақтың $current-сұрағы',
-  );
+  String quizQuestionHeader(int current, int total) =>
+      t('Вопрос $current из $total', '$total сұрақтың $current-сұрағы');
   String get quizAnsweredBadge => t('Отвечено', 'Жауап берілді');
   String get quizPendingBadge => t('Ожидает ответа', 'Жауап күтілуде');
   String get quizAllAnswered =>
       t('Все ответы выбраны', 'Барлық жауаптар таңдалды');
-  String quizAnswerSpecific(int num) => t(
-    'Пожалуйста, ответьте на вопрос $num',
-    '$num-сұраққа жауап беріңіз',
-  );
+  String quizAnswerSpecific(int num) =>
+      t('Пожалуйста, ответьте на вопрос $num', '$num-сұраққа жауап беріңіз');
   String quizSubmitWithCount(int answered, int total) => t(
     'Проверить ответы ($answered из $total)',
     'Жауаптарды тексеру ($answered/$total)',
   );
-  String get quizNextQuestion => t('К следующему вопросу ↓', 'Келесі сұраққа ↓');
+  String get quizNextQuestion =>
+      t('К следующему вопросу ↓', 'Келесі сұраққа ↓');
 
   String get summaryTitle => t(
     'Поздравляем с прохождением уровня!',

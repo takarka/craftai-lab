@@ -195,7 +195,7 @@ class AssistantController {
       completedCourseLevelsProvider(ownerId).future,
     );
     if (!completedLevels.contains(skill.level)) {
-      throw StateError('Умение откроется на уровне ${skill.level}');
+      throw StateError('Умение откроется на уровне ${skill.displayLevel}');
     }
 
     final currentConfig = await ref.read(
@@ -295,13 +295,9 @@ class AssistantController {
       allowedSkills: allowedSkills,
     );
 
-    // Refresh model category in models provider if restored
-    final restoredConfig = await _repo.getConfiguration(ownerId);
-    if (restoredConfig?.selectedCategory != null) {
-      ref
-          .read(selectedCategoryProvider(ownerId).notifier)
-          .select(restoredConfig!.selectedCategory!);
-    }
+    // Rollback already persisted the category in its transaction. Reload the
+    // provider rather than writing the same setting and revision a second time.
+    ref.invalidate(selectedCategoryProvider(ownerId));
 
     ref.invalidate(assistantConfigProvider(ownerId));
     ref.invalidate(assistantVersionsProvider(ownerId));

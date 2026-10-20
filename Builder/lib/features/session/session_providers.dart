@@ -6,6 +6,7 @@ import '../../core/storage/storage_providers.dart';
 import 'infrastructure/persistent_session_repository.dart';
 import 'infrastructure/secure_token_storage.dart';
 import 'infrastructure/refreshing_token_storage.dart';
+import '../schedules/push/push_providers.dart';
 
 final secureTokenStorageProvider = Provider<SecureTokenStorage>((ref) {
   final config = ref.watch(appConfigProvider);
@@ -29,6 +30,8 @@ final persistentSessionRepositoryProvider =
       if (!kIsWeb && (db == null || wsService == null)) return null;
 
       return PersistentSessionRepository(
+        beforeSessionChange: () =>
+            ref.read(pushRegistrationServiceProvider).detach(),
         tokenStorage: tokenStorage,
         database: db,
         workspaceStorageService: wsService,

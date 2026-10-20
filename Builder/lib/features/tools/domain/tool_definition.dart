@@ -98,6 +98,8 @@ class ToolDefinition {
           errors.add('Параметр $propName должен быть числом');
         } else if (expectedType == 'integer' && propVal is! int) {
           errors.add('Параметр $propName должен быть целым числом');
+        } else if (expectedType == 'array') {
+          errors.addAll(_validateArray(propName, propVal, propSchema));
         }
 
         if (expectedType == 'string' &&
@@ -107,6 +109,33 @@ class ToolDefinition {
               'Параметр $propName должен содержать корректную дату/время ISO-8601',
             );
           }
+        }
+      }
+    }
+    return errors;
+  }
+
+  static List<String> _validateArray(
+    String name,
+    Object value,
+    Map<String, dynamic> schema,
+  ) {
+    if (value is! List) return ['Параметр $name должен быть списком'];
+    final errors = <String>[];
+    final maxItems = schema['maxItems'] as int?;
+    if (maxItems != null && value.length > maxItems) {
+      errors.add('Параметр $name: не более $maxItems значений');
+    }
+    final items = schema['items'] as Map<String, dynamic>?;
+    if (items?['type'] == 'integer') {
+      final min = items!['minimum'] as int?;
+      final max = items['maximum'] as int?;
+      for (final item in value) {
+        if (item is! int ||
+            (min != null && item < min) ||
+            (max != null && item > max)) {
+          errors.add('Параметр $name: значения должны быть целыми от $min до $max');
+          break;
         }
       }
     }

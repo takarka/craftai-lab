@@ -17,17 +17,20 @@ import '../../features/memory/presentation/memory_page.dart';
 import '../../features/models/presentation/model_selection_page.dart';
 import '../../features/tools/presentation/tools_page.dart';
 import '../../features/mcp/presentation/mcp_page.dart';
+import '../../features/skills/presentation/skills_page.dart';
 import '../../features/auth/application/auth_controller.dart';
 import '../../features/auth/presentation/auth_page.dart';
 import '../../features/onboarding/application/onboarding_controller.dart';
 import '../../features/onboarding/presentation/onboarding_pages.dart';
 import '../../features/course/presentation/course_page.dart';
 import '../../features/course/presentation/lesson_player_page.dart';
+import '../../features/course/presentation/lesson_access_gate.dart';
 import '../../features/course/presentation/glossary_page.dart';
 import '../../features/profile/presentation/profile_pages.dart';
 import '../localization/app_localizations.dart';
 import '../presentation/foundation_pages.dart';
 import '../providers.dart';
+import '../../features/schedules/presentation/schedules_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   // Replace navigation stacks when account ownership changes.
@@ -101,6 +104,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       message: AppLocalizations.of(context).featurePending,
     ),
     routes: [
+      GoRoute(
+        path: '/automation/runs/:runId',
+        builder: (context, state) => SchedulesPage(
+          ownerId: ownerId!,
+          initialRunId: state.pathParameters['runId'],
+        ),
+      ),
       GoRoute(
         path: '/startup',
         builder: (context, state) => const StartupPage(),
@@ -191,6 +201,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     ),
                   ),
                   GoRoute(
+                    path: 'skills',
+                    parentNavigatorKey: rootNavigatorKey,
+                    builder: (context, state) => SkillsPage(ownerId: ownerId!),
+                  ),
+                  GoRoute(
                     path: 'knowledge',
                     parentNavigatorKey: rootNavigatorKey,
                     builder: (context, state) => AssistantFeatureGate(
@@ -270,9 +285,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                             state.pathParameters['levelId'] ?? '1',
                           ) ??
                           1;
-                      return LessonPlayerPage(
+                      return LessonAccessGate(
                         ownerId: ownerId!,
                         levelId: levelId,
+                        child: LessonPlayerPage(
+                          ownerId: ownerId,
+                          levelId: levelId,
+                        ),
                       );
                     },
                   ),

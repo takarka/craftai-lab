@@ -4,6 +4,7 @@ import 'package:builder/ui_kit/ui_kit.dart';
 import '../domain/request_trace.dart';
 import '../domain/trace_analogy.dart';
 import '../trace_providers.dart';
+import '../../skills/presentation/skill_request_summary.dart';
 
 enum TraceTab { schema, xray, analogy }
 
@@ -112,7 +113,7 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
                   child: switch (_activeTab) {
                     TraceTab.schema => _buildSchemaTab(context, trace, isKk),
                     TraceTab.xray => _buildXrayTab(context, trace, isKk),
-                    TraceTab.analogy => _buildAnalogyTab(context, isKk),
+                    TraceTab.analogy => _buildAnalogyTab(context, trace, isKk),
                   },
                 ),
               ),
@@ -264,6 +265,7 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
       key: const ValueKey('trace_schema_tab'),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
+        if (trace.skillRequest != null) _buildSkillContext(trace, isKk),
         Text(
           isKk
               ? 'Бір сұраныс жолы: сіздің хабарламаңыздан жауапқа дейін.'
@@ -428,7 +430,11 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    step.description,
+                    step.stepIndex == 1 && trace.skillRequest != null
+                        ? (isKk
+                              ? 'Дағды сценарийі және енгізілген деректер жіберілді.'
+                              : 'Отправлены сценарий навыка и указанные входные данные.')
+                        : step.description,
                     style: TextStyle(
                       fontSize: 12.5,
                       color: BuilderColors.inkSecondary,
@@ -676,6 +682,7 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
       key: const ValueKey('trace_xray_tab'),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
+        if (trace.skillRequest != null) _buildSkillContext(trace, isKk),
         Row(
           children: [
             Expanded(
@@ -814,7 +821,12 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        layer.contentSnippet,
+                        layer.type == TraceLayerType.userPrompt
+                            ? skillRequestSummary(
+                                layer.contentSnippet,
+                                isKk: isKk,
+                              )
+                            : layer.contentSnippet,
                         style: BuilderType.mono.copyWith(fontSize: 12),
                       ),
                     ),
@@ -831,13 +843,25 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
   // -------------------------------------------------------------
   // TAB 3: АНАЛОГИЯ (ANALOGY)
   // -------------------------------------------------------------
-  Widget _buildAnalogyTab(BuildContext context, bool isKk) {
+  Widget _buildAnalogyTab(BuildContext context, RequestTrace trace, bool isKk) {
     final analogy = TraceAnalogy.getForLanguage(isKk ? 'kk' : 'ru');
 
     return ListView(
       key: const ValueKey('trace_analogy_tab'),
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
+        if (trace.skillRequest != null) ...[
+          _buildSkillContext(trace, isKk),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Text(
+              isKk
+                  ? 'Дағды — рецепт, ал кіріс деректер — осы жолғы ингредиенттер. Ассистенттің жалпы нұсқаулары асүй ережелері сияқты қолданыла береді. Рецепттегі кітап атауы кітаптың оқылғанын білдірмейді.'
+                  : 'Навык — рецепт, а входы — ингредиенты для этого раза. Общие инструкции ассистента продолжают действовать как правила кухни. Название книги в рецепте ещё не означает, что книга прочитана.',
+              style: BuilderType.body,
+            ),
+          ),
+        ],
         // Story Card
         Container(
           padding: const EdgeInsets.all(14),
@@ -920,6 +944,59 @@ class _TraceSheetState extends ConsumerState<TraceSheet> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSkillContext(RequestTrace trace, bool isKk) {
+    final request = trace.skillRequest!;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: BuilderCard(
+        child: Column(
+          key: const Key('trace.skillContext'),
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${isKk ? 'Дағды' : 'Навык'}: ${request.skill.name} · v${request.skill.revision}',
+              style: BuilderType.title,
+            ),
+            const SizedBox(height: 8),
+            for (final input in request.inputs.entries)
+              Text('${input.key}: ${input.value}', style: BuilderType.body),
+            const SizedBox(height: 8),
+            Text(
+              '${isKk ? 'Мәлімделген дереккөздер' : 'Заявленные источники'}: ${request.skill.sources.isEmpty ? (isKk ? 'жоқ' : 'нет') : request.skill.sources.join('; ')}',
+              style: BuilderType.small,
+            ),
+            Text(
+              isKk
+                  ? 'Атау дереккөздің ашылғанын растамайды. Бұл сұраныста жалпы нұсқаулар мен қолданыстағы рұқсаттар сақталады.'
+                  : 'Название не подтверждает чтение источника. Общие инструкции и действующие разрешения сохраняются.',
+              style: BuilderType.small,
+            ),
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: Text(
+                isKk ? 'Жіберілген сценарий' : 'Отправленный сценарий',
+                style: BuilderType.small,
+              ),
+              children: [
+                SelectableText(
+                  skillRequestSummary(
+                    trace.layers
+                        .firstWhere(
+                          (layer) => layer.type == TraceLayerType.userPrompt,
+                        )
+                        .contentSnippet,
+                    isKk: isKk,
+                  ),
+                  style: BuilderType.body,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 

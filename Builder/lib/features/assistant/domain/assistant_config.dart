@@ -1,3 +1,5 @@
+import '../../course/domain/course_topic.dart';
+import '../../skills/domain/skill_scenario.dart';
 import '../../models/domain/model_category.dart';
 import '../../../ui_kit/identity.dart';
 
@@ -77,7 +79,10 @@ enum AssistantSkillId {
   });
 
   final String id;
+
+  /// Persisted course key; use displayLevel in user-facing labels.
   final int level;
+  int get displayLevel => CourseTopic.fromStorageId(level).displayOrder;
   final String title;
   final String subtitle;
   final BuilderGlyph glyph;
@@ -100,6 +105,7 @@ class AssistantSnapshot {
     this.memoryFactsCount = 0,
     this.documentsCount = 0,
     this.documentIds = const [],
+    this.skillScenarios = const [],
   });
 
   final String name;
@@ -109,6 +115,7 @@ class AssistantSnapshot {
   final int memoryFactsCount;
   final int documentsCount;
   final List<String> documentIds;
+  final List<SkillScenario> skillScenarios;
 
   Map<String, dynamic> toJson() => {
     'name': name,
@@ -118,6 +125,7 @@ class AssistantSnapshot {
     'memory_facts_count': memoryFactsCount,
     'documents_count': documentsCount,
     'document_ids': documentIds,
+    'skill_scenarios': skillScenarios.map((skill) => skill.toJson()).toList(),
   };
 
   factory AssistantSnapshot.fromJson(Map<String, dynamic> json) {
@@ -135,6 +143,9 @@ class AssistantSnapshot {
       memoryFactsCount: json['memory_facts_count'] as int? ?? 0,
       documentsCount: json['documents_count'] as int? ?? 0,
       documentIds: docsRaw.map((e) => e.toString()).toList(),
+      skillScenarios: (json['skill_scenarios'] as List<dynamic>? ?? [])
+          .map((e) => SkillScenario.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

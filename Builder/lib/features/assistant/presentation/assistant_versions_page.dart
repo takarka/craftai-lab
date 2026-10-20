@@ -240,7 +240,9 @@ class _VersionTile extends StatelessWidget {
           Text(version.reason, style: BuilderType.title),
           const SizedBox(height: 6),
           Text(
-            'Имя: ${version.snapshot.name} · Модель: ${version.snapshot.selectedCategory?.name ?? 'По умолчанию'} · Умений: ${version.snapshot.enabledSkills.length}',
+            Localizations.localeOf(context).languageCode == 'kk'
+                ? 'Аты: ${version.snapshot.name} · Модель: ${version.snapshot.selectedCategory?.name ?? 'Әдепкі'} · Модульдер: ${version.snapshot.enabledSkills.length} · Дағдылар: ${version.snapshot.skillScenarios.length}'
+                : 'Имя: ${version.snapshot.name} · Модель: ${version.snapshot.selectedCategory?.name ?? 'По умолчанию'} · Модулей: ${version.snapshot.enabledSkills.length} · Навыков: ${version.snapshot.skillScenarios.length}',
             style: BuilderType.small.copyWith(
               color: BuilderColors.inkSecondary,
             ),

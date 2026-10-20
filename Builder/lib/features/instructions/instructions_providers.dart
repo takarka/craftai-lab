@@ -2,6 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/storage/storage_providers.dart';
 import '../assistant/assistant_providers.dart';
 import '../chat/domain/context_assembler.dart';
+import '../chat/chat_providers.dart';
+import '../chat/domain/chat_stream_event.dart';
+import '../models/model_providers.dart';
 import '../models/domain/model_category.dart';
 import '../trace/domain/request_trace.dart';
 import '../trace/trace_providers.dart';
@@ -63,13 +66,14 @@ class InstructionDraftState {
     bool? isSaving,
     bool? isTesting,
     TestComparisonResult? testResult,
+    bool clearTestResult = false,
     String? errorMessage,
   }) {
     return InstructionDraftState(
       config: config ?? this.config,
       isSaving: isSaving ?? this.isSaving,
       isTesting: isTesting ?? this.isTesting,
-      testResult: testResult ?? this.testResult,
+      testResult: clearTestResult ? null : testResult ?? this.testResult,
       errorMessage: errorMessage,
     );
   }
@@ -78,10 +82,12 @@ class InstructionDraftState {
 class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
   InstructionDraftNotifier(this.ownerId);
   final String ownerId;
+  bool _hasEdits = false;
 
   @override
   InstructionDraftState build() {
     final initialConfigAsync = ref.watch(instructionConfigProvider(ownerId));
+    if (_hasEdits) return state;
     final initialConfig =
         initialConfigAsync.asData?.value ??
         InstructionConfig(
@@ -96,6 +102,7 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
   }
 
   void toggleRule(String ruleId, bool isEnabled) {
+    _hasEdits = true;
     final updatedRules = state.config.rules.map((rule) {
       if (rule.id == ruleId) {
         return rule.copyWith(isEnabled: isEnabled);
@@ -110,6 +117,7 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
   }
 
   void setMode({required bool isRawMode}) {
+    _hasEdits = true;
     if (state.config.isRawMode == isRawMode) return;
 
     // F11-05: When switching to raw mode, if rawText was empty, seed with current assembled rules.
@@ -126,6 +134,7 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
   }
 
   void updateRawText(String newText) {
+    _hasEdits = true;
     state = state.copyWith(
       config: state.config.copyWith(rawText: newText),
       errorMessage: null,
@@ -138,6 +147,7 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
     required String text,
     required String explanation,
   }) async {
+    _hasEdits = true;
     final newId = 'custom_${DateTime.now().millisecondsSinceEpoch}';
     final newRule = InstructionRule(
       id: newId,
@@ -165,6 +175,7 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
   }
 
   void deleteCustomRule(String ruleId) {
+    _hasEdits = true;
     final updated = state.config.rules.where((r) => r.id != ruleId).toList();
     state = state.copyWith(
       config: state.config.copyWith(rules: updated),
@@ -180,11 +191,15 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
     required String question,
     required ModelCategory category,
   }) async {
-    state = state.copyWith(isTesting: true, errorMessage: null);
+    _hasEdits = true;
+    final activeInstruction = state.config.activeInstructionText;
+    state = state.copyWith(isTesting: true, clearTestResult: true);
 
     try {
       final now = DateTime.now().toUtc();
       final assembler = const ContextAssembler();
+      final catalog = await ref.read(modelCatalogFutureProvider.future);
+      final contextWindow = catalog.getModel(category).contextWindow;
 
       // 1. Before Run (Baseline without instructions)
       final beforeRequestId = 'trace_test_before_${now.millisecondsSinceEpoch}';
@@ -192,18 +207,16 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
         manifestId: 'manifest_$beforeRequestId',
         requestId: beforeRequestId,
         category: category.id,
-        catalogRevision: '2026-03-31-01',
-        contextWindow: 128000,
+        catalogRevision: catalog.revision,
+        contextWindow: contextWindow,
         activeInstruction: null,
         conversationHistory: const [],
         userPrompt: question,
       );
 
-      final beforeAnswer = _generateSimulatedResponse(
-        question: question,
-        instructionText: null,
-        isBefore: true,
-      );
+      final beforeWatch = Stopwatch()..start();
+      final beforeAnswer = await _generateResponse(beforeManifest);
+      beforeWatch.stop();
 
       final beforeTrace = RequestTrace(
         requestId: beforeRequestId,
@@ -254,7 +267,7 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
           totalTokens:
               beforeManifest.estimatedTokens +
               (beforeAnswer.length / 3.5).ceil(),
-          durationMs: 320,
+          durationMs: beforeWatch.elapsedMilliseconds,
           isServerReported: false,
           costTier: 2,
         ),
@@ -264,13 +277,12 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
 
       // 2. After Run (With draft instructions applied)
       final afterRequestId = 'trace_test_after_${now.millisecondsSinceEpoch}';
-      final activeInstruction = state.config.activeInstructionText;
       final afterManifest = assembler.assemble(
         manifestId: 'manifest_$afterRequestId',
         requestId: afterRequestId,
         category: category.id,
-        catalogRevision: '2026-03-31-01',
-        contextWindow: 128000,
+        catalogRevision: catalog.revision,
+        contextWindow: contextWindow,
         activeInstruction: activeInstruction.isNotEmpty
             ? activeInstruction
             : null,
@@ -278,11 +290,9 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
         userPrompt: question,
       );
 
-      final afterAnswer = _generateSimulatedResponse(
-        question: question,
-        instructionText: activeInstruction,
-        isBefore: false,
-      );
+      final afterWatch = Stopwatch()..start();
+      final afterAnswer = await _generateResponse(afterManifest);
+      afterWatch.stop();
 
       final afterTrace = RequestTrace(
         requestId: afterRequestId,
@@ -334,7 +344,7 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
           completionTokens: (afterAnswer.length / 3.5).ceil(),
           totalTokens:
               afterManifest.estimatedTokens + (afterAnswer.length / 3.5).ceil(),
-          durationMs: 340,
+          durationMs: afterWatch.elapsedMilliseconds,
           isServerReported: false,
           costTier: 2,
         ),
@@ -369,57 +379,36 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
     }
   }
 
-  String _generateSimulatedResponse({
-    required String question,
-    required String? instructionText,
-    required bool isBefore,
-  }) {
-    if (isBefore || instructionText == null || instructionText.isEmpty) {
-      return 'Фотосинтез — это сложный процесс превращения энергии света в энергию химических связей органических соединений при участии фотосинтетических пигментов (хлорофилл у растений, бактериохлорофилл у бактерий). В процессе фотосинтеза выделяется кислород, необходимый для дыхания большинства живых организмов. Происходит в хлоропластах растительных клеток.';
+  Future<String> _generateResponse(ContextManifest manifest) async {
+    final client = ref.read(chatStreamClientProvider);
+    final answer = StringBuffer();
+    var completed = false;
+    await for (final event in client.streamCompletion(
+      ownerId: ownerId,
+      category: manifest.category,
+      catalogRevision: manifest.catalogRevision,
+      messages: manifest.messages,
+      requestId: manifest.requestId,
+    )) {
+      if (event is TextDeltaStreamEvent) {
+        answer.write(event.text);
+      } else if (event is TerminalStreamEvent) {
+        if (!event.isCompleted) {
+          throw StateError(
+            event.code ??
+                '\u0413\u0435\u043d\u0435\u0440\u0430\u0446\u0438\u044f \u043f\u0440\u0435\u0440\u0432\u0430\u043d\u0430',
+          );
+        }
+        completed = true;
+        break;
+      }
     }
-
-    final buffer = StringBuffer();
-    final isBullet =
-        instructionText.contains('Списком') ||
-        instructionText.contains('маркированными');
-    final isMax5 = instructionText.contains('5 предложений');
-    final isBold = instructionText.contains('жирным');
-    final isBio = instructionText.contains('биологии');
-
-    if (isBio) {
-      buffer.writeln(
-        'Здравствуйте! Как ваш методический помощник по биологии, объясняю суть процесса:',
-      );
-    }
-
-    if (isBullet) {
-      buffer.writeln(
-        '• **Фотосинтез** — процесс образования органических веществ из воды и углекислого газа под действием солнечного света.',
-      );
-      buffer.writeln(
-        '• **Хлоропласты** — органоиды растительной клетки, содержащие зеленый пигмент хлорофилл, где и происходит синтез.',
-      );
-      buffer.writeln(
-        '• **Кислород** — побочный продукт реакции, выделяющийся в атмосферу для дыхания.',
-      );
-      buffer.writeln(
-        '• **Глюкоза** — питательное вещество, запасающее энергию для роста растения.',
-      );
-    } else if (isMax5) {
-      buffer.writeln(
-        'Фотосинтез — это способ питания зеленых растений с помощью солнечного света. Растения поглощают воду и углекислый газ, вырабатывая глюкозу и выделяя кислород. Главную роль в этом процессе играет пигмент хлорофилл в листьях.',
-      );
-    } else if (isBold) {
-      buffer.writeln(
-        '**Фотосинтез** — ключевой процесс биосферы, обеспечивающий всё живое энергией и кислородом. Реакция протекает в специальных клеточных структурах — **хлоропластах** при обязательном участии пигмента **хлорофилла**.',
-      );
-    } else {
-      buffer.writeln(
-        'Фотосинтез — это образование органических веществ из неорганических на свету в хлоропластах растений с выделением кислорода.',
+    if (!completed || answer.toString().trim().isEmpty) {
+      throw StateError(
+        '\u041c\u043e\u0434\u0435\u043b\u044c \u043d\u0435 \u0432\u0435\u0440\u043d\u0443\u043b\u0430 \u043f\u043e\u043b\u043d\u044b\u0439 \u043e\u0442\u0432\u0435\u0442.',
       );
     }
-
-    return buffer.toString().trim();
+    return answer.toString().trim();
   }
 
   /// Saves the draft instructions to persistent storage, activates skill, and commits assistant version (F11-07)

@@ -5,7 +5,7 @@ import 'package:builder/core/storage/storage_providers.dart';
 import 'package:builder/features/session/session_repository.dart';
 import 'package:builder/app/localization/app_localizations.dart';
 import 'package:builder/core/storage/schema/storage_schema_v1.dart';
-import 'package:builder/features/assistant/presentation/assistant_page.dart';
+import 'package:builder/features/assistant/presentation/assistant_chat_page.dart';
 import 'package:builder/features/chat/chat_providers.dart';
 import 'package:builder/features/chat/domain/chat_message.dart';
 import 'package:builder/features/chat/domain/conversation.dart';
@@ -516,7 +516,7 @@ void main() {
             child: const MaterialApp(
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              home: AssistantPage(ownerId: 'owner_f08'),
+              home: AssistantChatPage(ownerId: 'owner_f08'),
             ),
           ),
         );

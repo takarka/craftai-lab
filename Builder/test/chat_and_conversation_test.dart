@@ -4,6 +4,7 @@ import 'package:builder/app/localization/app_localizations.dart';
 import 'package:builder/core/storage/database/storage_database.dart';
 import 'package:builder/core/storage/schema/storage_schema_v1.dart';
 import 'package:builder/features/assistant/presentation/assistant_page.dart';
+import 'package:builder/features/assistant/presentation/assistant_chat_page.dart';
 import 'package:builder/features/chat/chat_providers.dart';
 import 'package:builder/features/chat/domain/chat_message.dart';
 import 'package:builder/features/chat/domain/chat_stream_event.dart';
@@ -462,7 +463,7 @@ void main() {
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: AssistantPage(ownerId: 'narrow_owner'),
+            home: AssistantChatPage(ownerId: 'narrow_owner'),
           ),
         ),
       );
@@ -528,7 +529,7 @@ void main() {
             child: const MaterialApp(
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
-              home: AssistantPage(ownerId: 'user_s10_1'),
+              home: AssistantChatPage(ownerId: 'user_s10_1'),
             ),
           ),
         );

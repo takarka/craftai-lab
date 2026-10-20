@@ -8,6 +8,7 @@ import '../../trace/presentation/trace_sheet.dart';
 import '../domain/knowledge_models.dart';
 import 'd03_personal_data_dialog.dart';
 import 'knowledge_providers.dart';
+import '../../course/domain/course_topic.dart';
 
 /// Screen S41: База знаний ассистента и локальный RAG (F12-08, F12-V01).
 ///
@@ -65,7 +66,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
               ),
             ),
             Text(
-              'Уровень 3 · Локальный RAG',
+              Localizations.localeOf(context).languageCode == 'kk'
+                  ? '${CourseTopic.knowledge.displayOrder}-деңгей · Жергілікті RAG'
+                  : 'Уровень ${CourseTopic.knowledge.displayOrder} · Локальный RAG',
               style: BuilderTypography.labelSmall.copyWith(
                 color: BuilderColors.inkSecondary,
               ),
@@ -161,7 +164,9 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
               ),
               const SizedBox(width: BuilderSpace.xs),
               Text(
-                'Практика: Уровень 3 — Знания и RAG',
+                Localizations.localeOf(context).languageCode == 'kk'
+                    ? 'Тәжірибе: ${CourseTopic.knowledge.displayOrder}-деңгей — Білім және RAG'
+                    : 'Практика: Уровень ${CourseTopic.knowledge.displayOrder} — Знания и RAG',
                 style: BuilderTypography.labelLarge.copyWith(
                   color: BuilderColors.accent,
                   fontWeight: FontWeight.bold,
