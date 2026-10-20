@@ -37,6 +37,38 @@
       ]
     },
     {
+      "name": "Builder (Demo stack, обычный запуск)",
+      "preLaunchTask": "Builder: connect Android API (demo stack)",
+      "cwd": "Builder",
+      "request": "launch",
+      "type": "dart",
+      "noDebug": true,
+      "deviceId": "af54415c",
+      "args": [
+        "--device-connection",
+        "attached",
+        "--dart-define=FIREBASE_PUSH_ENABLED=true",
+        "--dart-define=APP_ENV=dev",
+        "--dart-define=CRAFTAI_API_BASE_URL=http://localhost:8080"
+      ]
+    },
+    {
+      "name": "Builder (Demo stack, Debug режим)",
+      "preLaunchTask": "Builder: connect Android API (demo stack)",
+      "cwd": "Builder",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "deviceId": "af54415c",
+      "args": [
+        "--device-connection",
+        "attached",
+        "--dart-define=FIREBASE_PUSH_ENABLED=true",
+        "--dart-define=APP_ENV=dev",
+        "--dart-define=CRAFTAI_API_BASE_URL=http://localhost:8080"
+      ]
+    },
+    {
       "name": "Builder (Web Chrome)",
       "cwd": "Builder",
       "request": "launch",

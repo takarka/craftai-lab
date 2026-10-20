@@ -8,6 +8,7 @@ import 'package:builder/app/router/app_router.dart';
 import 'package:builder/core/errors/app_failure.dart';
 import 'package:builder/features/auth/application/auth_controller.dart';
 import 'package:builder/features/auth/domain/auth_gateway.dart';
+import 'package:builder/features/auth/infrastructure/auth_credentials_storage.dart';
 import 'package:builder/features/auth/presentation/auth_validation.dart';
 import 'package:builder/features/session/session_repository.dart';
 import 'package:builder/ui_kit/ui_kit.dart';
@@ -109,6 +110,7 @@ Future<ProviderContainer> mount(
   TestAuthGateway? gateway,
   String locale = 'ru',
   SessionRepository? sessionRepository,
+  AuthCredentialsStorage? credentialsStorage,
 }) async {
   final container = ProviderContainer(
     overrides: [
@@ -118,6 +120,8 @@ Future<ProviderContainer> mount(
       if (gateway != null) authGatewayProvider.overrideWithValue(gateway),
       if (sessionRepository != null)
         sessionRepositoryProvider.overrideWithValue(sessionRepository),
+      if (credentialsStorage != null)
+        authCredentialsStorageProvider.overrideWithValue(credentialsStorage),
     ],
   );
   container.read(appLocaleProvider.notifier).select(Locale(locale));
@@ -543,4 +547,45 @@ void main() {
       },
     );
   }
+
+  testWidgets(
+    'Last entered email and password autofill on the authorization screen',
+    (tester) async {
+      final storage = InMemoryAuthCredentialsStorage();
+      await storage.saveLastCredentials(
+        email: 'teacher@school.kz',
+        password: 'mypassword123',
+      );
+      await mount(
+        tester,
+        gateway: TestAuthGateway(),
+        credentialsStorage: storage,
+      );
+      expect(
+        tester.widget<TextFormField>(input('email')).controller!.text,
+        'teacher@school.kz',
+      );
+      expect(
+        tester.widget<TextFormField>(input('password')).controller!.text,
+        'mypassword123',
+      );
+    },
+  );
+
+  testWidgets(
+    'Submitting sign-in saves entered credentials to storage',
+    (tester) async {
+      final storage = InMemoryAuthCredentialsStorage();
+      final gateway = TestAuthGateway();
+      await mount(tester, gateway: gateway, credentialsStorage: storage);
+      await enter(tester, 'email', 'tester@school.kz');
+      await enter(tester, 'password', 'secure_pass_456');
+      await submit(tester, 'Войти');
+      await tester.pumpAndSettle();
+
+      final saved = await storage.readLastCredentials();
+      expect(saved?.email, 'tester@school.kz');
+      expect(saved?.password, 'secure_pass_456');
+    },
+  );
 }

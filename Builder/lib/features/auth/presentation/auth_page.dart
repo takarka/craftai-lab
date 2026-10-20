@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,11 +30,60 @@ class _AuthPageState extends ConsumerState<AuthPage>
   final _password = TextEditingController();
   final _confirmation = TextEditingController();
   _DocumentRevision? _acceptedRevision;
+  Timer? _saveDebounce;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    if (widget.kind == AuthFormKind.signIn) {
+      _email.addListener(_onCredentialsChanged);
+      _password.addListener(_onCredentialsChanged);
+      _loadSavedCredentials();
+    }
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final credentials = await ref
+        .read(authCredentialsStorageProvider)
+        .readLastCredentials();
+    if (!mounted) return;
+    if (credentials != null) {
+      if (_email.text.isEmpty && credentials.email.isNotEmpty) {
+        _email.value = TextEditingValue(
+          text: credentials.email,
+          selection: TextSelection.collapsed(offset: credentials.email.length),
+        );
+      }
+      if (_password.text.isEmpty && credentials.password.isNotEmpty) {
+        _password.value = TextEditingValue(
+          text: credentials.password,
+          selection: TextSelection.collapsed(
+            offset: credentials.password.length,
+          ),
+        );
+      }
+    }
+  }
+
+  void _onCredentialsChanged() {
+    if (widget.kind != AuthFormKind.signIn) return;
+    final email = _email.text.trim();
+    final password = _password.text;
+    if (email.isNotEmpty && password.isNotEmpty) {
+      _saveDebounce?.cancel();
+      _saveDebounce = Timer(const Duration(milliseconds: 500), () {
+        ref.read(authCredentialsStorageProvider).saveLastCredentials(
+          email: email,
+          password: password,
+        );
+      });
+    } else if (email.isNotEmpty && password.isEmpty) {
+      _saveDebounce?.cancel();
+      _saveDebounce = Timer(const Duration(milliseconds: 500), () {
+        ref.read(authCredentialsStorageProvider).saveLastEmail(email);
+      });
+    }
   }
 
   @override
@@ -48,6 +99,11 @@ class _AuthPageState extends ConsumerState<AuthPage>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _saveDebounce?.cancel();
+    if (widget.kind == AuthFormKind.signIn) {
+      _email.removeListener(_onCredentialsChanged);
+      _password.removeListener(_onCredentialsChanged);
+    }
     _name.dispose();
     _email.dispose();
     _password.dispose();
@@ -80,9 +136,36 @@ class _AuthPageState extends ConsumerState<AuthPage>
       return;
     }
     FocusScope.of(context).unfocus();
+    _saveDebounce?.cancel();
     final email = _email.text.trim();
     final password = _password.text;
     final name = _name.text.trim();
+    if (widget.kind == AuthFormKind.signIn ||
+        widget.kind == AuthFormKind.register) {
+      if (email.isNotEmpty && password.isNotEmpty) {
+        unawaited(
+          ref.read(authCredentialsStorageProvider).saveLastCredentials(
+            email: email,
+            password: password,
+          ),
+        );
+      }
+    } else if (widget.kind == AuthFormKind.resetPassword ||
+        widget.kind == AuthFormKind.changePassword) {
+      if (password.isNotEmpty) {
+        unawaited(() async {
+          final last = await ref
+              .read(authCredentialsStorageProvider)
+              .readLastCredentials();
+          if (last != null) {
+            await ref.read(authCredentialsStorageProvider).saveLastCredentials(
+              email: last.email,
+              password: password,
+            );
+          }
+        }());
+      }
+    }
     try {
       await ref
           .read(authControllerProvider(widget.kind).notifier)
