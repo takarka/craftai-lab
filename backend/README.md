@@ -37,3 +37,41 @@ docker compose up --build -d
 cd backend
 uv run pytest -v
 ```
+
+## Lab API — фаза LM01
+
+Маршруты `/lab/v1` используют ту же Bearer-авторизацию, что мобильный API.
+Схема новых таблиц `lab_*` создаётся при старте, каталог двух скиллов заполняется
+идемпотентно. SQLite и PostgreSQL используют существующее подключение приложения.
+
+- `GET/POST /agents`, `GET/PATCH/DELETE /agents/{id}` — до пяти активных агентов;
+  изменение настроек создаёт неизменяемую версию. Чужие объекты возвращают 404.
+- `POST /agents/{id}/copy` — только конфигурация; можно передать `{"name": "Копия"}`.
+- `POST /agents/{id}/reset` — очистка памяти, материалов, диалогов, новый epoch и
+  отмена активных запусков/подтверждений. Прогресс курса сохраняется.
+- `GET /models`, `GET /skills` — каталоги с флагами совместимости и версиями.
+- `GET/PUT /course/progress` — `course_version`, `current_lesson` (1–7),
+  `completed_lessons`. Достигнутые уроки объединяются и сохраняются при обновлении курса.
+
+Пример тела создания агента:
+
+```json
+{
+  "name": "Задания по математике",
+  "subject": "Математика",
+  "grade": "5",
+  "instruction": "Подготовь задания от простого к сложному.",
+  "skills": [{"skill_id": "prepare_tasks", "version": 1}],
+  "permissions": {"save_material": false, "search_materials": false}
+}
+```
+
+Имена полей — snake_case. Инструкция и редактируемая часть скилла ограничены
+5000 символами, материал — 10000. Невалидные запросы Lab возвращают 422,
+превышение лимита агентов — `409 agents.limit-reached`.
+Два слота моделей задаются `CRAFTAI_LAB_MODEL_1_ID` / `CRAFTAI_LAB_MODEL_2_ID`
+и соответствующими `SUPPORTS_TOOLS` / `SUPPORTS_VISION` из `.env.example`.
+Пока Q-2 не решён, пустые слоты помечены недоступными, `model_id` агента может
+быть null; скрытой подстановки модели нет. Скиллы: `prepare_tasks`, `check_answer`.
+
+Проверка LM01: `uv run pytest tests/test_lab_agents.py tests/test_api_contracts.py -q`.

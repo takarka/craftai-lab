@@ -1,34 +1,7 @@
 from __future__ import annotations
 
-import os
-from pathlib import Path
-
 import pytest
-from httpx import ASGITransport, AsyncClient
-
-os.environ["CRAFTAI_DATABASE_URL"] = "sqlite+aiosqlite:///./test_craftai.db"
-os.environ["CRAFTAI_STORAGE_DIR"] = "./test_storage"
-os.environ["CRAFTAI_ENABLE_EMBEDDED_WORKER"] = "false"
-
-from app.core.database import Base, engine  # noqa: E402
-from app.main import app, seed_default_dev_user  # noqa: E402
-
-
-@pytest.fixture(autouse=True)
-async def setup_database():
-    Path("./test_storage").mkdir(parents=True, exist_ok=True)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
-    await seed_default_dev_user()
-    yield
-
-
-@pytest.fixture
-async def client():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://testserver") as ac:
-        yield ac
+from httpx import AsyncClient
 
 
 async def _login_dev(client: AsyncClient) -> dict[str, str]:

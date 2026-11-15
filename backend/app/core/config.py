@@ -28,6 +28,13 @@ class Settings(BaseSettings):
     # External Providers (optional in dev; falls back to deterministic local execution if empty)
     openrouter_api_key: str = ""
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    # LM01: explicit catalog slots; provider IDs/capabilities await decision Q-2.
+    lab_model_1_id: str = ""
+    lab_model_1_supports_tools: bool = False
+    lab_model_1_supports_vision: bool = False
+    lab_model_2_id: str = ""
+    lab_model_2_supports_tools: bool = False
+    lab_model_2_supports_vision: bool = False
     search_provider: str = "brave"  # brave | tavily | serper | local
     search_api_key: str = ""
 

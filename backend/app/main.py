@@ -23,6 +23,8 @@ from app.core.database import (
 from app.core.errors import get_request_id, register_exception_handlers
 from app.core.security import format_utc, hash_password, utc_now
 from app.modules import auth, documents, mcp, models_and_chat
+from app.modules.lab.catalog import seed_catalog
+from app.modules.lab.router import router as lab_router
 
 
 async def seed_default_dev_user() -> None:
@@ -86,6 +88,10 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         await conn.run_sync(Base.metadata.create_all)
     await seed_default_dev_user()
 
+    async with SessionLocal() as db:
+        await seed_catalog(db)
+        await db.commit()
+
     stop_event = asyncio.Event()
     worker_task: asyncio.Task[None] | None = None
     if settings.enable_embedded_worker:
@@ -131,6 +137,7 @@ app.include_router(auth.router)
 app.include_router(models_and_chat.router)
 app.include_router(documents.router)
 app.include_router(mcp.router)
+app.include_router(lab_router)
 
 
 @app.get("/health", tags=["system"])

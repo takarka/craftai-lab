@@ -46,7 +46,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
         req_id = get_request_id(request)
         return JSONResponse(
-            status_code=400,
+            status_code=422 if request.url.path.startswith("/lab/v1/") else 400,
             headers={"X-Request-Id": req_id},
             content={
                 "code": "request.invalid",
