@@ -6,7 +6,6 @@ import '../../trace/domain/request_trace.dart';
 import '../../trace/trace_providers.dart';
 import '../domain/knowledge_models.dart';
 import '../domain/knowledge_repository.dart';
-import '../domain/text_extractor.dart';
 import '../infrastructure/persistent_knowledge_repository.dart';
 
 final knowledgeRepositoryProvider = Provider<KnowledgeRepository>((ref) {

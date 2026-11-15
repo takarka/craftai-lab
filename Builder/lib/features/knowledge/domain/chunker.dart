@@ -1,5 +1,4 @@
 import 'knowledge_models.dart';
-import 'text_extractor.dart';
 
 /// Sentence-window chunking implementation per F12-05 ('v1.0-sentence-window').
 ///

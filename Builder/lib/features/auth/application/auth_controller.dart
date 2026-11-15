@@ -6,7 +6,6 @@ import '../../session/session_providers.dart';
 import '../domain/auth_gateway.dart';
 import '../infrastructure/auth_credentials_storage.dart';
 import '../infrastructure/craft_ai_auth_gateway.dart';
-import '../../schedules/push/push_providers.dart';
 
 enum AuthFormKind { signIn, register, recovery, resetPassword, changePassword }
 
@@ -21,7 +20,6 @@ final authGatewayProvider = Provider<AuthGateway>((ref) {
 
   if (config?.apiBaseUri != null) {
     return CraftAiAuthGateway(
-      beforeLogout: () => ref.read(pushRegistrationServiceProvider).detach(),
       baseUri: config!.apiBaseUri!,
       sessionRepository: sessionRepo,
       tokenStorage: tokenStorage,

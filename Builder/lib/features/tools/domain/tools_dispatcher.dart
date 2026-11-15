@@ -1,6 +1,4 @@
-import '../infrastructure/builder_calendar_adapter.dart';
 import '../infrastructure/notes_adapter.dart';
-import '../infrastructure/search_adapter.dart';
 import 'pending_action.dart';
 import 'tool_definition.dart';
 import 'tool_invocation.dart';
@@ -63,20 +61,14 @@ class ToolExecutionResult {
 /// and confirmation state machine enforcement (F14-01, F14-05, F14-10, F14-11, F14-12).
 class ToolsDispatcher {
   final ToolsRepository repository;
-  /// Null without a signed-in API: calendar tools then fail instead of inventing data.
-  final BuilderCalendarAdapter? calendarAdapter;
   final NotesAdapter notesAdapter;
-  final SearchAdapter searchAdapter;
   final PendingActionStateMachine stateMachine;
 
   ToolsDispatcher({
     required this.repository,
-    this.calendarAdapter,
     NotesAdapter? notesAdapter,
-    SearchAdapter? searchAdapter,
     PendingActionStateMachine? stateMachine,
   }) : notesAdapter = notesAdapter ?? NotesAdapter(),
-       searchAdapter = searchAdapter ?? const SearchAdapter(),
        stateMachine = stateMachine ?? const PendingActionStateMachine();
 
   /// Dispatches a tool call from LLM or UI.
@@ -278,40 +270,12 @@ class ToolsDispatcher {
     );
   }
 
-  BuilderCalendarAdapter _calendar() =>
-      calendarAdapter ??
-      (throw const ToolExecutionException(
-        'Календарь Builder недоступен: нет входа в аккаунт.',
-      ));
-
   Future<Map<String, dynamic>> _executeToolImplementation(
     String ownerId,
     String toolName,
     Map<String, dynamic> args,
   ) async {
     switch (toolName) {
-      case ToolsRegistry.readCalendar:
-        return _calendar().read(
-          ownerId,
-          startDate: args['start_date'] as String,
-          endDate: args['end_date'] as String,
-        );
-
-      case ToolsRegistry.createCalendarEvent:
-        return _calendar().create(
-          ownerId,
-          title: args['title'] as String,
-          start: args['start_time'] as String,
-          end: args['end_time'] as String,
-          timeZone: args['time_zone'] as String?,
-          allDay: args['is_all_day'] as bool? ?? false,
-          notes: args['notes'] as String?,
-          reminderMinutes: [
-            for (final minutes in (args['reminder_minutes'] as List?) ?? const [])
-              minutes as int,
-          ],
-        );
-
       case ToolsRegistry.createNote:
         final title = args['title'] as String;
         final content = args['content'] as String;
@@ -340,15 +304,6 @@ class ToolsDispatcher {
           noteId: noteId,
         );
         return {'deleted': deleted, 'note_id': noteId};
-
-      case ToolsRegistry.webSearch:
-        final query = args['query'] as String;
-        final hits = await searchAdapter.search(query);
-        return {
-          'query': query,
-          'results': hits.map((h) => h.toMap()).toList(),
-          'count': hits.length,
-        };
 
       default:
         throw UnimplementedError('Обработчик для $toolName не реализован');

@@ -215,7 +215,10 @@ class CraftAiClient {
 
       _throwFailure(status, bodyText, requestId);
     } on http.RequestAbortedException {
-      throw CraftAiCancelledException('Request cancelled.', requestId: requestId);
+      throw CraftAiCancelledException(
+        'Request cancelled.',
+        requestId: requestId,
+      );
     } on SocketException {
       throw CraftAiNetworkException(
         'Network unavailable or connection failed.',
@@ -257,8 +260,12 @@ class CraftAiClient {
       if (rangeStart > 0) 'Range': 'bytes=$rangeStart-',
     };
     try {
-      var tokens = tokenStorage == null ? null : await tokenStorage!.readTokens();
-      if (tokens != null) headers['Authorization'] = 'Bearer ${tokens.accessToken}';
+      var tokens = tokenStorage == null
+          ? null
+          : await tokenStorage!.readTokens();
+      if (tokens != null) {
+        headers['Authorization'] = 'Bearer ${tokens.accessToken}';
+      }
       Future<http.StreamedResponse> send() => _httpClient.send(
         http.AbortableRequest('GET', url, abortTrigger: abortTrigger)
           ..headers.addAll(headers),
@@ -299,15 +306,30 @@ class CraftAiClient {
       }
       return head;
     } on http.RequestAbortedException {
-      throw CraftAiCancelledException('Request cancelled.', requestId: requestId);
+      throw CraftAiCancelledException(
+        'Request cancelled.',
+        requestId: requestId,
+      );
     } on SocketException {
-      throw CraftAiNetworkException('Network unavailable or connection failed.', requestId: requestId);
+      throw CraftAiNetworkException(
+        'Network unavailable or connection failed.',
+        requestId: requestId,
+      );
     } on HandshakeException {
-      throw CraftAiNetworkException('Secure TLS connection failed.', requestId: requestId);
+      throw CraftAiNetworkException(
+        'Secure TLS connection failed.',
+        requestId: requestId,
+      );
     } on TimeoutException {
-      throw CraftAiNetworkException('Download timed out.', requestId: requestId);
+      throw CraftAiNetworkException(
+        'Download timed out.',
+        requestId: requestId,
+      );
     } on http.ClientException catch (e) {
-      throw CraftAiNetworkException('Network error: ${e.message}', requestId: requestId);
+      throw CraftAiNetworkException(
+        'Network error: ${e.message}',
+        requestId: requestId,
+      );
     } on CraftAiException {
       rethrow;
     } on FileSystemException {
@@ -319,40 +341,40 @@ class CraftAiClient {
   }
 
   static Never _throwFailure(int status, String bodyText, String requestId) {
-  final errorCode = _errorCode(bodyText);
-  if (status == 401) {
-    throw CraftAiAuthException(
-      'Unauthorized: session expired or token missing.',
-      statusCode: status,
-      requestId: requestId,
-      code: errorCode,
-    );
-  }
+    final errorCode = _errorCode(bodyText);
+    if (status == 401) {
+      throw CraftAiAuthException(
+        'Unauthorized: session expired or token missing.',
+        statusCode: status,
+        requestId: requestId,
+        code: errorCode,
+      );
+    }
 
-  if (status == 403) {
-    throw CraftAiForbiddenException(
-      'Access forbidden.',
-      statusCode: status,
-      requestId: requestId,
-      code: errorCode,
-    );
-  }
+    if (status == 403) {
+      throw CraftAiForbiddenException(
+        'Access forbidden.',
+        statusCode: status,
+        requestId: requestId,
+        code: errorCode,
+      );
+    }
 
-  if (status >= 500) {
+    if (status >= 500) {
+      throw CraftAiServerException(
+        'CraftAI server error occurred.',
+        statusCode: status,
+        requestId: requestId,
+        code: errorCode,
+      );
+    }
+
     throw CraftAiServerException(
-      'CraftAI server error occurred.',
+      'Unexpected response status $status',
       statusCode: status,
       requestId: requestId,
       code: errorCode,
     );
-  }
-
-  throw CraftAiServerException(
-    'Unexpected response status $status',
-    statusCode: status,
-    requestId: requestId,
-    code: errorCode,
-  );
   }
 
   static String? _errorCode(String bodyText) {

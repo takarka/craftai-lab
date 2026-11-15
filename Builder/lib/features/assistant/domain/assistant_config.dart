@@ -1,6 +1,5 @@
 import '../../course/domain/course_topic.dart';
 import '../../skills/domain/skill_scenario.dart';
-import '../../models/domain/model_category.dart';
 import '../../../ui_kit/identity.dart';
 
 enum AssistantSkillId {
@@ -32,41 +31,9 @@ enum AssistantSkillId {
     id: 'tools',
     level: 5,
     title: 'Инструменты и MCP',
-    subtitle: 'Календарь, поиск и внешние сервисы',
+    subtitle: 'Материалы и заметки агента',
     glyph: BuilderGlyph.tool,
     comingSoon: false,
-  ),
-  voice(
-    id: 'voice',
-    level: 6,
-    title: 'Голос',
-    subtitle: 'Голосовой ввод и озвучивание ответов',
-    glyph: BuilderGlyph.phone,
-    comingSoon: true,
-  ),
-  vision(
-    id: 'vision',
-    level: 7,
-    title: 'Зрение',
-    subtitle: 'Распознавание заданий с фото и сканов',
-    glyph: BuilderGlyph.search,
-    comingSoon: true,
-  ),
-  security(
-    id: 'security',
-    level: 8,
-    title: 'Безопасность',
-    subtitle: 'Проверка ответов и защита данных',
-    glyph: BuilderGlyph.lock,
-    comingSoon: true,
-  ),
-  agent(
-    id: 'agent',
-    level: 9,
-    title: 'Агент',
-    subtitle: 'Автономное планирование и цепочки действий',
-    glyph: BuilderGlyph.bolt,
-    comingSoon: true,
   );
 
   const AssistantSkillId({
@@ -109,7 +76,7 @@ class AssistantSnapshot {
   });
 
   final String name;
-  final ModelCategory? selectedCategory;
+  final String? selectedCategory;
   final Set<String> enabledSkills;
   final List<String> systemRules;
   final int memoryFactsCount;
@@ -119,7 +86,7 @@ class AssistantSnapshot {
 
   Map<String, dynamic> toJson() => {
     'name': name,
-    'selected_category': selectedCategory?.name,
+    'selected_category': selectedCategory,
     'enabled_skills': enabledSkills.toList()..sort(),
     'system_rules': systemRules,
     'memory_facts_count': memoryFactsCount,
@@ -130,14 +97,13 @@ class AssistantSnapshot {
 
   factory AssistantSnapshot.fromJson(Map<String, dynamic> json) {
     final catName = json['selected_category'] as String?;
-    final cat = catName != null ? ModelCategory.fromString(catName) : null;
     final skillsRaw = json['enabled_skills'] as List<dynamic>? ?? [];
     final rulesRaw = json['system_rules'] as List<dynamic>? ?? [];
     final docsRaw = json['document_ids'] as List<dynamic>? ?? [];
 
     return AssistantSnapshot(
       name: json['name'] as String? ?? '',
-      selectedCategory: cat,
+      selectedCategory: catName,
       enabledSkills: skillsRaw.map((e) => e.toString()).toSet(),
       systemRules: rulesRaw.map((e) => e.toString()).toList(),
       memoryFactsCount: json['memory_facts_count'] as int? ?? 0,
@@ -198,7 +164,7 @@ class AssistantConfig {
 
   final String ownerId;
   final String name;
-  final ModelCategory? selectedCategory;
+  final String? selectedCategory;
   final Set<String> enabledSkills;
   final List<String> systemRules;
   final int stateRevision;
@@ -206,7 +172,7 @@ class AssistantConfig {
 
   AssistantConfig copyWith({
     String? name,
-    ModelCategory? selectedCategory,
+    String? selectedCategory,
     Set<String>? enabledSkills,
     List<String>? systemRules,
     int? stateRevision,

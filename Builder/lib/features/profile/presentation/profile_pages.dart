@@ -7,7 +7,6 @@ import '../../../app/localization/app_localizations.dart';
 import '../../../app/providers.dart';
 import '../../../core/storage/storage_providers.dart';
 import '../../../ui_kit/ui_kit.dart';
-import '../../documents/application/document_controller.dart';
 import '../../onboarding/domain/assistant_setup.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../onboarding/domain/initial_workspace_repository.dart';
@@ -64,7 +63,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         throw StateError('Sign out unavailable');
       }
       // Server copies and staged files go while the session can still authorize it.
-      await clearDocumentWork(ref, widget.ownerId);
       try {
         await ref.read(authGatewayProvider).logout();
       } finally {
@@ -633,7 +631,7 @@ class _RemindersCard extends ConsumerWidget {
     name: 'system.notifications',
     displayName: 'Системные уведомления',
     description: 'Отправка локальных напоминаний о графике курса',
-    category: ToolCategory.calendar,
+    category: ToolCategory.notes,
     capability: ToolCapability.requiresConfirmation,
     defaultOsPermission: OsPermissionStatus.notRequested,
     parametersSchema: {},
@@ -836,7 +834,6 @@ class _AccountDeletionCardState extends ConsumerState<_AccountDeletionCard> {
     try {
       final gateway = ref.read(profileAccountGatewayProvider);
       if (widget.ownerId != null) {
-        await clearDocumentWork(ref, widget.ownerId!);
         await gateway.deleteAccount(widget.ownerId!);
       }
       final session = ref.read(sessionRepositoryProvider);

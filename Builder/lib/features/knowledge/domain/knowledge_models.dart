@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart';
 
 enum DocumentFormat {
-  pdf('pdf', 'PDF'),
-  docx('docx', 'DOCX'),
   txt('txt', 'TXT');
 
   final String extension;
@@ -17,6 +15,27 @@ enum DocumentFormat {
     }
     return null;
   }
+}
+
+@immutable
+class ExtractedDocumentText {
+  final String fullText;
+  final List<String> pages;
+
+  const ExtractedDocumentText({required this.fullText, required this.pages});
+}
+
+class DocumentProcessingException implements Exception {
+  final String code;
+  final String message;
+
+  const DocumentProcessingException({
+    required this.code,
+    required this.message,
+  });
+
+  @override
+  String toString() => '$code: $message';
 }
 
 enum DocumentProcessingStatus {

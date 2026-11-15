@@ -183,19 +183,6 @@ class _McpPageState extends ConsumerState<McpPage> {
                     const SizedBox(height: BuilderSpace.md),
                   ],
 
-                  // 4. Coming Soon Connectors (F15-10)
-                  Text(
-                    'Планируемые интеграции (Скоро)',
-                    style: BuilderTypography.titleSmall.copyWith(
-                      color: BuilderColors.ink,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: BuilderSpace.xs),
-                  ...McpConnector.allConnectors
-                      .where((c) => c.isComingSoon)
-                      .map((c) => _buildComingSoonConnectorCard(c)),
-
                   const SizedBox(height: BuilderSpace.lg),
                 ],
               ),
@@ -654,48 +641,6 @@ class _McpPageState extends ConsumerState<McpPage> {
     );
   }
 
-  Widget _buildComingSoonConnectorCard(McpConnector connector) {
-    return Container(
-      key: Key('mcp.comingSoonCard.${connector.id}'),
-      margin: const EdgeInsets.only(bottom: BuilderSpace.xs),
-      padding: const EdgeInsets.all(BuilderSpace.sm),
-      decoration: BoxDecoration(
-        color: BuilderColors.surface,
-        borderRadius: BorderRadius.circular(BuilderRadii.tile),
-        border: Border.all(color: BuilderColors.line.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          BuilderIconTile(connector.glyph, warm: false),
-          const SizedBox(width: BuilderSpace.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  connector.title,
-                  style: BuilderTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: BuilderColors.inkSecondary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  connector.subtitle,
-                  style: BuilderTypography.bodySmall.copyWith(
-                    color: BuilderColors.inkSecondary.withValues(alpha: 0.7),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          _buildStatusBadge(McpConnectionStatus.comingSoon),
-        ],
-      ),
-    );
-  }
-
   Widget _buildStatusBadge(McpConnectionStatus status) {
     Color bg;
     Color fg;
@@ -711,10 +656,6 @@ class _McpPageState extends ConsumerState<McpPage> {
       case McpConnectionStatus.disconnected:
         bg = BuilderColors.background;
         fg = BuilderColors.inkSecondary;
-        break;
-      case McpConnectionStatus.comingSoon:
-        bg = Colors.grey.shade100;
-        fg = Colors.grey.shade600;
         break;
     }
 

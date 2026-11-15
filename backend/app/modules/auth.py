@@ -10,19 +10,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.database import (
-    ArtifactModel,
     AttachmentModel,
-    CalendarChangeLogModel,
-    CalendarEventModel,
-    CalendarOccurrenceOverrideModel,
     ContentReportModel,
-    DocumentJobModel,
     PasswordResetTokenModel,
     RefreshSessionModel,
-    ScheduleModel,
-    ScheduleRunModel,
     TokenUsageLedgerModel,
-    UserDeviceModel,
     UserModel,
     get_db,
 )
@@ -408,15 +400,7 @@ async def delete_account(
         shutil.rmtree(user_storage_dir, ignore_errors=True)
 
     # Erase all user-owned entities across all tables (B07-02, EB-02, EB-06)
-    await db.execute(delete(ArtifactModel).where(ArtifactModel.user_id == uid))
-    await db.execute(delete(DocumentJobModel).where(DocumentJobModel.user_id == uid))
     await db.execute(delete(AttachmentModel).where(AttachmentModel.user_id == uid))
-    await db.execute(delete(CalendarOccurrenceOverrideModel).where(CalendarOccurrenceOverrideModel.user_id == uid))
-    await db.execute(delete(CalendarChangeLogModel).where(CalendarChangeLogModel.user_id == uid))
-    await db.execute(delete(CalendarEventModel).where(CalendarEventModel.user_id == uid))
-    await db.execute(delete(ScheduleRunModel).where(ScheduleRunModel.user_id == uid))
-    await db.execute(delete(ScheduleModel).where(ScheduleModel.user_id == uid))
-    await db.execute(delete(UserDeviceModel).where(UserDeviceModel.user_id == uid))
     await db.execute(delete(TokenUsageLedgerModel).where(TokenUsageLedgerModel.user_id == uid))
     await db.execute(delete(RefreshSessionModel).where(RefreshSessionModel.user_id == uid))
     await db.execute(delete(PasswordResetTokenModel).where(PasswordResetTokenModel.user_id == uid))

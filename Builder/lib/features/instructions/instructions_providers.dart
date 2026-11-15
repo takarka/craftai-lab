@@ -5,7 +5,6 @@ import '../chat/domain/context_assembler.dart';
 import '../chat/chat_providers.dart';
 import '../chat/domain/chat_stream_event.dart';
 import '../models/model_providers.dart';
-import '../models/domain/model_category.dart';
 import '../trace/domain/request_trace.dart';
 import '../trace/trace_providers.dart';
 import 'domain/instruction_models.dart';
@@ -189,7 +188,7 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
   /// Runs test question before & after and records both traces (F11-06)
   Future<TestComparisonResult> runBeforeAfterTest({
     required String question,
-    required ModelCategory category,
+    String category = 'standard',
   }) async {
     _hasEdits = true;
     final activeInstruction = state.config.activeInstructionText;
@@ -199,14 +198,14 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
       final now = DateTime.now().toUtc();
       final assembler = const ContextAssembler();
       final catalog = await ref.read(modelCatalogFutureProvider.future);
-      final contextWindow = catalog.getModel(category).contextWindow;
+      final contextWindow = catalog.models.firstOrNull?.contextWindow ?? 128000;
 
       // 1. Before Run (Baseline without instructions)
       final beforeRequestId = 'trace_test_before_${now.millisecondsSinceEpoch}';
       final beforeManifest = assembler.assemble(
         manifestId: 'manifest_$beforeRequestId',
         requestId: beforeRequestId,
-        category: category.id,
+        category: category,
         catalogRevision: catalog.revision,
         contextWindow: contextWindow,
         activeInstruction: null,
@@ -222,7 +221,7 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
         requestId: beforeRequestId,
         ownerId: ownerId,
         conversationId: 'test_before_after',
-        modelCategory: category.id,
+        modelCategory: category,
         assistantVersion: 1,
         layers: [
           TraceLayer(
@@ -280,7 +279,7 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
       final afterManifest = assembler.assemble(
         manifestId: 'manifest_$afterRequestId',
         requestId: afterRequestId,
-        category: category.id,
+        category: category,
         catalogRevision: catalog.revision,
         contextWindow: contextWindow,
         activeInstruction: activeInstruction.isNotEmpty
@@ -298,7 +297,7 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
         requestId: afterRequestId,
         ownerId: ownerId,
         conversationId: 'test_before_after',
-        modelCategory: category.id,
+        modelCategory: category,
         assistantVersion: 1,
         layers: [
           TraceLayer(
@@ -359,7 +358,7 @@ class InstructionDraftNotifier extends Notifier<InstructionDraftState> {
 
       final result = TestComparisonResult(
         question: question,
-        modelCategory: category.id,
+        modelCategory: category,
         beforeAnswer: beforeAnswer,
         afterAnswer: afterAnswer,
         beforeTrace: beforeTrace,

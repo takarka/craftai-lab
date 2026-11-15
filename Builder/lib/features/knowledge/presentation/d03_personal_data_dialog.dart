@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:archive/archive.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -43,30 +42,6 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
 
   // Educational sample presets for offline use & testing
   static const _samplePresets = <String, _SampleDoc>{
-    'timetable': _SampleDoc(
-      fileName: 'Расписание_7Б.docx',
-      format: DocumentFormat.docx,
-      title: 'Расписание уроков 7 «Б» класса',
-      subtitle: 'DOCX · 12 КБ · Учебный план на четверть',
-      content:
-          'Расписание уроков 7 «Б» класса на вторую четверть.\n'
-          'Понедельник: 1. Алгебра (кабинет 24), 2. Физика (кабинет 18), 3. Биология (кабинет 12), 4. История.\n'
-          'Вторник: 1. Русский язык, 2. Литература, 3. География, 4. Физкультура.\n'
-          'Среда: 1. Геометрия, 2. Английский язык, 3. Информатика (кабинет 30), 4. Обществознание.\n'
-          'Четверг: 1. Алгебра, 2. Химия, 3. Музыка, 4. Литература.\n'
-          'Пятница: 1. Физика, 2. Русский язык, 3. Биология, 4. Классный час.',
-    ),
-    'biology': _SampleDoc(
-      fileName: 'Биология_программа.pdf',
-      format: DocumentFormat.pdf,
-      title: 'Учебная программа по биологии (7 класс)',
-      subtitle: 'PDF · 45 КБ · Тематическое планирование',
-      content:
-          'Рабочая программа по биологии для 7 класса.\n'
-          'Тема 1: Строение растительной и животной клетки. Органоиды, клеточная мембрана и хлоропласты.\n'
-          'Лабораторная работа №3: Изучение микропрепарата кожицы лука под микроскопом. Требуется подготовить предметные стекла и раствор йода.\n'
-          'Контрольная работа по теме «Клетка и ткани» запланирована на 25 ноября.',
-    ),
     'safety': _SampleDoc(
       fileName: 'Памятка_учителя.txt',
       format: DocumentFormat.txt,
@@ -194,16 +169,9 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
 
             // Supported formats info
             Text(
-              'Поддерживаются: PDF, DOCX, TXT (до 10 МБ).',
+              'Поддерживаются: TXT (до 10 МБ).',
               style: BuilderTypography.bodySmall.copyWith(
                 color: BuilderColors.inkSecondary,
-              ),
-            ),
-            Text(
-              'Таблицы Excel (.xlsx) не поддерживаются.',
-              style: BuilderTypography.bodySmall.copyWith(
-                color: BuilderColors.inkDisabled,
-                fontStyle: FontStyle.italic,
               ),
             ),
             const SizedBox(height: BuilderSpace.md),
@@ -334,16 +302,7 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
       final sample = _samplePresets[_selectedSampleKey]!;
       fileName = sample.fileName;
       format = sample.format;
-
-      if (format == DocumentFormat.docx) {
-        // Construct minimal valid DOCX with word/document.xml
-        bytes = _createMockDocxBytes(sample.content);
-      } else if (format == DocumentFormat.pdf) {
-        // Construct minimal valid PDF with /Type /Page and BT/ET
-        bytes = _createMockPdfBytes(sample.content);
-      } else {
-        bytes = Uint8List.fromList(utf8.encode(sample.content));
-      }
+      bytes = Uint8List.fromList(utf8.encode(sample.content));
     } else if (_customBytes != null &&
         _customFileName != null &&
         _customFormat != null) {
@@ -372,64 +331,6 @@ class _D03PersonalDataDialogState extends ConsumerState<D03PersonalDataDialog> {
       );
     }
   }
-
-  Uint8List _createMockDocxBytes(String text) {
-    // Escape XML entities
-    final escapedText = text
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;');
-
-    final documentXml =
-        '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-  <w:body>
-    <w:p>
-      <w:r>
-        <w:t>$escapedText</w:t>
-      </w:r>
-    </w:p>
-  </w:body>
-</w:document>''';
-
-    // Zip archive with word/document.xml
-    final archive = Archive();
-    final bytes = utf8.encode(documentXml);
-    archive.addFile(ArchiveFile('word/document.xml', bytes.length, bytes));
-    return Uint8List.fromList(ZipEncoder().encode(archive));
-  }
-
-  Uint8List _createMockPdfBytes(String text) {
-    // Generate valid minimal PDF structure
-    final cleanText = text.replaceAll('(', '[').replaceAll(')', ']');
-    final pdfContent =
-        '%PDF-1.4\n'
-        '1 0 obj\n'
-        '<< /Type /Catalog /Pages 2 0 R >>\n'
-        'endobj\n'
-        '2 0 obj\n'
-        '<< /Type /Pages /Kids [3 0 R] /Count 1 >>\n'
-        'endobj\n'
-        '3 0 obj\n'
-        '<< /Type /Page /Parent 2 0 R /Contents 4 0 R >>\n'
-        'endobj\n'
-        '4 0 obj\n'
-        '<< /Length ${cleanText.length + 20} >>\n'
-        'stream\n'
-        'BT\n'
-        '/F1 12 Tf\n'
-        '($cleanText) Tj\n'
-        'ET\n'
-        'endstream\n'
-        'endobj\n'
-        'xref\n'
-        '0 5\n'
-        '0000000000 65535 f \n'
-        'trailer\n'
-        '<< /Root 1 0 R >>\n'
-        '%%EOF';
-    return Uint8List.fromList(utf8.encode(pdfContent));
-  }
 }
 
 class _FormatBadge extends StatelessWidget {
@@ -443,14 +344,6 @@ class _FormatBadge extends StatelessWidget {
     Color fg;
 
     switch (format) {
-      case DocumentFormat.pdf:
-        bg = Colors.red.shade100;
-        fg = Colors.red.shade900;
-        break;
-      case DocumentFormat.docx:
-        bg = Colors.blue.shade100;
-        fg = Colors.blue.shade900;
-        break;
       case DocumentFormat.txt:
         bg = Colors.grey.shade200;
         fg = BuilderColors.ink;

@@ -9,8 +9,6 @@ void main() {
       expect(CourseTopic.highestCompletedOrder([1, 2, 10]), 3);
       expect(CourseTopic.highestCompletedOrder([1, 2, 10, 3]), 4);
       expect(CourseTopic.highestCompletedOrder([5]), 6);
-      expect(CourseTopic.highestCompletedOrder([11]), 7);
-      expect(CourseTopic.highestCompletedOrder([9]), 11);
       expect(CourseTopic.highestCompletedOrder([999]), 0);
     },
   );

@@ -6,12 +6,7 @@ enum CourseTopic {
   skills(10, 3),
   knowledge(3, 4),
   memory(4, 5),
-  tools(5, 6),
-  automation(11, 7),
-  voice(6, 8),
-  vision(7, 9),
-  security(8, 10),
-  agent(9, 11);
+  tools(5, 6);
 
   const CourseTopic(this.storageId, this.displayOrder);
 

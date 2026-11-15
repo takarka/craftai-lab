@@ -15,28 +15,31 @@ import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
-  test('Both locales expose eleven ordered topics with stable legacy keys', () {
-    for (final locale in ['ru', 'kk']) {
-      final levels = CourseCatalog.getLevels(locale: locale);
-      expect(
-        levels.map((l) => l.displayOrder),
-        List.generate(11, (i) => i + 1),
-      );
-      expect(levels.map((l) => l.contentId).toSet().length, 11);
-      final knowledge = CourseCatalog.getLevelByContentId(
-        'course.topic.knowledge',
-        locale: locale,
-      )!;
-      expect(knowledge.id, 3);
-      expect(knowledge.displayOrder, 4);
-      expect(knowledge.targetSkillId, AssistantSkillId.knowledge);
-      expect(CourseCatalog.getLevel(10)!.comingSoon, isFalse);
-      expect(CourseCatalog.getLevel(11)!.comingSoon, isTrue);
-    }
-    expect(AssistantSkillId.knowledge.level, 3);
-    expect(AssistantSkillId.knowledge.displayLevel, 4);
-    expect(AssistantSkillId.tools.displayLevel, 6);
-  });
+  test(
+    'Both locales expose six ordered MVP topics with stable legacy keys',
+    () {
+      for (final locale in ['ru', 'kk']) {
+        final levels = CourseCatalog.getLevels(locale: locale);
+        expect(
+          levels.map((l) => l.displayOrder),
+          List.generate(6, (i) => i + 1),
+        );
+        expect(levels.map((l) => l.contentId).toSet().length, 6);
+        final knowledge = CourseCatalog.getLevelByContentId(
+          'course.topic.knowledge',
+          locale: locale,
+        )!;
+        expect(knowledge.id, 3);
+        expect(knowledge.displayOrder, 4);
+        expect(knowledge.targetSkillId, AssistantSkillId.knowledge);
+        expect(CourseCatalog.getLevel(10)!.comingSoon, isFalse);
+        expect(CourseCatalog.getLevel(11), isNull);
+      }
+      expect(AssistantSkillId.knowledge.level, 3);
+      expect(AssistantSkillId.knowledge.displayLevel, 4);
+      expect(AssistantSkillId.tools.displayLevel, 6);
+    },
+  );
 
   test(
     'New learner passes topics in the visible order, Skills third',
@@ -159,7 +162,7 @@ void main() {
         );
         for (var read = 0; read < 2; read++) {
           final progress = await repository.getAllProgress('existing');
-          expect(progress.length, 11);
+          expect(progress.length, 6);
           final knowledge = progress.singleWhere(
             (p) => p.levelId == CourseTopic.knowledge.storageId,
           );
@@ -172,16 +175,8 @@ void main() {
             isFalse,
           );
           expect(
-            progress.singleWhere((p) => p.levelId == 11).isCompleted,
-            isFalse,
-          );
-          expect(
             await repository.getLevelStatus('existing', 10),
             LevelStatus.available,
-          );
-          expect(
-            await repository.getLevelStatus('existing', 11),
-            LevelStatus.comingSoon,
           );
           expect(
             await repository.getLevelStatus('existing', 3),
@@ -208,7 +203,7 @@ void main() {
     );
 
     test(
-      'All nine legacy topics retain achievements without completing new topics',
+      'Legacy topics survive reopening without completing new topics',
       () async {
         for (var id = 6; id <= 9; id++) {
           await database.db.insert(StorageSchemaV1.tableCourseProgress, {
@@ -230,13 +225,15 @@ void main() {
         final progress = await repository.getAllProgress('existing');
         expect(
           progress.where((p) => p.isCompleted).map((p) => p.levelId).toSet(),
-          {1, 2, 3, 4, 5, 6, 7, 8, 9},
+          {1, 2, 3, 4, 5},
         );
         expect(
-          progress
-              .where((p) => p.levelId == 10 || p.levelId == 11)
-              .every((p) => !p.isCompleted),
+          progress.where((p) => p.levelId == 10).every((p) => !p.isCompleted),
           isTrue,
+        );
+        expect(
+          await repository.getLevelStatus('existing', 10),
+          LevelStatus.available,
         );
         expect(
           await database.db.query(StorageSchemaV1.tableCourseProgress),
@@ -281,11 +278,11 @@ void main() {
     );
 
     test(
-      'Unavailable topics cannot be completed and reset remains owner scoped',
+      'Unknown topics throw ArgumentError and reset remains owner scoped',
       () async {
         await expectLater(
           repository.completeLevel(ownerId: 'existing', levelId: 11),
-          throwsStateError,
+          throwsArgumentError,
         );
         await repository.resetCourseProgress('other');
         expect(

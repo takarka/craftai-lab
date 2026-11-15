@@ -13,14 +13,25 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   const owner = 'access-test';
-  test('Access uses completed course progress without a local database', () async {
-    final container = ProviderContainer();
-    addTearDown(container.dispose);
-    expect(await container.read(completedCourseLevelsProvider(owner).future), isEmpty);
-    await container.read(courseRepositoryProvider).completeLevel(ownerId: owner, levelId: 3);
-    container.invalidate(completedCourseLevelsProvider(owner));
-    expect(await container.read(completedCourseLevelsProvider(owner).future), {3});
-  });
+  test(
+    'Access uses completed course progress without a local database',
+    () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(
+        await container.read(completedCourseLevelsProvider(owner).future),
+        isEmpty,
+      );
+      await container
+          .read(courseRepositoryProvider)
+          .completeLevel(ownerId: owner, levelId: 3);
+      container.invalidate(completedCourseLevelsProvider(owner));
+      expect(
+        await container.read(completedCourseLevelsProvider(owner).future),
+        {3},
+      );
+    },
+  );
 
   test('Feature levels match the actual course lessons', () {
     for (final lesson in CourseCatalog.levels) {

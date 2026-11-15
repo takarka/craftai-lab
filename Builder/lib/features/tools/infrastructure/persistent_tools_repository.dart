@@ -90,12 +90,10 @@ class PersistentToolsRepository implements ToolsRepository {
 
     await db.transaction((txn) async {
       for (final tool in ToolsRegistry.allTools) {
-        // Web search is disabled by default per F14-09; calendar/notes/comm are enabled by default
-        final defaultEnabled = tool.name != ToolsRegistry.webSearch;
         final grant = ToolGrant(
           ownerId: ownerId,
           toolName: tool.name,
-          isEnabled: defaultEnabled,
+          isEnabled: true,
           permissionScope: 'standard',
           revision: 1,
           updatedAtUtc: now,
@@ -253,11 +251,10 @@ class InMemoryToolsRepository implements ToolsRepository {
     final now = DateTime.now().toUtc();
     final userGrants = _grants.putIfAbsent(ownerId, () => {});
     for (final tool in ToolsRegistry.allTools) {
-      final defaultEnabled = tool.name != ToolsRegistry.webSearch;
       userGrants[tool.name] = ToolGrant(
         ownerId: ownerId,
         toolName: tool.name,
-        isEnabled: defaultEnabled,
+        isEnabled: true,
         permissionScope: 'standard',
         revision: 1,
         updatedAtUtc: now,

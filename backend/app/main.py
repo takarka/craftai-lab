@@ -13,7 +13,6 @@ from sqlalchemy import delete, select
 
 from app.core.config import settings
 from app.core.database import (
-    ArtifactModel,
     AttachmentModel,
     Base,
     IdempotencyRecordModel,
@@ -23,7 +22,7 @@ from app.core.database import (
 )
 from app.core.errors import get_request_id, register_exception_handlers
 from app.core.security import format_utc, hash_password, utc_now
-from app.modules import auth, calendar, documents, mcp, models_and_chat, schedules
+from app.modules import auth, documents, mcp, models_and_chat
 
 
 async def seed_default_dev_user() -> None:
@@ -61,14 +60,6 @@ async def cleanup_expired_resources() -> None:
                     Path(att.storage_path).unlink(missing_ok=True)
             await db.delete(att)
 
-        art_res = await db.execute(
-            select(ArtifactModel).where(ArtifactModel.expires_at_utc < now_str)
-        )
-        for art in art_res.scalars().all():
-            with contextlib.suppress(OSError):
-                Path(art.storage_path).unlink(missing_ok=True)
-            await db.delete(art)
-
         await db.execute(
             delete(IdempotencyRecordModel).where(IdempotencyRecordModel.expires_at_utc < now_str)
         )
@@ -78,7 +69,6 @@ async def cleanup_expired_resources() -> None:
 async def background_worker_loop(stop_event: asyncio.Event) -> None:
     while not stop_event.is_set():
         with contextlib.suppress(Exception):
-            await schedules.run_scheduler_tick()
             await cleanup_expired_resources()
         try:
             await asyncio.wait_for(
@@ -139,9 +129,7 @@ register_exception_handlers(app)
 
 app.include_router(auth.router)
 app.include_router(models_and_chat.router)
-app.include_router(calendar.router)
 app.include_router(documents.router)
-app.include_router(schedules.router)
 app.include_router(mcp.router)
 
 

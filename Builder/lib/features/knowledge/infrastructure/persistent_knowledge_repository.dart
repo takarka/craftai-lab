@@ -12,7 +12,6 @@ import '../domain/chunker.dart';
 import '../domain/knowledge_models.dart';
 import '../domain/knowledge_repository.dart';
 import '../domain/local_embedder.dart';
-import '../domain/text_extractor.dart';
 
 class PersistentKnowledgeRepository implements KnowledgeRepository {
   final StorageDatabase database;
@@ -190,11 +189,11 @@ class PersistentKnowledgeRepository implements KnowledgeRepository {
       return KnowledgeDocument.fromJson(existingRows.first);
     }
 
-    // 3. Extract text outside UI isolate
-    final extracted = await TextExtractor.extract(
-      bytes: bytes,
-      format: format,
-      fileName: fileName,
+    // 3. Decode UTF-8 text
+    final text = utf8.decode(bytes, allowMalformed: true).trim();
+    final extracted = ExtractedDocumentText(
+      fullText: text,
+      pages: text.isEmpty ? const [] : [text],
     );
 
     // 4. Stable doc and rev IDs

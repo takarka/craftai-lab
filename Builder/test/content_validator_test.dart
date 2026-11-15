@@ -28,18 +28,18 @@ void main() {
     });
 
     test(
-      'CourseCatalog levels bilingual parity: identical IDs and counts (6 active, 5 comingSoon)',
+      'CourseCatalog levels bilingual parity: identical IDs and counts (6 active)',
       () {
         final ruLevels = CourseCatalog.levelsRu;
         final kkLevels = CourseCatalog.levelsKk;
 
-        expect(ruLevels.length, 11);
-        expect(kkLevels.length, 11);
+        expect(ruLevels.length, 6);
+        expect(kkLevels.length, 6);
 
         final ruIds = ruLevels.map((l) => l.id).toList();
         final kkIds = kkLevels.map((l) => l.id).toList();
-        expect(ruIds, [1, 2, 10, 3, 4, 5, 11, 6, 7, 8, 9]);
-        expect(kkIds, [1, 2, 10, 3, 4, 5, 11, 6, 7, 8, 9]);
+        expect(ruIds, [1, 2, 10, 3, 4, 5]);
+        expect(kkIds, [1, 2, 10, 3, 4, 5]);
         expect(ruIds, equals(kkIds));
 
         final activeRu = ruLevels
@@ -177,8 +177,8 @@ void main() {
         expect(level1Ru?.title, 'Пустой ассистент');
 
         // Backward compatibility getters
-        expect(CourseCatalog.allLevels.length, 11);
-        expect(CourseCatalog.levels.length, 11);
+        expect(CourseCatalog.allLevels.length, 6);
+        expect(CourseCatalog.levels.length, 6);
         expect(CourseCatalog.allLevels.first.title, 'Пустой ассистент');
       },
     );

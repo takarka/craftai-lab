@@ -5,7 +5,6 @@ import '../../app/providers.dart';
 import '../../core/network/api_http_client.dart';
 import '../../core/storage/storage_providers.dart';
 import '../models/infrastructure/craft_ai_client.dart';
-import '../models/model_providers.dart';
 import '../session/session_providers.dart';
 import 'domain/chat_message.dart';
 import 'domain/chat_repository.dart';
@@ -245,41 +244,10 @@ class ChatSessionNotifier extends Notifier<ChatState> {
 
     final repo = ref.read(chatRepositoryProvider);
     final client = ref.read(chatStreamClientProvider);
-    final selectedCategory = ref.read(selectedCategoryProvider(ownerId));
-
-    // Check if category switched since last assistant message, if so add system divider
-    final lastAssistant = state.messages.lastWhere(
-      (m) => m.role == MessageRole.assistant && m.category != null,
-      orElse: () => ChatMessage(
-        id: '',
-        conversationId: '',
-        ownerId: '',
-        role: MessageRole.system,
-        content: '',
-        status: MessageStatus.completed,
-        createdAtUtc: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
-      ),
-    );
+    const String defaultCategory = 'standard';
+    const int defaultCostTier = 2;
 
     final List<ChatMessage> initialNewMessages = [...state.messages];
-
-    if (lastAssistant.id.isNotEmpty &&
-        lastAssistant.category != selectedCategory.id) {
-      final dividerMsg = ChatMessage(
-        id: 'sys_${DateTime.now().microsecondsSinceEpoch}',
-        conversationId: conversation.id,
-        ownerId: ownerId,
-        role: MessageRole.system,
-        content: 'Переключено на категорию: ${selectedCategory.id}',
-        status: MessageStatus.completed,
-        category: selectedCategory.id,
-        createdAtUtc: DateTime.now().toUtc(),
-      );
-      initialNewMessages.add(dividerMsg);
-      if (!conversation.isEphemeral) {
-        await repo.saveMessage(dividerMsg);
-      }
-    }
 
     // 1. Add User Message
     final now = DateTime.now().toUtc();
@@ -383,7 +351,7 @@ class ChatSessionNotifier extends Notifier<ChatState> {
     final manifest = assembler.assemble(
       manifestId: 'manifest_$requestId',
       requestId: requestId,
-      category: selectedCategory.id,
+      category: defaultCategory,
       catalogRevision: '2026-03-31-01',
       contextWindow: 128000,
       activeInstruction: activeInstruction,
@@ -408,7 +376,7 @@ class ChatSessionNotifier extends Notifier<ChatState> {
       content: '',
       status: MessageStatus.streaming,
       requestId: requestId,
-      category: selectedCategory.id,
+      category: defaultCategory,
       createdAtUtc: DateTime.now().toUtc(),
     );
     initialNewMessages.add(assistantPlaceholder);
@@ -445,7 +413,7 @@ class ChatSessionNotifier extends Notifier<ChatState> {
     try {
       final stream = client.streamCompletion(
         ownerId: ownerId,
-        category: selectedCategory.id,
+        category: defaultCategory,
         catalogRevision: '2026-03-31-01',
         messages: manifest.messages,
         requestId: requestId,
@@ -510,7 +478,7 @@ class ChatSessionNotifier extends Notifier<ChatState> {
             requestId: requestId,
             ownerId: ownerId,
             conversationId: conversation.id,
-            modelCategory: selectedCategory.id,
+            modelCategory: defaultCategory,
             assistantVersion: 1,
             userPrompt: trimmed,
             responseText: _bufferedText.isEmpty
@@ -524,7 +492,7 @@ class ChatSessionNotifier extends Notifier<ChatState> {
             createdAtUtc: startTime,
             serverPromptTokens: serverPromptTokens,
             serverCompletionTokens: serverCompletionTokens,
-            costTier: selectedCategory.priceRating,
+            costTier: defaultCostTier,
           );
           await ref
               .read(traceRepositoryProvider)
@@ -591,7 +559,7 @@ class ChatSessionNotifier extends Notifier<ChatState> {
         requestId: requestId,
         ownerId: ownerId,
         conversationId: conversation.id,
-        modelCategory: selectedCategory.id,
+        modelCategory: defaultCategory,
         assistantVersion: 1,
         userPrompt: trimmed,
         responseText: _bufferedText,
@@ -599,7 +567,7 @@ class ChatSessionNotifier extends Notifier<ChatState> {
         status: TraceStatus.error,
         errorCode: errorMsg,
         createdAtUtc: startTime,
-        costTier: selectedCategory.priceRating,
+        costTier: defaultCostTier,
       );
       await ref
           .read(traceRepositoryProvider)

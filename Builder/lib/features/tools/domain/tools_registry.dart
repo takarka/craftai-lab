@@ -2,89 +2,12 @@ import 'tool_definition.dart';
 
 /// Registry of all standard tools available to the assistant (F14-01).
 class ToolsRegistry {
-  static const String readCalendar = 'read_calendar';
-  static const String createCalendarEvent = 'create_calendar_event';
   static const String createNote = 'create_note';
   static const String readNotes = 'read_notes';
   static const String deleteNote = 'delete_note';
-  // Retained only to identify historical records; excluded from this release.
-  static const String prepareCall = 'prepare_call';
-  static const String webSearch = 'web_search';
 
   static final List<ToolDefinition> allTools = [
-    // 1. Calendar
-    const ToolDefinition(
-      name: readCalendar,
-      displayName: 'Чтение календаря',
-      description:
-          'Просмотреть события и расписание уроков за указанный период времени.',
-      category: ToolCategory.calendar,
-      capability: ToolCapability.readOnly,
-      parametersSchema: {
-        'type': 'object',
-        'properties': {
-          'start_date': {
-            'type': 'string',
-            'description':
-                'Первый день периода, дата календаря Builder (например 2026-10-20)',
-          },
-          'end_date': {
-            'type': 'string',
-            'description':
-                'Последний день периода включительно (например 2026-10-26), не более 62 дней',
-          },
-        },
-        'required': ['start_date', 'end_date'],
-      },
-    ),
-    const ToolDefinition(
-      name: createCalendarEvent,
-      displayName: 'Создание события',
-      description:
-          'Создать новое событие, урок или консультацию в календаре (требует подтверждения учителя).',
-      category: ToolCategory.calendar,
-      capability: ToolCapability.requiresConfirmation,
-      parametersSchema: {
-        'type': 'object',
-        'properties': {
-          'title': {
-            'type': 'string',
-            'description':
-                'Название события или урока (например: «Консультация по алгебре 7Б»)',
-          },
-          'start_time': {
-            'type': 'string',
-            'description':
-                'Местное время начала без часового пояса, yyyy-MM-ddTHH:mm:ss (для всего дня — yyyy-MM-dd)',
-          },
-          'end_time': {
-            'type': 'string',
-            'description':
-                'Местное время окончания без часового пояса, yyyy-MM-ddTHH:mm:ss (для всего дня — yyyy-MM-dd)',
-          },
-          'time_zone': {
-            'type': 'string',
-            'description':
-                'Часовой пояс IANA, например Asia/Almaty; нужен, если событие не на весь день',
-          },
-          'is_all_day': {'type': 'boolean', 'description': 'Весь день'},
-          'notes': {
-            'type': 'string',
-            'description': 'Дополнительные заметки к событию',
-          },
-          'reminder_minutes': {
-            'type': 'array',
-            'description':
-                'За сколько минут до начала напомнить (до 3 значений от 0 до 10080); телефон покажет уведомление, если учитель включил напоминания в календаре',
-            'items': {'type': 'integer', 'minimum': 0, 'maximum': 10080},
-            'maxItems': 3,
-          },
-        },
-        'required': ['title', 'start_time', 'end_time'],
-      },
-    ),
-
-    // 2. Notes
+    // Notes
     const ToolDefinition(
       name: createNote,
       displayName: 'Создать заметку',
@@ -138,27 +61,6 @@ class ToolsRegistry {
           },
         },
         'required': ['note_id'],
-      },
-    ),
-
-    // 3. Search
-    const ToolDefinition(
-      name: webSearch,
-      displayName: 'Поиск в интернете',
-      description:
-          'Найти актуальные образовательные статьи или материалы в интернете через CraftAI Search (по умолчанию выключен).',
-      category: ToolCategory.search,
-      capability: ToolCapability.readOnly,
-      defaultOsPermission: OsPermissionStatus.notRequired,
-      parametersSchema: {
-        'type': 'object',
-        'properties': {
-          'query': {
-            'type': 'string',
-            'description': 'Поисковый запрос в интернет',
-          },
-        },
-        'required': ['query'],
       },
     ),
   ];

@@ -10,7 +10,7 @@
 
 | Фаза | Этап | Название | Состояние | Результат / ближайший шаг |
 |---|---|---|---|---|
-| **Фаза 0** | LM00 | Очистка исключённых функций | ⏳ **В очереди** | Удалить `lib/features/calendar/` и зависимые провайдеры |
+| **Фаза 0** | LM00 | Очистка исключённых функций | ✅ **Готово** | Удалены `calendar`, `schedules`, `documents`, `pdf`/`docx`, уровни 6–9 и 11, категории моделей, старые пакеты и роуты |
 | **Фаза 1** | LM01 | Серверные агенты, версии и изоляция | ⏳ **В очереди** | Модели SQLAlchemy в `backend/app/modules/lab/` |
 | **Фаза 2** | LM02 | Серверный runtime: запуски, harness, подтверждения | ⏳ **В очереди** | Нужен ответ Q-2 (две модели); прототип tool-loop |
 | **Фаза 3** | LM03 | MCP «Материалы», фото, память, скиллы | ⏳ **В очереди** | Нужен ответ Q-3 (способ извлечения текста) |
@@ -26,16 +26,16 @@
 ## 2. Детальный чек-лист
 
 ### Фаза 0: Очистка исключённых функций (LM00)
-- [ ] 0.1. Удалить `Builder/lib/features/calendar/`, провайдер `calendarReminderAutoSyncProvider` в `lib/app/app.dart`, таблицы `calendar_*` из `storage_schema_v1.dart`
-- [ ] 0.2. Удалить `Builder/lib/features/schedules/`, `pushLifecycleProvider`, роут `/automation/runs/:runId`
-- [ ] 0.3. Удалить `Builder/lib/features/documents/`, таблицу `document_work`, `text_extractor.dart`, форматы pdf/docx в `knowledge_models.dart`
-- [ ] 0.4. Удалить старые инструменты в `tools_registry.dart` и `builder_calendar_adapter.dart`; демо-каталог уроков в `lib/features/mcp/`
-- [ ] 0.5. Удалить уровни 8–11, `course_automation_lesson.dart`, `automation_practice_*`, темы `comingSoon`
-- [ ] 0.6. Удалить категории моделей, `selectedCategoryProvider`, разделитель категории в `ChatController.sendMessage`, `suggestAlternative`
-- [ ] 0.7. Удалить пакеты `flutter_local_notifications`, `timezone`, `firebase_core`, `firebase_messaging`, `archive`, `xml`, `open_filex` и Firebase-конфиги
-- [ ] 0.8. Удалить или переписать тесты удалённых функций
-- [ ] 0.9. backend: удалить `calendar.py`, `schedules.py`, document-jobs/artifacts, `/builder/search`; обновить `tests/test_api_contracts.py`
-- [ ] 0.10. Проверка: `flutter analyze`, `flutter test`, `flutter build apk --debug`, `pytest` — зелёные
+- [x] 0.1. Удалить `Builder/lib/features/calendar/`, провайдер `calendarReminderAutoSyncProvider` в `lib/app/app.dart`, таблицы `calendar_*` из `storage_schema_v1.dart`
+- [x] 0.2. Удалить `Builder/lib/features/schedules/`, `pushLifecycleProvider`, роут `/automation/runs/:runId`
+- [x] 0.3. Удалить `Builder/lib/features/documents/`, таблицу `document_work`, `text_extractor.dart`, форматы pdf/docx в `knowledge_models.dart`
+- [x] 0.4. Удалить старые инструменты в `tools_registry.dart` и `builder_calendar_adapter.dart`; демо-каталог уроков в `lib/features/mcp/`
+- [x] 0.5. Удалить уровни 8–11, `course_automation_lesson.dart`, `automation_practice_*`, темы `comingSoon`
+- [x] 0.6. Удалить категории моделей, `selectedCategoryProvider`, разделитель категории в `ChatController.sendMessage`, `suggestAlternative`
+- [x] 0.7. Удалить пакеты `flutter_local_notifications`, `timezone`, `firebase_core`, `firebase_messaging`, `archive`, `xml`, `open_filex` и Firebase-конфиги
+- [x] 0.8. Удалить или переписать тесты удалённых функций
+- [x] 0.9. backend: удалить `calendar.py`, `schedules.py`, document-jobs/artifacts, `/builder/search`; обновить `tests/test_api_contracts.py`
+- [x] 0.10. Проверка: `flutter analyze`, `flutter test`, `flutter build apk --debug`, `pytest` — зелёные
 
 ### Фаза 1: Серверные агенты, версии и изоляция (LM01)
 - [ ] 1.1. Создать `backend/app/modules/lab/` и модели: agents, agent_versions, skills, skill_versions, agent_skill_overrides, materials, memory_entries, conversations, messages, course_progress
@@ -113,3 +113,4 @@
 | Дата | Фаза | Проверка | Результат | Примечания (пропущенные тесты, отклонения) |
 |---|---|---|---|---|
 | 15.11.2026 | — | План и прогресс созданы | ✅ | Тесты не запускались (только документация). Открыты вопросы Q-1…Q-5 |
+| 15.11.2026 | Фаза 0 (LM00) | `flutter analyze`, `flutter test`, `flutter build apk --debug`, `pytest` | ✅ | `flutter analyze`: 0 issues; `flutter test` (без `live_backend_e2e_test.dart`, требующего живой сервер `https://localhost:5001`): 340 passed; `flutter build apk --debug`: собран `app-debug.apk`; `backend` `pytest`: 4 passed |

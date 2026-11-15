@@ -1,6 +1,5 @@
 import '../../assistant/domain/assistant_config.dart';
 import 'course_models.dart';
-import 'course_automation_lesson.dart';
 
 abstract final class CourseCatalog {
   static const String currentContentVersion = '1.2.0';
@@ -15,7 +14,7 @@ abstract final class CourseCatalog {
   );
 
   static List<CourseLevel> _buildCurriculum(List<CourseLevel> legacy, bool kk) {
-    final levels = [...legacy, _skillsLevel(kk), AutomationLesson.level(kk)]
+    final levels = [...legacy, _skillsLevel(kk)]
       ..sort((a, b) => a.displayOrder.compareTo(b.displayOrder));
     return List.unmodifiable(levels);
   }
@@ -624,99 +623,6 @@ abstract final class CourseCatalog {
         ),
       ],
     ),
-
-    // ----------------------------------------------------
-    // УРОВНИ 6–9: ПОСЛЕ MVP · СКОРО
-    // ----------------------------------------------------
-    CourseLevel(
-      id: 6,
-      title: 'Голос и транскрибация',
-      subtitle:
-          'Цепочка «речь → текст → модель»: ошибки распознавания на казахском и русском',
-      estimatedMinutes: 15,
-      targetSkillId: AssistantSkillId.voice,
-      targetSkillName: 'Голосовой ввод',
-      comingSoon: true,
-      ideaTitle: 'Голос как текст: точность речевого движка',
-      ideaText:
-          'После MVP: как распознавание речи влияет на понимание терминов и казахских специфических звуков.',
-      ideaExampleTemplate:
-          'Сравнение локального движка на устройстве и облачного распознавания.',
-      practiceTask: 'Скоро в обновлении.',
-      practiceDefaultInput: '',
-      practiceExpectedAnswer: '',
-      underTheHoodConcept: 'Speech-to-Text Pipeline',
-      underTheHoodExplanation: 'Скоро в обновлении.',
-      underTheHoodLayers: [],
-      quizQuestions: [],
-    ),
-
-    CourseLevel(
-      id: 7,
-      title: 'Зрение и изображения',
-      subtitle: 'Анализ схем, диаграмм и печатных заданий: что видит модель',
-      estimatedMinutes: 15,
-      targetSkillId: AssistantSkillId.vision,
-      targetSkillName: 'Компьютерное зрение',
-      comingSoon: true,
-      ideaTitle: 'Изображения как токены',
-      ideaText:
-          'После MVP: разбор схем из учебников и правила безопасности при фотографировании.',
-      ideaExampleTemplate: 'Анализ фото графиков функций и биологических схем.',
-      practiceTask: 'Скоро в обновлении.',
-      practiceDefaultInput: '',
-      practiceExpectedAnswer: '',
-      underTheHoodConcept: 'Vision Embeddings',
-      underTheHoodExplanation: 'Скоро в обновлении.',
-      underTheHoodLayers: [],
-      quizQuestions: [],
-    ),
-
-    CourseLevel(
-      id: 8,
-      title: 'Безопасность и промпт-инъекции',
-      subtitle:
-          'Защита от скрытых инструкций в чужих документах и проверка фактов',
-      estimatedMinutes: 20,
-      targetSkillId: AssistantSkillId.security,
-      targetSkillName: 'Безопасность',
-      comingSoon: true,
-      ideaTitle: 'Вредоносный текст в файлах',
-      ideaText:
-          'После MVP: как обнаружить скрытые команды в скачанных из сети материалах.',
-      ideaExampleTemplate:
-          'Пример файла с скрытым белым текстом, пытающимся переопределить роль ассистента.',
-      practiceTask: 'Скоро в обновлении.',
-      practiceDefaultInput: '',
-      practiceExpectedAnswer: '',
-      underTheHoodConcept: 'Prompt Injection Defense',
-      underTheHoodExplanation: 'Скоро в обновлении.',
-      underTheHoodLayers: [],
-      quizQuestions: [],
-    ),
-
-    CourseLevel(
-      id: 9,
-      title: 'Автономные агенты',
-      subtitle:
-          'Цикл «план → шаг → проверка»: многоэтапные педагогические задачи',
-      estimatedMinutes: 25,
-      targetSkillId: AssistantSkillId.agent,
-      targetSkillName: 'Агентный режим',
-      comingSoon: true,
-      ideaTitle: 'От чата к автономному решению',
-      ideaText:
-          'После MVP: запуск многошаговых сценариев разработки четвертного плана.',
-      ideaExampleTemplate:
-          'Ассистент самостоятельно составляет план, проверяет его по критериям и оформляет в таблицу.',
-      practiceTask: 'Скоро в обновлении.',
-      practiceDefaultInput: '',
-      practiceExpectedAnswer: '',
-      underTheHoodConcept: 'Agent Loop & Self-Reflection',
-      underTheHoodExplanation: 'Скоро в обновлении.',
-      underTheHoodLayers: [],
-      quizQuestions: [],
-    ),
   ];
 
   // ===========================================================================
@@ -1125,101 +1031,6 @@ abstract final class CourseCatalog {
               'Бас тартқан кезде құралды шақыру тоқтатылады, ал модель пайдаланушының бас тартқаны туралы хабарлама алады.',
         ),
       ],
-    ),
-
-    // ----------------------------------------------------
-    // УРОВНИ 6–9: ПОСЛЕ MVP · ЖУЫҚТА
-    // ----------------------------------------------------
-    CourseLevel(
-      id: 6,
-      title: 'Дауыс және транскрипция',
-      subtitle:
-          '«Сөйлеу → мәтін → модель» тізбегі: қазақ және орыс тілдеріндегі тану қателері',
-      estimatedMinutes: 15,
-      targetSkillId: AssistantSkillId.voice,
-      targetSkillName: 'Дауыспен енгізу',
-      comingSoon: true,
-      ideaTitle: 'Дауыс мәтін ретінде: сөйлеу қозғалтқышының дәлдігі',
-      ideaText:
-          'MVP-ден кейін: сөйлеуді тану терминдерді және қазақтың төл дыбыстарын түсінуге қалай әсер етеді.',
-      ideaExampleTemplate:
-          'Құрылғыдағы жергілікті қозғалтқыш пен бұлттық тануды салыстыру.',
-      practiceTask: 'Жуықта жаңартуда.',
-      practiceDefaultInput: '',
-      practiceExpectedAnswer: '',
-      underTheHoodConcept: 'Speech-to-Text Pipeline',
-      underTheHoodExplanation: 'Жуықта жаңартуда.',
-      underTheHoodLayers: [],
-      quizQuestions: [],
-    ),
-
-    CourseLevel(
-      id: 7,
-      title: 'Көру және кескіндер',
-      subtitle:
-          'Сұлбаларды, диаграммаларды және баспа тапсырмаларын талдау: модель нені көреді',
-      estimatedMinutes: 15,
-      targetSkillId: AssistantSkillId.vision,
-      targetSkillName: 'Компьютерлік көру',
-      comingSoon: true,
-      ideaTitle: 'Кескіндер токендер ретінде',
-      ideaText:
-          'MVP-ден кейін: оқулықтардағы сызбаларды талдау және суретке түсіру кезіндегі қауіпсіздік ережелері.',
-      ideaExampleTemplate:
-          'Функциялар графиктері мен биологиялық сызбалардың фотосын талдау.',
-      practiceTask: 'Жуықта жаңартуда.',
-      practiceDefaultInput: '',
-      practiceExpectedAnswer: '',
-      underTheHoodConcept: 'Vision Embeddings',
-      underTheHoodExplanation: 'Жуықта жаңартуда.',
-      underTheHoodLayers: [],
-      quizQuestions: [],
-    ),
-
-    CourseLevel(
-      id: 8,
-      title: 'Қауіпсіздік және промпт-инъекциялар',
-      subtitle:
-          'Бөгде құжаттардағы жасырын нұсқаулықтардан қорғау және фактілерді тексеру',
-      estimatedMinutes: 20,
-      targetSkillId: AssistantSkillId.security,
-      targetSkillName: 'Қауіпсіздік',
-      comingSoon: true,
-      ideaTitle: 'Файлдардағы зиянды мәтін',
-      ideaText:
-          'MVP-ден кейін: желіден жүктелген материалдардағы жасырын пәрмендерді қалай анықтауға болады.',
-      ideaExampleTemplate:
-          'Ассистент рөлін қайта анықтауға тырысатын жасырын ақ мәтіні бар файл мысалы.',
-      practiceTask: 'Жуықта жаңартуда.',
-      practiceDefaultInput: '',
-      practiceExpectedAnswer: '',
-      underTheHoodConcept: 'Prompt Injection Defense',
-      underTheHoodExplanation: 'Жуықта жаңартуда.',
-      underTheHoodLayers: [],
-      quizQuestions: [],
-    ),
-
-    CourseLevel(
-      id: 9,
-      title: 'Автономды агенттер',
-      subtitle:
-          '«Жоспар → қадам → тексеру» циклі: көпсатылы педагогикалық тапсырмалар',
-      estimatedMinutes: 25,
-      targetSkillId: AssistantSkillId.agent,
-      targetSkillName: 'Агенттік режим',
-      comingSoon: true,
-      ideaTitle: 'Чаттан автономды шешімге',
-      ideaText:
-          'MVP-ден кейін: тоқсандық жоспарды әзірлеудің көпқадамды сценарийлерін іске қосу.',
-      ideaExampleTemplate:
-          'Ассистент өз бетінше жоспар құрады, оны критерийлер бойынша тексереді және кестеге түсіреді.',
-      practiceTask: 'Жуықта жаңартуда.',
-      practiceDefaultInput: '',
-      practiceExpectedAnswer: '',
-      underTheHoodConcept: 'Agent Loop & Self-Reflection',
-      underTheHoodExplanation: 'Жуықта жаңартуда.',
-      underTheHoodLayers: [],
-      quizQuestions: [],
     ),
   ];
 }

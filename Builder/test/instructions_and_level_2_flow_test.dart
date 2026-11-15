@@ -16,7 +16,6 @@ import 'package:builder/features/instructions/domain/instruction_models.dart';
 import 'package:builder/features/instructions/instructions_providers.dart';
 import 'package:builder/features/instructions/infrastructure/persistent_instructions_repository.dart';
 import 'package:builder/features/instructions/presentation/instructions_page.dart';
-import 'package:builder/features/models/domain/model_category.dart';
 import 'package:builder/features/models/model_providers.dart';
 import 'package:builder/features/models/domain/model_catalog.dart';
 import 'package:flutter/material.dart';
@@ -266,7 +265,7 @@ void main() {
       await assistantRepo.commitChange(
         ownerId: testOwner,
         name: 'Сова',
-        selectedCategory: ModelCategory.standard,
+        selectedCategory: 'standard',
         enabledSkills: {},
         systemRules: [],
         reason: 'Инициализация',
@@ -453,7 +452,7 @@ void main() {
       await assistantRepo.commitChange(
         ownerId: testOwner,
         name: 'Сова',
-        selectedCategory: ModelCategory.standard,
+        selectedCategory: 'standard',
         enabledSkills: {},
         systemRules: [],
         reason: 'Инициализация виджет-теста',
@@ -597,7 +596,7 @@ void main() {
             .read(instructionDraftProvider(testOwner).notifier)
             .runBeforeAfterTest(
               question: 'Test question',
-              category: ModelCategory.standard,
+              category: 'standard',
             );
       });
       await tester.pumpAndSettle();
@@ -700,7 +699,7 @@ void main() {
                 .read(instructionDraftProvider(testOwner).notifier)
                 .runBeforeAfterTest(
                   question: 'Test question',
-                  category: ModelCategory.standard,
+                  category: 'standard',
                 );
             await Future<void>.delayed(const Duration(milliseconds: 300));
           });

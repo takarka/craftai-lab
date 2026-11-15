@@ -96,7 +96,7 @@ async def test_auth_lifecycle_and_usage(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_models_chat_sse_and_search(client: AsyncClient):
+async def test_models_chat_sse(client: AsyncClient):
     tokens = await _login_dev(client)
     headers = {"Authorization": f"Bearer {tokens['accessToken']}"}
 
@@ -128,91 +128,9 @@ async def test_models_chat_sse_and_search(client: AsyncClient):
     assert "usage" in event_types
     assert event_types[-1] == "terminal"
 
-    search_res = await client.post(
-        "/builder/search",
-        headers=headers,
-        json={"query": "методика преподавания дробей", "count": 3},
-    )
-    assert search_res.status_code == 200
-    s_body = search_res.json()
-    assert len(s_body["results"]) >= 1
-    assert s_body["results"][0]["url"].startswith("https://")
-
 
 @pytest.mark.asyncio
-async def test_calendar_crud_etag_and_recurrence(client: AsyncClient):
-    tokens = await _login_dev(client)
-    headers = {"Authorization": f"Bearer {tokens['accessToken']}"}
-
-    create_res = await client.post(
-        "/builder/calendar/events",
-        headers={**headers, "Idempotency-Key": "cal-create-1"},
-        json={
-            "title": "Планерка кафедры",
-            "start": "2026-04-20T09:00:00",
-            "end": "2026-04-20T10:00:00",
-            "timeZone": "Asia/Almaty",
-            "allDay": False,
-            "recurrence": {"frequency": "daily", "interval": 1, "count": 3},
-        },
-    )
-    assert create_res.status_code == 201
-    event = create_res.json()
-    event_id = event["id"]
-    assert event["version"] == 1
-
-    range_res = await client.get(
-        "/builder/calendar/events",
-        headers=headers,
-        params={
-            "from": "2026-04-20",
-            "to": "2026-04-25",
-        },
-    )
-    assert range_res.status_code == 200
-    occurrences = range_res.json()["items"]
-    assert len(occurrences) == 3
-
-    conflict_res = await client.put(
-        f"/builder/calendar/events/{event_id}",
-        headers={**headers, "If-Match": '"99"'},
-        json={
-            "title": "Конфликт",
-            "start": "2026-04-20T09:00:00",
-            "end": "2026-04-20T10:00:00",
-            "timeZone": "Asia/Almaty",
-            "allDay": False,
-        },
-    )
-    assert conflict_res.status_code == 412
-    assert conflict_res.json()["code"] == "calendar.version-conflict"
-
-    occ_res = await client.put(
-        f"/builder/calendar/events/{event_id}/occurrences/2026-04-21",
-        headers=headers,
-        json={"canceled": True},
-    )
-    assert occ_res.status_code == 200
-
-    range_after = await client.get(
-        "/builder/calendar/events",
-        headers=headers,
-        params={
-            "from": "2026-04-20",
-            "to": "2026-04-25",
-        },
-    )
-    assert len(range_after.json()["items"]) == 2
-
-    changes_res = await client.get("/builder/calendar/changes", headers=headers)
-    assert changes_res.status_code == 200
-    changes_body = changes_res.json()
-    assert len(changes_body["items"]) >= 1
-    assert "nextCursor" in changes_body
-
-
-@pytest.mark.asyncio
-async def test_documents_pipeline_and_range_download(client: AsyncClient):
+async def test_attachments_upload_and_delete(client: AsyncClient):
     tokens = await _login_dev(client)
     headers = {"Authorization": f"Bearer {tokens['accessToken']}"}
 
@@ -231,72 +149,14 @@ async def test_documents_pipeline_and_range_download(client: AsyncClient):
     att = att_res.json()
     assert att["status"] == "uploaded"
 
-    job_res = await client.post(
-        "/builder/document-jobs",
-        headers={**headers, "Idempotency-Key": "job-create-1"},
-        json={
-            "attachmentId": att["id"],
-            "skill": "lesson-plan",
-            "parameters": {"topic": "Алгоритмы", "grade": 8, "language": "ru"},
-            "outputs": ["docx", "pdf"],
-        },
-    )
-    assert job_res.status_code == 202
-    job_id = job_res.json()["id"]
-
-    status_res = await client.get(f"/builder/document-jobs/{job_id}", headers=headers)
-    assert status_res.status_code == 200
-    job_body = status_res.json()
-    assert job_body["status"] == "succeeded"
-    assert len(job_body["artifacts"]) == 2
-
-    pdf_art = next(a for a in job_body["artifacts"] if a["format"] == "pdf")
-    full_dl = await client.get(f"/builder/artifacts/{pdf_art['id']}/content", headers=headers)
-    assert full_dl.status_code == 200
-    assert full_dl.content.startswith(b"%PDF-")
-
-    partial_dl = await client.get(
-        f"/builder/artifacts/{pdf_art['id']}/content",
-        headers={**headers, "Range": "bytes=10-"},
-    )
-    assert partial_dl.status_code == 206
-    assert partial_dl.content == full_dl.content[10:]
+    del_res = await client.delete(f"/builder/attachments/{att['id']}", headers=headers)
+    assert del_res.status_code == 204
 
 
 @pytest.mark.asyncio
-async def test_schedules_and_mcp(client: AsyncClient):
+async def test_mcp_tools(client: AsyncClient):
     tokens = await _login_dev(client)
     headers = {"Authorization": f"Bearer {tokens['accessToken']}"}
-
-    sched_res = await client.put(
-        "/builder/schedules/daily-brief",
-        headers=headers,
-        json={
-            "enabled": True,
-            "timeZone": "Asia/Almaty",
-            "timing": {"frequency": "daily", "localTime": "07:30"},
-            "parameters": {"includeCalendar": True},
-            "extraContext": "Учитывать уроки первой смены",
-            "consentRevision": "schedules-2026-10-v1",
-        },
-    )
-    assert sched_res.status_code == 200
-    sched = sched_res.json()
-    assert "extraContext" in sched
-    sched_id = sched["id"]
-
-    run_res = await client.post(
-        f"/builder/schedules/{sched_id}/run-now",
-        headers={**headers, "Idempotency-Key": "run-now-1"},
-    )
-    assert run_res.status_code == 202
-    run_id = run_res.json()["id"]
-
-    detail_res = await client.get(f"/builder/runs/{run_id}", headers=headers)
-    assert detail_res.status_code == 200
-    detail = detail_res.json()
-    assert detail["status"] == "succeeded"
-    assert detail["result"]["format"] == "structured"
 
     mcp_list = await client.post(
         "/mcp/v1",

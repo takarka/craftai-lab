@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:http/io_client.dart';
 import 'package:builder/features/auth/infrastructure/craft_ai_auth_gateway.dart';
 import 'package:builder/features/models/domain/model_catalog.dart';
-import 'package:builder/features/models/domain/model_category.dart';
 import 'package:builder/features/models/infrastructure/craft_ai_client.dart';
 import 'package:builder/features/session/infrastructure/refreshing_token_storage.dart';
 import 'package:builder/features/session/infrastructure/secure_token_storage.dart';
@@ -119,18 +118,12 @@ void main() {
 
         expect(catalog.revision, isNotEmpty);
         expect(catalog.models, isNotEmpty);
-
-        final fast = catalog.getModel(ModelCategory.fast);
-        expect(fast, isNotNull);
-        expect(fast.modelId, contains('gemini'));
-
-        final standard = catalog.getModel(ModelCategory.standard);
-        expect(standard, isNotNull);
-        expect(standard.modelId, contains('qwen'));
-
-        final advanced = catalog.getModel(ModelCategory.advanced);
-        expect(advanced, isNotNull);
-        expect(advanced.modelId, contains('deepseek'));
+        expect(catalog.models.any((m) => m.modelId.contains('gemini')), isTrue);
+        expect(catalog.models.any((m) => m.modelId.contains('qwen')), isTrue);
+        expect(
+          catalog.models.any((m) => m.modelId.contains('deepseek')),
+          isTrue,
+        );
       },
     );
 

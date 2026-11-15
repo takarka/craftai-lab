@@ -25,8 +25,7 @@ class AssistantFeatureGate extends ConsumerWidget {
     final completed = progress.asData?.value;
     if (!progress.hasError &&
         completed != null &&
-        completed.contains(skill.level) &&
-        !skill.comingSoon) {
+        completed.contains(skill.level)) {
       return builder(context);
     }
     final isKk = Localizations.localeOf(context).languageCode == 'kk';

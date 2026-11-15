@@ -71,7 +71,7 @@ class _RollbackConfirmationContent extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '• Модель: ${catDiffers ? "${currentConfig!.selectedCategory?.name ?? '—'} → ${snapshot.selectedCategory?.name ?? '—'}" : (snapshot.selectedCategory?.name ?? 'По умолчанию')}',
+                '• Модель: ${catDiffers ? "${currentConfig!.selectedCategory ?? '—'} → ${snapshot.selectedCategory ?? '—'}" : (snapshot.selectedCategory ?? 'По умолчанию')}',
                 style: BuilderType.small,
               ),
               const SizedBox(height: 4),

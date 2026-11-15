@@ -56,42 +56,19 @@ void main() {
   group(
     'F15-01, F15-02 & F15-10: Connectors Catalog, Disclosure & Coming Soon',
     () {
-      test(
-        'contains CraftAI catalog connector and 3 coming soon connectors',
-        () {
-          final connectors = McpConnector.allConnectors;
-          expect(connectors.length, 4);
+      test('contains managed Materials MCP connector', () {
+        final connectors = McpConnector.allConnectors;
+        expect(connectors.length, 1);
 
-          // CraftAI Lessons
-          final craftAi = connectors.firstWhere(
-            (c) => c.id == McpConnector.craftAiLessonsId,
-          );
-          expect(craftAi.isComingSoon, isFalse);
-          expect(craftAi.capabilities.length, 2);
-          expect(
-            craftAi.dataDisclosure,
-            contains('Не передаёт персональные данные'),
-          );
-
-          // Google Drive (coming soon)
-          final gDrive = connectors.firstWhere(
-            (c) => c.id == McpConnector.googleDriveId,
-          );
-          expect(gDrive.isComingSoon, isTrue);
-
-          // Google Calendar (coming soon)
-          final gCal = connectors.firstWhere(
-            (c) => c.id == McpConnector.googleCalendarId,
-          );
-          expect(gCal.isComingSoon, isTrue);
-
-          // Kundelik (coming soon)
-          final kundelik = connectors.firstWhere(
-            (c) => c.id == McpConnector.kundelikId,
-          );
-          expect(kundelik.isComingSoon, isTrue);
-        },
-      );
+        final materials = connectors.firstWhere(
+          (c) => c.id == McpConnector.materialsId,
+        );
+        expect(materials.capabilities.length, 2);
+        expect(
+          materials.dataDisclosure,
+          contains('Не передаёт данные другим агентам'),
+        );
+      });
     },
   );
 

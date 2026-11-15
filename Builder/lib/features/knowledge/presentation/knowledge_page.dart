@@ -406,14 +406,6 @@ class _KnowledgePageState extends ConsumerState<KnowledgePage> {
     Color bg;
     Color fg;
     switch (format) {
-      case DocumentFormat.pdf:
-        bg = Colors.red.shade100;
-        fg = Colors.red.shade900;
-        break;
-      case DocumentFormat.docx:
-        bg = Colors.blue.shade100;
-        fg = Colors.blue.shade900;
-        break;
       case DocumentFormat.txt:
         bg = Colors.grey.shade200;
         fg = BuilderColors.ink;

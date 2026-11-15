@@ -1,8 +1,5 @@
-import 'model_category.dart';
-
 class ModelDescriptor {
   const ModelDescriptor({
-    required this.category,
     required this.modelId,
     required this.available,
     required this.streaming,
@@ -11,7 +8,6 @@ class ModelDescriptor {
     required this.contextWindow,
   });
 
-  final ModelCategory category;
   final String modelId;
   final bool available;
   final bool streaming;
@@ -20,8 +16,6 @@ class ModelDescriptor {
   final int contextWindow;
 
   factory ModelDescriptor.fromJson(Map<String, dynamic> json) {
-    final categoryStr =
-        json['category'] as String? ?? json['Category'] as String?;
     final modelId =
         json['modelId'] as String? ?? json['ModelId'] as String? ?? '';
     final available =
@@ -39,7 +33,6 @@ class ModelDescriptor {
         128000;
 
     return ModelDescriptor(
-      category: ModelCategory.fromString(categoryStr),
       modelId: modelId,
       available: available,
       streaming: streaming,
@@ -50,7 +43,6 @@ class ModelDescriptor {
   }
 
   Map<String, dynamic> toJson() => {
-    'category': category.id,
     'modelId': modelId,
     'available': available,
     'streaming': streaming,
@@ -71,47 +63,11 @@ class ModelCatalog {
   final List<ModelDescriptor> models;
   final DateTime fetchedAtUtc;
 
-  ModelDescriptor getModel(ModelCategory category) {
-    return models.firstWhere(
-      (m) => m.category == category,
-      orElse: () => ModelDescriptor(
-        category: category,
-        modelId: category.defaultModelId,
-        available: true,
-        streaming: true,
-        tools: true,
-        languages: const ['ru', 'kk'],
-        contextWindow: 128000,
-      ),
-    );
-  }
-
-  bool isCategoryAvailable(ModelCategory category) {
-    final descriptor = models.cast<ModelDescriptor?>().firstWhere(
-      (m) => m?.category == category,
-      orElse: () => null,
-    );
-    return descriptor?.available ?? false;
-  }
-
-  /// Suggests a reliable fallback alternative when the requested category is unavailable (F06-07).
-  ModelCategory suggestAlternative(ModelCategory unavailable) {
-    // If standard is available, it is the primary balanced recommendation
-    if (unavailable != ModelCategory.standard &&
-        isCategoryAvailable(ModelCategory.standard)) {
-      return ModelCategory.standard;
+  ModelDescriptor? getModel(String modelId) {
+    for (final m in models) {
+      if (m.modelId == modelId) return m;
     }
-    // Otherwise try fast
-    if (unavailable != ModelCategory.fast &&
-        isCategoryAvailable(ModelCategory.fast)) {
-      return ModelCategory.fast;
-    }
-    // Otherwise try advanced
-    if (unavailable != ModelCategory.advanced &&
-        isCategoryAvailable(ModelCategory.advanced)) {
-      return ModelCategory.advanced;
-    }
-    return ModelCategory.standard;
+    return models.isNotEmpty ? models.first : null;
   }
 
   factory ModelCatalog.fromJson(
@@ -143,17 +99,23 @@ class ModelCatalog {
   static ModelCatalog defaultCatalog() {
     return ModelCatalog(
       revision: 'rev-offline-default',
-      models: [
-        for (final category in ModelCategory.values)
-          ModelDescriptor(
-            category: category,
-            modelId: category.defaultModelId,
-            available: true,
-            streaming: true,
-            tools: true,
-            languages: const ['ru', 'kk'],
-            contextWindow: 128000,
-          ),
+      models: const [
+        ModelDescriptor(
+          modelId: 'google/gemini-2.5-flash',
+          available: true,
+          streaming: true,
+          tools: true,
+          languages: ['ru', 'kk'],
+          contextWindow: 128000,
+        ),
+        ModelDescriptor(
+          modelId: 'qwen/qwen3-32b',
+          available: true,
+          streaming: true,
+          tools: true,
+          languages: ['ru', 'kk'],
+          contextWindow: 128000,
+        ),
       ],
       fetchedAtUtc: DateTime.now().toUtc(),
     );

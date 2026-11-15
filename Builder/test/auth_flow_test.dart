@@ -572,20 +572,19 @@ void main() {
     },
   );
 
-  testWidgets(
-    'Submitting sign-in saves entered credentials to storage',
-    (tester) async {
-      final storage = InMemoryAuthCredentialsStorage();
-      final gateway = TestAuthGateway();
-      await mount(tester, gateway: gateway, credentialsStorage: storage);
-      await enter(tester, 'email', 'tester@school.kz');
-      await enter(tester, 'password', 'secure_pass_456');
-      await submit(tester, 'Войти');
-      await tester.pumpAndSettle();
+  testWidgets('Submitting sign-in saves entered credentials to storage', (
+    tester,
+  ) async {
+    final storage = InMemoryAuthCredentialsStorage();
+    final gateway = TestAuthGateway();
+    await mount(tester, gateway: gateway, credentialsStorage: storage);
+    await enter(tester, 'email', 'tester@school.kz');
+    await enter(tester, 'password', 'secure_pass_456');
+    await submit(tester, 'Войти');
+    await tester.pumpAndSettle();
 
-      final saved = await storage.readLastCredentials();
-      expect(saved?.email, 'tester@school.kz');
-      expect(saved?.password, 'secure_pass_456');
-    },
-  );
+    final saved = await storage.readLastCredentials();
+    expect(saved?.email, 'tester@school.kz');
+    expect(saved?.password, 'secure_pass_456');
+  });
 }

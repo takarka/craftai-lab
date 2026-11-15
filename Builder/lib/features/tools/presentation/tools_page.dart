@@ -5,13 +5,9 @@ import '../../../ui_kit/ui_kit.dart';
 import '../domain/tool_definition.dart';
 import 'd07_os_permission_dialog.dart';
 import 'tool_confirmation_card.dart';
-import '../../documents/presentation/documents_page.dart';
-import 'search_page.dart';
 import 'tools_providers.dart';
 import '../../mcp/presentation/mcp_page.dart';
 import '../../course/domain/course_topic.dart';
-import '../../calendar/presentation/builder_calendar_page.dart';
-import '../../schedules/presentation/schedules_page.dart';
 
 /// Screen S43: Assistant Tools Management (F14-02, F14-04, F14-09, F14-13).
 class ToolsPage extends ConsumerStatefulWidget {
@@ -110,19 +106,6 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                     const SizedBox(height: BuilderSpace.md),
                   ],
 
-                  ListTile(
-                    leading: const Icon(Icons.schedule),
-                    title: Text(
-                      Localizations.localeOf(context).languageCode == 'kk'
-                          ? 'AI кестелері'
-                          : 'AI-расписания',
-                    ),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => SchedulesPage(ownerId: widget.ownerId),
-                      ),
-                    ),
-                  ),
                   // 2. Info / Safety Banner (F14-05, F14-08)
                   Container(
                     key: const Key('tools.safetyBanner'),
@@ -172,63 +155,8 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                   ),
                   const SizedBox(height: BuilderSpace.md),
 
-                  // 3. Three Tool Groups (F14-02)
-                  ListTile(
-                    leading: const Icon(Icons.calendar_month),
-                    title: Text(
-                      Localizations.localeOf(context).languageCode == 'kk'
-                          ? 'Builder күнтізбесі'
-                          : 'Календарь Builder',
-                    ),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) =>
-                            BuilderCalendarPage(ownerId: widget.ownerId),
-                      ),
-                    ),
-                  ),
-                  ListTile(
-                    key: const Key('tools.openDocuments'),
-                    leading: const Icon(Icons.upload_file),
-                    title: Text(
-                      Localizations.localeOf(context).languageCode == 'kk'
-                          ? 'DOCX және PDF құжаттары'
-                          : 'Документы DOCX и PDF',
-                    ),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => DocumentsPage(ownerId: widget.ownerId),
-                      ),
-                    ),
-                  ),
-                  ListTile(
-                    key: const Key('tools.openSearch'),
-                    leading: const Icon(Icons.search),
-                    title: Text(
-                      Localizations.localeOf(context).languageCode == 'kk'
-                          ? 'CraftAI іздеуі'
-                          : 'Поиск CraftAI',
-                    ),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const SearchPage(),
-                      ),
-                    ),
-                  ),
                   _buildGroupSection(
-                    title: '1 · Календарь и расписание',
-                    category: ToolCategory.calendar,
-                    items: state.toolItems
-                        .where(
-                          (i) => i.definition.category == ToolCategory.calendar,
-                        )
-                        .toList(),
-                    controller: controller,
-                  ),
-                  const SizedBox(height: BuilderSpace.md),
-
-                  _buildGroupSection(
-                    title: '2 · Личные заметки и черновики',
+                    title: 'Личные заметки и черновики',
                     category: ToolCategory.notes,
                     items: state.toolItems
                         .where(
@@ -236,54 +164,6 @@ class _ToolsPageState extends ConsumerState<ToolsPage> {
                         )
                         .toList(),
                     controller: controller,
-                  ),
-                  const SizedBox(height: BuilderSpace.md),
-
-                  _buildGroupSection(
-                    title: '3 · Поиск в интернете',
-                    category: ToolCategory.search,
-                    items: state.toolItems
-                        .where(
-                          (i) => i.definition.category == ToolCategory.search,
-                        )
-                        .toList(),
-                    controller: controller,
-                    disclosure: Container(
-                      key: const Key('tools.webSearchDisclosure'),
-                      margin: const EdgeInsets.only(top: BuilderSpace.xs),
-                      padding: const EdgeInsets.all(BuilderSpace.sm),
-                      decoration: BoxDecoration(
-                        color: BuilderColors.warning.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(BuilderRadii.tile),
-                        border: Border.all(
-                          color: BuilderColors.warning.withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.only(top: 2),
-                            child: BuilderIcon(
-                              BuilderGlyph.cloud,
-                              size: 16,
-                              color: BuilderColors.warning,
-                            ),
-                          ),
-                          const SizedBox(width: BuilderSpace.xs),
-                          Expanded(
-                            child: Text(
-                              'Поиск в интернете передаёт поисковый запрос внешнему серверу CraftAI Search. '
-                              'По умолчанию отключён. Не отправляйте персональные данные учеников в поисковых запросах.',
-                              style: BuilderTypography.bodySmall.copyWith(
-                                color: BuilderColors.ink,
-                                height: 1.3,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                   const SizedBox(height: BuilderSpace.md),
 

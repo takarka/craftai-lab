@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../ui_kit/ui_kit.dart';
-import '../../models/model_providers.dart';
 import '../domain/instruction_models.dart';
 import '../instructions_providers.dart';
 
@@ -57,9 +56,6 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
     final draftState = ref.watch(instructionDraftProvider(widget.ownerId));
     final draftNotifier = ref.read(
       instructionDraftProvider(widget.ownerId).notifier,
-    );
-    final selectedCategory = ref.watch(
-      selectedCategoryProvider(widget.ownerId),
     );
 
     // Keep raw text controller in sync if not focused or initially
@@ -147,11 +143,7 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                     const SizedBox(height: 20),
 
                     // 6. Before / After Test Comparison (F11-06)
-                    _buildBeforeAfterTestSection(
-                      draftState,
-                      draftNotifier,
-                      selectedCategory,
-                    ),
+                    _buildBeforeAfterTestSection(draftState, draftNotifier),
                     const SizedBox(height: 20),
 
                     // 7. Reflection Field for Learn Mode (F11-08)
@@ -786,24 +778,22 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
   Widget _buildBeforeAfterTestSection(
     InstructionDraftState draftState,
     InstructionDraftNotifier draftNotifier,
-    dynamic selectedCategory,
   ) {
     return BuilderCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
-              const BuilderIcon(
+              BuilderIcon(
                 BuilderGlyph.search,
                 size: 20,
                 color: BuilderColors.primary,
               ),
-              const SizedBox(width: 8),
-              const Expanded(
+              SizedBox(width: 8),
+              Expanded(
                 child: Text('Проверка «До / После»', style: BuilderType.h3),
               ),
-              BuilderBadge('Модель: ${selectedCategory.id}', neutral: true),
             ],
           ),
           const SizedBox(height: 8),
@@ -840,7 +830,6 @@ class _InstructionsPageState extends ConsumerState<InstructionsPage> {
                       try {
                         await draftNotifier.runBeforeAfterTest(
                           question: question,
-                          category: selectedCategory,
                         );
                       } catch (_) {
                         // The provider exposes the error below the test button.

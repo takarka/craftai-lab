@@ -4,7 +4,6 @@ import 'package:sqflite/sqflite.dart';
 import '../../../core/storage/database/storage_database.dart';
 import '../../../core/storage/schema/storage_schema_v1.dart';
 import '../../../core/storage/workspace/workspace_storage_service.dart';
-import '../../models/domain/model_category.dart';
 import '../../skills/domain/skill_scenario.dart';
 import '../../skills/domain/skills_repository.dart';
 import '../domain/assistant_config.dart';
@@ -143,7 +142,6 @@ class PersistentAssistantRepository
 
   AssistantConfig _parseConfig(Map<String, dynamic> row) {
     final catName = row['selected_category'] as String?;
-    final cat = catName != null ? ModelCategory.fromString(catName) : null;
     final skillsRaw =
         jsonDecode(row['enabled_skills_json'] as String) as List<dynamic>;
     final rulesRaw =
@@ -152,7 +150,7 @@ class PersistentAssistantRepository
     return AssistantConfig(
       ownerId: row['owner_id'] as String,
       name: row['name'] as String,
-      selectedCategory: cat,
+      selectedCategory: catName,
       enabledSkills: skillsRaw.map((e) => e.toString()).toSet(),
       systemRules: rulesRaw.map((e) => e.toString()).toList(),
       stateRevision: row['state_revision'] as int,
@@ -233,7 +231,7 @@ class PersistentAssistantRepository
   Future<AssistantVersion> commitChange({
     required String ownerId,
     required String name,
-    ModelCategory? selectedCategory,
+    String? selectedCategory,
     required Set<String> enabledSkills,
     List<String>? systemRules,
     required String reason,
@@ -257,7 +255,7 @@ class PersistentAssistantRepository
     DatabaseExecutor txn, {
     required String ownerId,
     required String name,
-    ModelCategory? selectedCategory,
+    String? selectedCategory,
     required Set<String> enabledSkills,
     List<String>? systemRules,
     required String reason,
@@ -321,7 +319,7 @@ class PersistentAssistantRepository
     await txn.insert(StorageSchemaV1.tableAssistantConfigurations, {
       'owner_id': ownerId,
       'name': name,
-      'selected_category': selectedCategory?.name,
+      'selected_category': selectedCategory,
       'enabled_skills_json': jsonEncode(enabledSkills.toList()..sort()),
       'system_rules_json': jsonEncode(rules),
       'state_revision': nextRevision,

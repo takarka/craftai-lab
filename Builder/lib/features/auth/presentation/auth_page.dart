@@ -73,10 +73,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
     if (email.isNotEmpty && password.isNotEmpty) {
       _saveDebounce?.cancel();
       _saveDebounce = Timer(const Duration(milliseconds: 500), () {
-        ref.read(authCredentialsStorageProvider).saveLastCredentials(
-          email: email,
-          password: password,
-        );
+        ref
+            .read(authCredentialsStorageProvider)
+            .saveLastCredentials(email: email, password: password);
       });
     } else if (email.isNotEmpty && password.isEmpty) {
       _saveDebounce?.cancel();
@@ -144,10 +143,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
         widget.kind == AuthFormKind.register) {
       if (email.isNotEmpty && password.isNotEmpty) {
         unawaited(
-          ref.read(authCredentialsStorageProvider).saveLastCredentials(
-            email: email,
-            password: password,
-          ),
+          ref
+              .read(authCredentialsStorageProvider)
+              .saveLastCredentials(email: email, password: password),
         );
       }
     } else if (widget.kind == AuthFormKind.resetPassword ||
@@ -158,10 +156,9 @@ class _AuthPageState extends ConsumerState<AuthPage>
               .read(authCredentialsStorageProvider)
               .readLastCredentials();
           if (last != null) {
-            await ref.read(authCredentialsStorageProvider).saveLastCredentials(
-              email: last.email,
-              password: password,
-            );
+            await ref
+                .read(authCredentialsStorageProvider)
+                .saveLastCredentials(email: last.email, password: password);
           }
         }());
       }

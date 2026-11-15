@@ -4,7 +4,6 @@ import '../../core/storage/schema/storage_schema_v1.dart';
 import '../../core/storage/storage_providers.dart';
 import '../chat/chat_providers.dart';
 import '../course/course_providers.dart';
-import '../models/model_providers.dart';
 import '../onboarding/application/onboarding_controller.dart';
 import '../onboarding/domain/assistant_setup.dart';
 import '../onboarding/domain/initial_workspace_repository.dart';
@@ -113,12 +112,11 @@ class AssistantController {
     final currentConfig = await ref.read(
       assistantConfigProvider(ownerId).future,
     );
-    final selectedCat = ref.read(selectedCategoryProvider(ownerId));
 
     await _repo.commitChange(
       ownerId: ownerId,
       name: trimmed,
-      selectedCategory: selectedCat,
+      selectedCategory: currentConfig?.selectedCategory,
       enabledSkills: currentConfig?.enabledSkills ?? {},
       systemRules: currentConfig?.systemRules,
       reason: 'Изменение имени на «$trimmed»',
@@ -137,7 +135,6 @@ class AssistantController {
     final currentConfig = await ref.read(
       assistantConfigProvider(ownerId).future,
     );
-    final selectedCat = ref.read(selectedCategoryProvider(ownerId));
 
     if (store != null && preferences != null) {
       await store.savePreferences(
@@ -175,7 +172,7 @@ class AssistantController {
     await _repo.commitChange(
       ownerId: ownerId,
       name: currentConfig?.name ?? '',
-      selectedCategory: selectedCat,
+      selectedCategory: currentConfig?.selectedCategory,
       enabledSkills: currentConfig?.enabledSkills ?? {},
       systemRules: currentRules,
       reason: 'Смена языка ассистента на $langTitle',
@@ -209,12 +206,10 @@ class AssistantController {
       currentSkills.remove(skill.id);
     }
 
-    final selectedCat = ref.read(selectedCategoryProvider(ownerId));
-
     await _repo.commitChange(
       ownerId: ownerId,
       name: currentConfig?.name ?? '',
-      selectedCategory: selectedCat,
+      selectedCategory: currentConfig?.selectedCategory,
       enabledSkills: currentSkills,
       systemRules: currentConfig?.systemRules,
       reason: '${enable ? "Включение" : "Отключение"} умения «${skill.title}»',
@@ -229,7 +224,6 @@ class AssistantController {
     final currentConfig = await ref.read(
       assistantConfigProvider(ownerId).future,
     );
-    final selectedCat = ref.read(selectedCategoryProvider(ownerId));
 
     final actualReason = (reason != null && reason.trim().isNotEmpty)
         ? reason.trim()
@@ -238,7 +232,7 @@ class AssistantController {
     await _repo.commitChange(
       ownerId: ownerId,
       name: currentConfig?.name ?? '',
-      selectedCategory: selectedCat,
+      selectedCategory: currentConfig?.selectedCategory,
       enabledSkills: currentConfig?.enabledSkills ?? {},
       systemRules: currentConfig?.systemRules,
       reason: actualReason,
@@ -256,7 +250,6 @@ class AssistantController {
     final currentConfig = await ref.read(
       assistantConfigProvider(ownerId).future,
     );
-    final selectedCat = ref.read(selectedCategoryProvider(ownerId));
     final currentSkills = Set<String>.from(currentConfig?.enabledSkills ?? {});
 
     // Ensure instructions skill is enabled
@@ -269,7 +262,7 @@ class AssistantController {
     await _repo.commitChange(
       ownerId: ownerId,
       name: currentConfig?.name ?? '',
-      selectedCategory: selectedCat,
+      selectedCategory: currentConfig?.selectedCategory,
       enabledSkills: currentSkills,
       systemRules: systemRules,
       reason: actualReason,
@@ -294,10 +287,6 @@ class AssistantController {
       targetVersionNumber: targetVersionNumber,
       allowedSkills: allowedSkills,
     );
-
-    // Rollback already persisted the category in its transaction. Reload the
-    // provider rather than writing the same setting and revision a second time.
-    ref.invalidate(selectedCategoryProvider(ownerId));
 
     ref.invalidate(assistantConfigProvider(ownerId));
     ref.invalidate(assistantVersionsProvider(ownerId));

@@ -17,7 +17,6 @@ import 'package:builder/features/assistant/presentation/assistant_settings_page.
 import 'package:builder/features/assistant/presentation/assistant_versions_page.dart';
 import 'package:builder/features/assistant/presentation/local_data_settings_page.dart';
 import 'package:builder/features/assistant/presentation/reset_confirmation_dialog.dart';
-import 'package:builder/features/models/domain/model_category.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -111,7 +110,7 @@ void main() {
         final v2 = await repo.commitChange(
           ownerId: testOwner,
           name: 'Сова Мудрая',
-          selectedCategory: ModelCategory.fast,
+          selectedCategory: 'fast',
           enabledSkills: {'instructions', 'knowledge'},
           systemRules: ['Отвечать кратко', 'Использовать примеры'],
           reason: 'Изменение имени на «Сова Мудрая»',
@@ -120,7 +119,7 @@ void main() {
         expect(v2.versionNumber, equals(2));
         expect(v2.reason, equals('Изменение имени на «Сова Мудрая»'));
         expect(v2.snapshot.name, equals('Сова Мудрая'));
-        expect(v2.snapshot.selectedCategory, equals(ModelCategory.fast));
+        expect(v2.snapshot.selectedCategory, equals('fast'));
         expect(v2.snapshot.enabledSkills, contains('knowledge'));
 
         final config = await repo.getConfiguration(testOwner);
@@ -156,7 +155,7 @@ void main() {
         await repo.commitChange(
           ownerId: testOwner,
           name: 'Сова',
-          selectedCategory: ModelCategory.standard,
+          selectedCategory: 'standard',
           enabledSkills: {'instructions'},
           reason: 'Добавлен документ',
         );
@@ -186,7 +185,7 @@ void main() {
         await repo.commitChange(
           ownerId: testOwner,
           name: 'Сова Продвинутая',
-          selectedCategory: ModelCategory.advanced,
+          selectedCategory: 'advanced',
           enabledSkills: {'instructions', 'knowledge', 'memory', 'tools'},
           reason: 'Включение всех умений',
         );
@@ -202,7 +201,7 @@ void main() {
 
         final config = await repo.getConfiguration(testOwner);
         expect(config?.name, equals('Сова Продвинутая'));
-        expect(config?.selectedCategory, equals(ModelCategory.advanced));
+        expect(config?.selectedCategory, equals('advanced'));
         // Memory and tools must be stripped because course level was not completed!
         expect(config?.enabledSkills, equals({'instructions', 'knowledge'}));
 
@@ -373,7 +372,7 @@ void main() {
           AssistantConfig(
             ownerId: testOwner,
             name: 'Арлан',
-            selectedCategory: ModelCategory.standard,
+            selectedCategory: 'standard',
             enabledSkills: const {'instructions'},
             systemRules: const [],
             stateRevision: 1,
@@ -389,7 +388,7 @@ void main() {
               reason: 'Создание ассистента',
               snapshot: const AssistantSnapshot(
                 name: 'Арлан',
-                selectedCategory: ModelCategory.standard,
+                selectedCategory: 'standard',
                 enabledSkills: {'instructions'},
               ),
               isCurrent: true,
@@ -461,13 +460,12 @@ void main() {
         );
         expect(find.text('История версий · v1'), findsOneWidget);
 
-        // 8 skills rendered
+        // 4 active skills rendered; no coming-soon skills
         for (final skill in AssistantSkillId.values) {
           expect(find.byKey(Key('skill.card.${skill.id}')), findsOneWidget);
         }
 
-        // Coming soon skills (6–9) are labeled "После MVP · скоро"
-        expect(find.text('После MVP · скоро'), findsNWidgets(4));
+        expect(find.text('После MVP · скоро'), findsNothing);
 
         // Reset button exists
         expect(
@@ -611,7 +609,7 @@ void main() {
           await repo.commitChange(
             ownerId: testOwner,
             name: 'Арлан Обновлённый',
-            selectedCategory: ModelCategory.fast,
+            selectedCategory: 'fast',
             enabledSkills: {'instructions'},
             reason: 'Обновление настроек',
           );
@@ -624,7 +622,7 @@ void main() {
             reason: 'Обновление настроек',
             snapshot: const AssistantSnapshot(
               name: 'Арлан Обновлённый',
-              selectedCategory: ModelCategory.fast,
+              selectedCategory: 'fast',
               enabledSkills: {'instructions'},
             ),
             isCurrent: true,
@@ -637,7 +635,7 @@ void main() {
             reason: 'Создание ассистента',
             snapshot: const AssistantSnapshot(
               name: 'Арлан',
-              selectedCategory: ModelCategory.standard,
+              selectedCategory: 'standard',
               enabledSkills: {'instructions'},
             ),
             isCurrent: false,

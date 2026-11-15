@@ -4,20 +4,18 @@ import '../../../ui_kit/identity.dart';
 enum McpConnectionStatus {
   disconnected('Отключено'),
   connecting('Подключение...'),
-  connected('Подключено'),
-  comingSoon('Скоро');
+  connected('Подключено');
 
   final String label;
   const McpConnectionStatus(this.label);
 }
 
-/// Description of an MCP connector (F15-01, F15-02, F15-10).
+/// Description of an MCP connector.
 class McpConnector {
   final String id;
   final String title;
   final String subtitle;
   final String description;
-  final bool isComingSoon;
   final String dataDisclosure;
   final BuilderGlyph glyph;
   final List<String> capabilities;
@@ -27,65 +25,28 @@ class McpConnector {
     required this.title,
     required this.subtitle,
     required this.description,
-    this.isComingSoon = false,
     required this.dataDisclosure,
     required this.glyph,
     this.capabilities = const [],
   });
 
-  static const craftAiLessonsId = 'craftai_lessons';
-  static const googleDriveId = 'google_drive';
-  static const googleCalendarId = 'google_calendar';
-  static const kundelikId = 'kundelik';
+  static const materialsId = 'materials';
 
   static const List<McpConnector> allConnectors = [
     McpConnector(
-      id: craftAiLessonsId,
-      title: 'Каталог уроков CraftAI',
-      subtitle: 'Методические материалы и готовые планы уроков',
+      id: materialsId,
+      title: 'Материалы агента',
+      subtitle: 'Управляемый MCP-сервер CraftAI Lab',
       description:
-          'Учебный MCP-сервер с базой проверенных методических планов уроков по математике, физике и другим школьным предметам.',
-      isComingSoon: false,
+          'Сервер хранения и поиска учебных материалов, изолированный по владельцу и агенту.',
       dataDisclosure:
-          'Передаёт поисковые запросы по теме урока в каталог CraftAI. '
-          'Возвращает тексты планов уроков и конспектов. Не передаёт персональные данные учеников.',
+          'Сохраняет и ищет материалы текущего агента по запросу. '
+          'Не передаёт данные другим агентам и пользователям.',
       glyph: BuilderGlyph.doc,
       capabilities: [
-        'Поиск уроков по предмету и классу (search_lessons)',
-        'Загрузка полного конспекта урока (get_lesson)',
+        'Сохранение материала (save_material)',
+        'Поиск по материалам агента (search_materials)',
       ],
-    ),
-    McpConnector(
-      id: googleDriveId,
-      title: 'Google Диск',
-      subtitle: 'Школьные документы и рабочие программы',
-      description:
-          'Интеграция с личными и общими папками Google Drive для быстрого поиска учебных документов.',
-      isComingSoon: true,
-      dataDisclosure: 'Потребует авторизацию через аккаунт Google.',
-      glyph: BuilderGlyph.cloud,
-    ),
-    McpConnector(
-      id: googleCalendarId,
-      title: 'Google Календарь',
-      subtitle: 'Синхронизация школьного расписания',
-      description:
-          'Двусторонняя синхронизация уроков и консультаций с внешним Google Календарём.',
-      isComingSoon: true,
-      dataDisclosure:
-          'Потребует доступ к просмотру и созданию событий в Google Calendar.',
-      glyph: BuilderGlyph.calendar,
-    ),
-    McpConnector(
-      id: kundelikId,
-      title: 'Электронный журнал',
-      subtitle: 'Темы уроков и расписание классов',
-      description:
-          'Интеграция со школьным журналом для чтения утверждённого поурочного планирования.',
-      isComingSoon: true,
-      dataDisclosure:
-          'Потребует подключение к закрытому API школьного портала.',
-      glyph: BuilderGlyph.doc,
     ),
   ];
 }

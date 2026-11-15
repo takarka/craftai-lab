@@ -9,13 +9,9 @@ import '../../chat/domain/chat_message.dart';
 import '../../chat/presentation/conversation_history_sheet.dart';
 import '../../chat/presentation/markdown_message_view.dart';
 
-import '../../models/domain/model_category.dart';
-import '../../models/model_providers.dart';
 import '../../onboarding/presentation/d02_consent_sheet.dart';
 import '../../policy/policy_providers.dart';
 import '../../trace/presentation/trace_sheet.dart';
-import '../../course/course_providers.dart';
-import '../../course/domain/course_catalog.dart';
 import '../../skills/domain/skill_scenario.dart';
 import '../../skills/domain/skill_preparation.dart';
 import '../../skills/skills_providers.dart';
@@ -181,9 +177,6 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
   Widget build(BuildContext context) {
     final s = AppLocalizations.of(context);
     final chatState = ref.watch(chatSessionProvider(widget.ownerId));
-    final selectedCategory = ref.watch(
-      selectedCategoryProvider(widget.ownerId),
-    );
     final isEphemeral = chatState.activeConversation?.isEphemeral ?? false;
 
     ref.listen(chatSessionProvider(widget.ownerId), (prev, next) {
@@ -197,11 +190,7 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
       }
     });
 
-    final categoryLabel = switch (selectedCategory) {
-      ModelCategory.fast => s.modelsFastTitle,
-      ModelCategory.standard => s.modelsStandardTitle,
-      ModelCategory.advanced => s.modelsAdvancedTitle,
-    };
+    final categoryLabel = s.modelsTitle;
 
     return Scaffold(
       appBar: AppBar(
@@ -780,108 +769,6 @@ class _AssistantChatPageState extends ConsumerState<AssistantChatPage> {
             ),
         ],
       ),
-    );
-  }
-
-  Widget _buildResumeCourseBanner(BuildContext context) {
-    final overallAsync = ref.watch(
-      overallCourseProgressProvider(widget.ownerId),
-    );
-    return overallAsync.maybeWhen(
-      data: (overall) {
-        if (overall.isAllCompleted || overall.activeLevelId == null) {
-          return const SizedBox.shrink();
-        }
-        final level = CourseCatalog.getLevel(overall.activeLevelId!);
-        final levelTitle = level?.title ?? 'Уровень ${overall.activeLevelId}';
-        final stepName = overall.activeStep.title;
-
-        return Container(
-          key: const Key('assistant.resumeLessonBanner'),
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: BuilderColors.primaryTint,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: BuilderColors.primary.withValues(alpha: 0.3),
-            ),
-          ),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(12),
-            onTap: () =>
-                context.push('/course/lesson/${overall.activeLevelId}'),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.play_circle_outline,
-                    color: BuilderColors.primary,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 4,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            Text(
-                              'Продолжить урок',
-                              style: BuilderType.label.copyWith(
-                                color: BuilderColors.primary,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: BuilderColors.primary.withValues(
-                                  alpha: 0.15,
-                                ),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                stepName,
-                                style: BuilderType.small.copyWith(
-                                  fontSize: 11,
-                                  color: BuilderColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          levelTitle,
-                          style: BuilderType.body.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: BuilderColors.ink,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 14,
-                    color: BuilderColors.primary,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-      orElse: () => const SizedBox.shrink(),
     );
   }
 }

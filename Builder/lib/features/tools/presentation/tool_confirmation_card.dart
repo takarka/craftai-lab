@@ -161,8 +161,8 @@ class _ToolConfirmationCardState extends State<ToolConfirmationCard> {
 
   String _getActionTitle(String name) {
     switch (name) {
-      case 'create_calendar_event':
-        return 'Запрос на создание события';
+      case 'create_note':
+        return 'Запрос на создание заметки';
       case 'delete_note':
         return 'Запрос на удаление заметки';
       default:

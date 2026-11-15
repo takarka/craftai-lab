@@ -1,16 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../app/providers.dart';
-import '../../models/model_providers.dart';
-import '../infrastructure/search_adapter.dart';
 
 import '../../../core/storage/storage_providers.dart';
 import '../domain/pending_action.dart';
 import '../domain/tool_definition.dart';
 import '../domain/tool_grant.dart';
-import '../../calendar/application/calendar_providers.dart';
-import '../../calendar/application/calendar_reminder_controller.dart';
 import '../domain/tools_dispatcher.dart';
-import '../infrastructure/builder_calendar_adapter.dart';
 import '../domain/tools_registry.dart';
 import '../domain/tools_repository.dart';
 import '../infrastructure/persistent_tools_repository.dart';
@@ -22,33 +16,10 @@ final toolsRepositoryProvider = Provider<ToolsRepository>((ref) {
   return PersistentToolsRepository(database: db);
 });
 
-/// CraftAI search for the chosen app language; shared by the search page and tool.
-final searchAdapterProvider = Provider<SearchAdapter>(
-  (ref) => SearchAdapter(
-    client: ref.watch(craftAiClientProvider),
-    language: ref.watch(appLocaleProvider)?.languageCode ?? 'ru',
-  ),
-);
-
 /// Global provider for ToolsDispatcher.
 final toolsDispatcherProvider = Provider<ToolsDispatcher>((ref) {
   final repo = ref.watch(toolsRepositoryProvider);
-  final calendarClient = ref.watch(builderCalendarClientProvider);
-  return ToolsDispatcher(
-    repository: repo,
-    calendarAdapter: calendarClient == null
-        ? null
-        : BuilderCalendarAdapter(
-            repository: ref.watch(calendarRepositoryProvider),
-            client: calendarClient,
-            onEventSaved: (ownerId) async {
-              await ref
-                  .read(calendarReminderServiceProvider)
-                  .sync(ownerId, kk: localeIsKazakh(ref));
-            },
-          ),
-    searchAdapter: ref.watch(searchAdapterProvider),
-  );
+  return ToolsDispatcher(repository: repo);
 });
 
 /// View-model item for Screen S43.
@@ -127,7 +98,7 @@ class ToolsNotifier extends Notifier<ToolsState> {
             ToolGrant(
               ownerId: ownerId,
               toolName: def.name,
-              isEnabled: def.name != ToolsRegistry.webSearch,
+              isEnabled: true,
               updatedAtUtc: DateTime.now().toUtc(),
             );
         final osPerm = await _repo.getOsPermission(def.name);
@@ -228,18 +199,14 @@ class ToolsNotifier extends Notifier<ToolsState> {
       invocationId: 'act_test_${now.millisecondsSinceEpoch}',
       ownerId: ownerId,
       workspaceEpoch: 1,
-      actionName: ToolsRegistry.createCalendarEvent,
+      actionName: ToolsRegistry.createNote,
       paramsHash: PendingAction.computeParamsHash({
-        'title': 'Родительское собрание 7Б',
-        'start_time': '2026-10-20T18:00:00',
-        'end_time': '2026-10-20T19:30:00',
-        'time_zone': 'Asia/Almaty',
+        'title': 'План родительского собрания 7Б',
+        'content': 'Повестка: итоги четверти и подготовка к контрольной.',
       }),
       params: {
-        'title': 'Родительское собрание 7Б',
-        'start_time': '2026-10-20T18:00:00',
-        'end_time': '2026-10-20T19:30:00',
-        'time_zone': 'Asia/Almaty',
+        'title': 'План родительского собрания 7Б',
+        'content': 'Повестка: итоги четверти и подготовка к контрольной.',
       },
       status: PendingActionStatus.pending,
       expiresAtUtc: now.add(const Duration(minutes: 15)),

@@ -52,11 +52,11 @@ void main() {
   });
 
   group('F10: Course Catalog & Schemas (F10-01, F10-V01)', () {
-    test('Catalog contains 11 levels with 5 active and 6 coming soon', () {
+    test('Catalog contains 6 active MVP levels', () {
       final levels = CourseCatalog.allLevels;
-      expect(levels.length, 11);
+      expect(levels.length, 6);
 
-      for (int i = 1; i <= 5; i++) {
+      for (final i in [1, 2, 10, 3, 4, 5]) {
         final level = CourseCatalog.getLevel(i);
         expect(level, isNotNull);
         expect(level!.comingSoon, isFalse);
@@ -67,12 +67,6 @@ void main() {
           expect(q.correctIndex, inInclusiveRange(0, q.options.length - 1));
           expect(q.explanation.isNotEmpty, isTrue);
         }
-      }
-
-      for (int i = 6; i <= 9; i++) {
-        final level = CourseCatalog.getLevel(i);
-        expect(level, isNotNull);
-        expect(level!.comingSoon, isTrue);
       }
     });
 

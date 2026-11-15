@@ -25,22 +25,20 @@ final profileStoreProvider = Provider<ProfileStore?>((ref) {
       : ProfileStore(database: db, workspace: workspace);
 });
 
-final profileAccountGatewayProvider = Provider<ProfileAccountGateway>(
-  (ref) {
-    final config = ref.watch(appConfigProvider);
-    final uri = config?.apiBaseUri;
-    if (uri == null) return const UnavailableProfileAccountGateway();
-    final httpClient = createApiHttpClient(config);
-    ref.onDispose(httpClient.close);
-    return CraftAiProfileAccountGateway(
-      CraftAiClient(
-        baseUri: uri,
-        httpClient: httpClient,
-        tokenStorage: ref.watch(secureTokenStorageProvider),
-      ),
-    );
-  },
-);
+final profileAccountGatewayProvider = Provider<ProfileAccountGateway>((ref) {
+  final config = ref.watch(appConfigProvider);
+  final uri = config?.apiBaseUri;
+  if (uri == null) return const UnavailableProfileAccountGateway();
+  final httpClient = createApiHttpClient(config);
+  ref.onDispose(httpClient.close);
+  return CraftAiProfileAccountGateway(
+    CraftAiClient(
+      baseUri: uri,
+      httpClient: httpClient,
+      tokenStorage: ref.watch(secureTokenStorageProvider),
+    ),
+  );
+});
 
 bool isProfileOwner(SessionSnapshot? session, String ownerId) {
   return session is AuthenticatedSession && session.ownerId == ownerId;

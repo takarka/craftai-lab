@@ -4,7 +4,6 @@ import '../../core/network/api_http_client.dart';
 import '../../core/storage/storage_providers.dart';
 import '../session/session_providers.dart';
 import 'domain/model_catalog.dart';
-import 'domain/model_category.dart';
 import 'domain/model_catalog_repository.dart';
 import 'infrastructure/craft_ai_client.dart';
 import 'infrastructure/persistent_model_catalog_repository.dart';
@@ -34,30 +33,3 @@ final modelCatalogFutureProvider = FutureProvider<ModelCatalog>((ref) async {
   final repo = ref.watch(modelCatalogRepositoryProvider);
   return await repo.getCatalog();
 });
-
-final selectedCategoryProvider = NotifierProvider.autoDispose
-    .family<SelectedCategoryController, ModelCategory, String>(
-      SelectedCategoryController.new,
-    );
-
-class SelectedCategoryController extends Notifier<ModelCategory> {
-  SelectedCategoryController(this.ownerId);
-  final String ownerId;
-
-  @override
-  ModelCategory build() {
-    final repo = ref.watch(modelCatalogRepositoryProvider);
-    repo.getSelectedCategory(ownerId).then((loaded) {
-      if (ref.mounted) {
-        state = loaded;
-      }
-    });
-    return ModelCategory.standard;
-  }
-
-  Future<void> select(ModelCategory category) async {
-    state = category;
-    final repo = ref.read(modelCatalogRepositoryProvider);
-    await repo.setSelectedCategory(ownerId: ownerId, category: category);
-  }
-}

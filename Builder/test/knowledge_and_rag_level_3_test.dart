@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:archive/archive.dart';
 import 'package:builder/app/localization/app_localizations.dart';
 import 'package:builder/core/storage/database/storage_database.dart';
 import 'package:builder/core/storage/schema/storage_schema_v1.dart';
@@ -10,7 +9,6 @@ import 'package:builder/features/chat/domain/context_assembler.dart';
 import 'package:builder/features/knowledge/domain/chunker.dart';
 import 'package:builder/features/knowledge/domain/knowledge_models.dart';
 import 'package:builder/features/knowledge/domain/local_embedder.dart';
-import 'package:builder/features/knowledge/domain/text_extractor.dart';
 import 'package:builder/features/knowledge/infrastructure/persistent_knowledge_repository.dart';
 import 'package:builder/features/knowledge/presentation/knowledge_page.dart';
 import 'package:builder/features/knowledge/presentation/knowledge_providers.dart';
@@ -22,164 +20,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-Uint8List createMockDocxBytes(String text) {
-  final escapedText = text
-      .replaceAll('&', '&amp;')
-      .replaceAll('<', '&lt;')
-      .replaceAll('>', '&gt;');
-
-  final documentXml =
-      '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-  <w:body>
-    <w:p>
-      <w:r>
-        <w:t>$escapedText</w:t>
-      </w:r>
-    </w:p>
-  </w:body>
-</w:document>''';
-
-  final archive = Archive();
-  final bytes = utf8.encode(documentXml);
-  archive.addFile(ArchiveFile('word/document.xml', bytes.length, bytes));
-  return Uint8List.fromList(ZipEncoder().encode(archive));
-}
-
-Uint8List createMockPdfBytes(String text) {
-  final cleanText = text.replaceAll('(', '[').replaceAll(')', ']');
-  final pdfContent =
-      '%PDF-1.4\n'
-      '1 0 obj\n'
-      '<< /Type /Catalog /Pages 2 0 R >>\n'
-      'endobj\n'
-      '2 0 obj\n'
-      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>\n'
-      'endobj\n'
-      '3 0 obj\n'
-      '<< /Type /Page /Parent 2 0 R /Contents 4 0 R >>\n'
-      'endobj\n'
-      '4 0 obj\n'
-      '<< /Length ${cleanText.length + 20} >>\n'
-      'stream\n'
-      'BT\n'
-      '/F1 12 Tf\n'
-      '($cleanText) Tj\n'
-      'ET\n'
-      'endstream\n'
-      'endobj\n'
-      'xref\n'
-      '0 5\n'
-      '0000000000 65535 f \n'
-      'trailer\n'
-      '<< /Root 1 0 R >>\n'
-      '%%EOF';
-  return Uint8List.fromList(utf8.encode(pdfContent));
-}
-
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   sqfliteFfiInit();
-
-  group('F12-03 & F12-04: Text Extraction', () {
-    test(
-      'TXT extraction supports UTF-8 and handles empty text error',
-      () async {
-        final sampleTxt = Uint8List.fromList(
-          utf8.encode('Учебный план на 2026 год. Раздел 1. Введение.'),
-        );
-        final extracted = await TextExtractor.extract(
-          bytes: sampleTxt,
-          format: DocumentFormat.txt,
-          fileName: 'plan.txt',
-        );
-
-        expect(extracted.fullText, contains('Учебный план на 2026 год'));
-        expect(extracted.pages.length, 1);
-
-        // Empty text throws DocumentProcessingException
-        expect(
-          () => TextExtractor.extract(
-            bytes: Uint8List(0),
-            format: DocumentFormat.txt,
-            fileName: 'empty.txt',
-          ),
-          throwsA(isA<DocumentProcessingException>()),
-        );
-      },
-    );
-
-    test(
-      'DOCX extraction extracts word/document.xml text without macros',
-      () async {
-        final sampleDocx = createMockDocxBytes(
-          'Расписание уроков 7 «Б» класса. Понедельник: 1. Алгебра, 2. Физика.',
-        );
-        final extracted = await TextExtractor.extract(
-          bytes: sampleDocx,
-          format: DocumentFormat.docx,
-          fileName: 'Расписание_7Б.docx',
-        );
-
-        expect(extracted.fullText, contains('Расписание уроков 7 «Б» класса'));
-        expect(extracted.fullText, contains('Алгебра'));
-      },
-    );
-
-    test(
-      'PDF extraction parses text and flags password-protected or scanned docs',
-      () async {
-        final samplePdf = createMockPdfBytes(
-          'Рабочая программа по биологии для 7 класса. Клетка и ткани.',
-        );
-        final extracted = await TextExtractor.extract(
-          bytes: samplePdf,
-          format: DocumentFormat.pdf,
-          fileName: 'Биология_программа.pdf',
-        );
-
-        expect(extracted.fullText, contains('Рабочая программа по биологии'));
-
-        // Encrypted PDF check
-        final encryptedPdf = Uint8List.fromList(
-          latin1.encode('%PDF-1.4\n/Encrypt 12 0 R\n%%EOF'),
-        );
-        expect(
-          () => TextExtractor.extract(
-            bytes: encryptedPdf,
-            format: DocumentFormat.pdf,
-            fileName: 'secret.pdf',
-          ),
-          throwsA(
-            predicate(
-              (e) =>
-                  e is DocumentProcessingException &&
-                  e.code == 'password_protected',
-            ),
-          ),
-        );
-
-        // Scanned image PDF without text layer
-        final scannedPdf = Uint8List.fromList(
-          latin1.encode('%PDF-1.4\n/Type /Page\n/Image /Subtype /Image\n%%EOF'),
-        );
-        expect(
-          () => TextExtractor.extract(
-            bytes: scannedPdf,
-            format: DocumentFormat.pdf,
-            fileName: 'scan.pdf',
-          ),
-          throwsA(
-            predicate(
-              (e) =>
-                  e is DocumentProcessingException &&
-                  e.code == 'scanned_image_no_text',
-            ),
-          ),
-        );
-      },
-    );
-  });
 
   group('F12-05: Sentence-Window Chunking', () {
     test('Chunks text with stable windows, sentence boundaries and metadata', () {
@@ -190,11 +33,7 @@ void main() {
       const text =
           'Первое предложение в тексте. Второе предложение с важной информацией! Третье предложение о правилах? Четвёртое предложение завершает первый раздел.';
 
-      final extracted = ExtractedDocumentText(
-        fullText: text,
-        pages: [text],
-        totalCharacters: text.length,
-      );
+      const extracted = ExtractedDocumentText(fullText: text, pages: [text]);
 
       final chunks = chunker.chunkDocument(
         extracted: extracted,
@@ -571,14 +410,16 @@ void main() {
 
         // Import sample document inside runAsync (handles compute isolate)
         await tester.runAsync(() async {
-          final sampleDocx = createMockDocxBytes(
-            'Расписание уроков 7Б класса. Понедельник: 1. Алгебра, 2. Физика.',
+          final sampleTxt = Uint8List.fromList(
+            utf8.encode(
+              'Расписание уроков 7Б класса. Понедельник: 1. Алгебра, 2. Физика.',
+            ),
           );
           await knowledgeRepo.importDocument(
             ownerId: testOwner,
-            fileName: 'Расписание_7Б.docx',
-            bytes: sampleDocx,
-            format: DocumentFormat.docx,
+            fileName: 'Расписание_7Б.txt',
+            bytes: sampleTxt,
+            format: DocumentFormat.txt,
           );
         });
 
@@ -615,8 +456,8 @@ void main() {
         expect(find.text('В облако: только фрагменты'), findsOneWidget);
 
         // 2. Verify imported document card
-        expect(find.text('Расписание_7Б.docx'), findsOneWidget);
-        expect(find.text('DOCX'), findsWidgets);
+        expect(find.text('Расписание_7Б.txt'), findsOneWidget);
+        expect(find.text('TXT'), findsWidgets);
 
         // 3. Test matching query
         await tester.enterText(

@@ -1,4 +1,3 @@
-import '../../models/domain/model_category.dart';
 import 'assistant_config.dart';
 
 abstract class AssistantRepository {
@@ -12,7 +11,7 @@ abstract class AssistantRepository {
   Future<AssistantVersion> commitChange({
     required String ownerId,
     required String name,
-    ModelCategory? selectedCategory,
+    String? selectedCategory,
     required Set<String> enabledSkills,
     List<String>? systemRules,
     required String reason,

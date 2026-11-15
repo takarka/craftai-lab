@@ -8,8 +8,6 @@ import '../assistant_providers.dart';
 import '../../chat/chat_providers.dart';
 import '../../chat/domain/conversation.dart';
 import '../../chat/presentation/conversation_history_sheet.dart';
-import '../../models/domain/model_category.dart';
-import '../../models/model_providers.dart';
 import '../../course/domain/course_topic.dart';
 import '../../course/presentation/course_character.dart';
 
@@ -67,12 +65,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final courseLevel = CourseTopic.highestCompletedOrder(levels ?? const {});
     final config = ref.watch(assistantConfigProvider(ownerId)).asData?.value;
     final name = config?.name.trim();
-    final category = ref.watch(selectedCategoryProvider(ownerId));
-    final categoryLabel = switch (category) {
-      ModelCategory.fast => s.modelsFastTitle,
-      ModelCategory.standard => s.modelsStandardTitle,
-      ModelCategory.advanced => s.modelsAdvancedTitle,
-    };
+    final categoryLabel = s.modelsTitle;
     final (title, description) = levelsAsync.hasError
         ? (
             t('Состояние пока недоступно', 'Күйі әзірге қолжетімсіз'),

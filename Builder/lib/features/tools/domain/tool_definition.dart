@@ -1,9 +1,6 @@
 /// Category of the tool (F14-02).
 enum ToolCategory {
-  calendar('calendar', 'Календарь и расписание'),
-  notes('notes', 'Личные заметки и черновики'),
-  communication('communication', 'Связь и звонки'),
-  search('search', 'Поиск в интернете');
+  notes('notes', 'Личные заметки и черновики');
 
   final String id;
   final String label;
@@ -134,7 +131,9 @@ class ToolDefinition {
         if (item is! int ||
             (min != null && item < min) ||
             (max != null && item > max)) {
-          errors.add('Параметр $name: значения должны быть целыми от $min до $max');
+          errors.add(
+            'Параметр $name: значения должны быть целыми от $min до $max',
+          );
           break;
         }
       }
