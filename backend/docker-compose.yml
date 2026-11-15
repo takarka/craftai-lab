@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: craftai
+      POSTGRES_PASSWORD: craftai_dev_password
+      POSTGRES_DB: craftai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U craftai -d craftai"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      CRAFTAI_ENV: dev
+      CRAFTAI_DATABASE_URL: postgresql+asyncpg://craftai:craftai_dev_password@postgres:5432/craftai
+      CRAFTAI_STORAGE_DIR: /data/storage
+      CRAFTAI_JWT_SECRET: change-me-in-production-min-32-bytes-secret
+      CRAFTAI_OPENROUTER_API_KEY: ${CRAFTAI_OPENROUTER_API_KEY:-}
+      CRAFTAI_BRAVE_SEARCH_API_KEY: ${CRAFTAI_BRAVE_SEARCH_API_KEY:-}
+    ports:
+      - "5001:5001"
+    volumes:
+      - storage_data:/data/storage
+
+volumes:
+  postgres_data:
+  storage_data:

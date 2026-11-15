@@ -1065,11 +1065,8 @@ class _SupportContactSheetState extends State<_SupportContactSheet> {
 }
 
 class _ProfileScaffold extends StatelessWidget {
-  const _ProfileScaffold({
-    required this.title,
-    required this.children,
-    this.showHeader = true,
-  });
+  const _ProfileScaffold({required this.title, required this.children})
+    : showHeader = true;
   final String title;
   final List<Widget> children;
   final bool showHeader;
