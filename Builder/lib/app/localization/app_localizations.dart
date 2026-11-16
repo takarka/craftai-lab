@@ -311,7 +311,7 @@ abstract class AppLocalizations {
   /// No description provided for @agentsInstructionTemplate.
   ///
   /// In ru, this message translates to:
-  /// **'Ты помогаешь учителю готовить задания. Предмет: {subject}. Класс: {grade}. Требования: {requirements}. Уточняй недостающие условия. Предлагай задания с понятными формулировками и критериями проверки. Не выдумывай факты.'**
+  /// **'Ты помогаешь учителю готовить задания. Предмет: {subject}. Класс: {grade}. Требования: {requirements}. Выполняй задачу сразу по запросу и учебному материалу. Предлагай задания с понятными формулировками. Не выдумывай факты.'**
   String agentsInstructionTemplate(
     String subject,
     String grade,

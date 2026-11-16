@@ -36,7 +36,7 @@
   "agentsGenerate": "Нұсқаулық құрастыру",
   "agentsPreview": "Агентті құрмас бұрын нұсқаулықты тексеріп, өңдеңіз.",
   "agentsDefaultName": "Тапсырмалар дайындау",
-  "agentsInstructionTemplate": "Сен мұғалімге тапсырмалар дайындауға көмектесесің. Пән: {subject}. Сынып: {grade}. Талаптар: {requirements}. Жетіспейтін шарттарды нақтыла. Тұжырымдары мен бағалау критерийлері түсінікті тапсырмалар ұсын. Деректерді ойдан шығарма.",
+  "agentsInstructionTemplate": "Сен мұғалімге тапсырмалар дайындауға көмектесесің. Пән: {subject}. Сынып: {grade}. Талаптар: {requirements}. Тапсырманы сұрау мен оқу материалы бойынша бірден орында. Тұжырымдары түсінікті тапсырмалар ұсын. Деректерді ойдан шығарма.",
   "@agentsInstructionTemplate": {"placeholders": {"subject": {"type": "String"}, "grade": {"type": "String"}, "requirements": {"type": "String"}}},
   "agentsCustomTask": "Өз тапсырмам",
   "agentsUpdated": "Өзгертілді: {date}",

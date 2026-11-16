@@ -396,7 +396,7 @@ void main() {
         await tester.enterText(find.byKey(const ValueKey('agent-grade')), '8');
         await tester.enterText(
           find.byKey(const ValueKey('agent-requirements')),
-          'Три задания',
+          'Три задания.',
         );
         await tester.tap(find.text('Составить инструкцию'));
         await tester.pumpAndSettle();
@@ -404,6 +404,14 @@ void main() {
           find.textContaining('Проверьте и отредактируйте'),
           findsOneWidget,
         );
+        final generated = tester
+            .widget<TextFormField>(
+              find.byKey(const ValueKey('agent-instruction')),
+            )
+            .controller!
+            .text;
+        expect(generated, contains('Требования: Три задания. Выполняй'));
+        expect(generated, isNot(contains('Уточняй')));
         await tester.enterText(
           find.byKey(const ValueKey('agent-instruction')),
           'Редактируемая инструкция $i',

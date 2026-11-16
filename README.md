@@ -44,7 +44,7 @@
 
 ### Сценарий для проверяющего (из workspace)
 
-> Готовая Android-сборка доступна в GitHub Release v0.1.0 (ссылка в шаге 2).
+> Готовая Android-сборка доступна в GitHub Release v0.1.0 (ссылка в шаге 2). План демонстрации (видео до 1 минуты и показ вживую): [docs/DEMO.md](docs/DEMO.md).
 
 1. Откройте [Startup_ecosystem - ChatGPT](https://chatgpt.com/spaces/page_space_47402f4174b081a4a784f9b0bd53c4bb?view=overview).
 2. Перейдите по ссылке на репозиторий или скачайте сборку: [craftai-lab-0.1.0-arm64.apk](https://github.com/takarka/craftai-lab/releases/download/v0.1.0/craftai-lab-0.1.0-arm64.apk) (GitHub Release [v0.1.0](https://github.com/takarka/craftai-lab/releases/tag/v0.1.0)).

@@ -614,7 +614,11 @@ class _AgentEditorPageState extends ConsumerState<AgentEditorPage> {
                               _instruction.text = s.agentsInstructionTemplate(
                                 _subject.text.trim(),
                                 _grade.text.trim(),
-                                _requirements.text.trim(),
+                                // The template adds its own period.
+                                _requirements.text.trim().replaceFirst(
+                                  RegExp(r'[.\s]+$'),
+                                  '',
+                                ),
                               );
                               _preview = true;
                               _persistDraft();

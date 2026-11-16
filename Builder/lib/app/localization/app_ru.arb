@@ -36,7 +36,7 @@
   "agentsGenerate": "Составить инструкцию",
   "agentsPreview": "Проверьте и отредактируйте инструкцию перед созданием агента.",
   "agentsDefaultName": "Подготовка заданий",
-  "agentsInstructionTemplate": "Ты помогаешь учителю готовить задания. Предмет: {subject}. Класс: {grade}. Требования: {requirements}. Уточняй недостающие условия. Предлагай задания с понятными формулировками и критериями проверки. Не выдумывай факты.",
+  "agentsInstructionTemplate": "Ты помогаешь учителю готовить задания. Предмет: {subject}. Класс: {grade}. Требования: {requirements}. Выполняй задачу сразу по запросу и учебному материалу. Предлагай задания с понятными формулировками. Не выдумывай факты.",
   "@agentsInstructionTemplate": {"placeholders": {"subject": {"type": "String"}, "grade": {"type": "String"}, "requirements": {"type": "String"}}},
   "agentsCustomTask": "Своя задача",
   "agentsUpdated": "Изменён: {date}",
