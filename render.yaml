@@ -3,7 +3,7 @@ services:
     name: craftai-lab-api
     runtime: docker
     plan: free
-    branch: feat/prd-0.2-mobile-mvp
+    branch: main
     rootDir: backend
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
