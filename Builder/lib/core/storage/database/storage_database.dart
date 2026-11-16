@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 import '../schema/storage_schema_v1.dart';
+import '../schema/storage_schema_v2.dart';
 
 class StorageCorruptionException implements Exception {
   const StorageCorruptionException(this.message, [this.cause]);
@@ -72,7 +73,7 @@ final class StorageDatabase {
       _db = await _databaseFactory.openDatabase(
         databasePath,
         options: OpenDatabaseOptions(
-          version: StorageSchemaV1.version,
+          version: StorageSchemaV2.version,
           onConfigure: (db) async {
             await db.execute('PRAGMA foreign_keys = ON;');
           },
@@ -80,6 +81,7 @@ final class StorageDatabase {
             for (final statement in StorageSchemaV1.createStatements) {
               await db.execute(statement);
             }
+            await StorageSchemaV2.ensure(db);
           },
           onOpen: (db) async {
             // Additive compatibility updates must either all succeed or roll back.
@@ -87,6 +89,7 @@ final class StorageDatabase {
               for (final statement in StorageSchemaV1.createStatements) {
                 await txn.execute(statement);
               }
+              await StorageSchemaV2.ensure(txn);
             });
           },
           onUpgrade: (db, oldVersion, newVersion) async {
@@ -121,8 +124,12 @@ final class StorageDatabase {
     await _createMigrationBackup(oldVersion);
 
     try {
-      // Future migrations (v1 -> v2, etc.) will be added sequentially here.
-      // Schema v1 is initial, so no migrations needed yet.
+      if (oldVersion < 2 && newVersion >= 2) {
+        for (final statement in StorageSchemaV1.createStatements) {
+          await db.execute(statement);
+        }
+        await StorageSchemaV2.ensure(db);
+      }
     } catch (e) {
       throw MigrationFailedException(
         oldVersion,

@@ -98,6 +98,220 @@ abstract class AppLocalizations {
     Locale('kk'),
   ];
 
+  /// No description provided for @agentsTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мои агенты'**
+  String get agentsTitle;
+
+  /// No description provided for @agentsCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count} из 5'**
+  String agentsCount(int count);
+
+  /// No description provided for @agentsCreate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Создать агента'**
+  String get agentsCreate;
+
+  /// No description provided for @agentsEmpty.
+  ///
+  /// In ru, this message translates to:
+  /// **'Создайте агента для своей учебной задачи.'**
+  String get agentsEmpty;
+
+  /// No description provided for @agentsLimit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Можно создать до 5 агентов. Удалите одного, чтобы освободить место.'**
+  String get agentsLimit;
+
+  /// No description provided for @agentsOffline.
+  ///
+  /// In ru, this message translates to:
+  /// **'Нет связи с сервером. Показана сохранённая копия. Для изменений подключитесь к сети и обновите список.'**
+  String get agentsOffline;
+
+  /// No description provided for @agentsError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось выполнить действие. Проверьте подключение и обновите список перед повтором.'**
+  String get agentsError;
+
+  /// No description provided for @agentsSessionError.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сессия завершена или изменена. Войдите в аккаунт снова.'**
+  String get agentsSessionError;
+
+  /// No description provided for @agentsRefresh.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обновить'**
+  String get agentsRefresh;
+
+  /// No description provided for @agentsOpen.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть'**
+  String get agentsOpen;
+
+  /// No description provided for @agentsRename.
+  ///
+  /// In ru, this message translates to:
+  /// **'Переименовать'**
+  String get agentsRename;
+
+  /// No description provided for @agentsCopy.
+  ///
+  /// In ru, this message translates to:
+  /// **'Копировать'**
+  String get agentsCopy;
+
+  /// No description provided for @agentsCopyName.
+  ///
+  /// In ru, this message translates to:
+  /// **'{name} — копия'**
+  String agentsCopyName(String name);
+
+  /// No description provided for @agentsReset.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сбросить данные'**
+  String get agentsReset;
+
+  /// No description provided for @agentsDelete.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить агента'**
+  String get agentsDelete;
+
+  /// No description provided for @agentsResetBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Будут удалены диалоги, материалы и память этого агента, а активные запуски отменены. Настройки агента и прогресс курса сохранятся. Другие агенты не изменятся.'**
+  String get agentsResetBody;
+
+  /// No description provided for @agentsDeleteBody.
+  ///
+  /// In ru, this message translates to:
+  /// **'Агент, его настройки, диалоги, материалы и память будут удалены, активные запуски отменены. Место в списке освободится. Другие агенты и прогресс курса сохранятся.'**
+  String get agentsDeleteBody;
+
+  /// No description provided for @agentsCancel.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отмена'**
+  String get agentsCancel;
+
+  /// No description provided for @agentsSave.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сохранить'**
+  String get agentsSave;
+
+  /// No description provided for @agentsName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Имя агента'**
+  String get agentsName;
+
+  /// No description provided for @agentsSubject.
+  ///
+  /// In ru, this message translates to:
+  /// **'Предмет'**
+  String get agentsSubject;
+
+  /// No description provided for @agentsGrade.
+  ///
+  /// In ru, this message translates to:
+  /// **'Класс'**
+  String get agentsGrade;
+
+  /// No description provided for @agentsRequirements.
+  ///
+  /// In ru, this message translates to:
+  /// **'Требования к заданиям'**
+  String get agentsRequirements;
+
+  /// No description provided for @agentsInstruction.
+  ///
+  /// In ru, this message translates to:
+  /// **'Инструкция агента'**
+  String get agentsInstruction;
+
+  /// No description provided for @agentsRequired.
+  ///
+  /// In ru, this message translates to:
+  /// **'Заполните поле'**
+  String get agentsRequired;
+
+  /// No description provided for @agentsPrepareTasks.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подготовка заданий'**
+  String get agentsPrepareTasks;
+
+  /// No description provided for @agentsCustom.
+  ///
+  /// In ru, this message translates to:
+  /// **'Без мастера'**
+  String get agentsCustom;
+
+  /// No description provided for @agentsGenerate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Составить инструкцию'**
+  String get agentsGenerate;
+
+  /// No description provided for @agentsPreview.
+  ///
+  /// In ru, this message translates to:
+  /// **'Проверьте и отредактируйте инструкцию перед созданием агента.'**
+  String get agentsPreview;
+
+  /// No description provided for @agentsDefaultName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Подготовка заданий'**
+  String get agentsDefaultName;
+
+  /// No description provided for @agentsInstructionTemplate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Ты помогаешь учителю готовить задания. Предмет: {subject}. Класс: {grade}. Требования: {requirements}. Уточняй недостающие условия. Предлагай задания с понятными формулировками и критериями проверки. Не выдумывай факты.'**
+  String agentsInstructionTemplate(
+    String subject,
+    String grade,
+    String requirements,
+  );
+
+  /// No description provided for @agentsCustomTask.
+  ///
+  /// In ru, this message translates to:
+  /// **'Своя задача'**
+  String get agentsCustomTask;
+
+  /// No description provided for @agentsUpdated.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменён: {date}'**
+  String agentsUpdated(String date);
+
+  /// No description provided for @agentsVersion.
+  ///
+  /// In ru, this message translates to:
+  /// **'Версия {version}'**
+  String agentsVersion(int version);
+
+  /// No description provided for @agentsInstructionLimit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Инструкция должна содержать не более 5 000 символов.'**
+  String get agentsInstructionLimit;
+
   /// No description provided for @appTitle.
   ///
   /// In ru, this message translates to:
@@ -599,7 +813,7 @@ abstract class AppLocalizations {
   /// No description provided for @onbCreate.
   ///
   /// In ru, this message translates to:
-  /// **'Создать ассистента'**
+  /// **'Продолжить'**
   String get onbCreate;
 
   /// No description provided for @onbCreating.

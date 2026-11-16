@@ -264,7 +264,7 @@ void main() {
         await tester.pumpAndSettle();
         router = container.read(appRouterProvider);
         expect(identical(router, previousRouter), isFalse);
-        expect(router.routeInformationProvider.value.uri.path, '/assistant');
+        expect(router.routeInformationProvider.value.uri.path, '/agents');
         repository.controller.add(const SignedOut());
         await tester.pumpAndSettle();
         expect(find.byType(NavigationBar), findsNothing);

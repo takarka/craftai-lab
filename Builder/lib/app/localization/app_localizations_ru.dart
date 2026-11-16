@@ -9,6 +9,133 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get agentsTitle => 'Мои агенты';
+
+  @override
+  String agentsCount(int count) {
+    return '$count из 5';
+  }
+
+  @override
+  String get agentsCreate => 'Создать агента';
+
+  @override
+  String get agentsEmpty => 'Создайте агента для своей учебной задачи.';
+
+  @override
+  String get agentsLimit =>
+      'Можно создать до 5 агентов. Удалите одного, чтобы освободить место.';
+
+  @override
+  String get agentsOffline =>
+      'Нет связи с сервером. Показана сохранённая копия. Для изменений подключитесь к сети и обновите список.';
+
+  @override
+  String get agentsError =>
+      'Не удалось выполнить действие. Проверьте подключение и обновите список перед повтором.';
+
+  @override
+  String get agentsSessionError =>
+      'Сессия завершена или изменена. Войдите в аккаунт снова.';
+
+  @override
+  String get agentsRefresh => 'Обновить';
+
+  @override
+  String get agentsOpen => 'Открыть';
+
+  @override
+  String get agentsRename => 'Переименовать';
+
+  @override
+  String get agentsCopy => 'Копировать';
+
+  @override
+  String agentsCopyName(String name) {
+    return '$name — копия';
+  }
+
+  @override
+  String get agentsReset => 'Сбросить данные';
+
+  @override
+  String get agentsDelete => 'Удалить агента';
+
+  @override
+  String get agentsResetBody =>
+      'Будут удалены диалоги, материалы и память этого агента, а активные запуски отменены. Настройки агента и прогресс курса сохранятся. Другие агенты не изменятся.';
+
+  @override
+  String get agentsDeleteBody =>
+      'Агент, его настройки, диалоги, материалы и память будут удалены, активные запуски отменены. Место в списке освободится. Другие агенты и прогресс курса сохранятся.';
+
+  @override
+  String get agentsCancel => 'Отмена';
+
+  @override
+  String get agentsSave => 'Сохранить';
+
+  @override
+  String get agentsName => 'Имя агента';
+
+  @override
+  String get agentsSubject => 'Предмет';
+
+  @override
+  String get agentsGrade => 'Класс';
+
+  @override
+  String get agentsRequirements => 'Требования к заданиям';
+
+  @override
+  String get agentsInstruction => 'Инструкция агента';
+
+  @override
+  String get agentsRequired => 'Заполните поле';
+
+  @override
+  String get agentsPrepareTasks => 'Подготовка заданий';
+
+  @override
+  String get agentsCustom => 'Без мастера';
+
+  @override
+  String get agentsGenerate => 'Составить инструкцию';
+
+  @override
+  String get agentsPreview =>
+      'Проверьте и отредактируйте инструкцию перед созданием агента.';
+
+  @override
+  String get agentsDefaultName => 'Подготовка заданий';
+
+  @override
+  String agentsInstructionTemplate(
+    String subject,
+    String grade,
+    String requirements,
+  ) {
+    return 'Ты помогаешь учителю готовить задания. Предмет: $subject. Класс: $grade. Требования: $requirements. Уточняй недостающие условия. Предлагай задания с понятными формулировками и критериями проверки. Не выдумывай факты.';
+  }
+
+  @override
+  String get agentsCustomTask => 'Своя задача';
+
+  @override
+  String agentsUpdated(String date) {
+    return 'Изменён: $date';
+  }
+
+  @override
+  String agentsVersion(int version) {
+    return 'Версия $version';
+  }
+
+  @override
+  String get agentsInstructionLimit =>
+      'Инструкция должна содержать не более 5 000 символов.';
+
+  @override
   String get appTitle => 'Craft Builder';
 
   @override
@@ -282,7 +409,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get onbName => 'Как назовёте ассистента?';
 
   @override
-  String get onbCreate => 'Создать ассистента';
+  String get onbCreate => 'Продолжить';
 
   @override
   String get onbCreating => 'Создание ассистента';

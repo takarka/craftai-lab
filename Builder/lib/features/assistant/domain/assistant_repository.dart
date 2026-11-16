@@ -33,9 +33,4 @@ abstract class AssistantRepository {
 
   /// Sets retention days setting in teacher preferences.
   Future<void> setStorageRetentionDays(String ownerId, int? days);
-
-  /// Performs full assistant workspace reset (D05).
-  /// Erases conversations, messages, facts, documents, versions and traces,
-  /// resets assistant configuration, and advances workspace epoch.
-  Future<void> resetAssistantWorkspace(String ownerId);
 }

@@ -250,19 +250,16 @@ void main() {
       },
     );
 
-    test(
-      'Reset and account purge remove scenarios only for the chosen owner',
-      () async {
-        await repository.saveSkill('alice', assessment());
-        await repository.saveSkill('bob', assessment());
-        await workspace.openWorkspace(ownerId: 'alice');
-        await repository.resetAssistantWorkspace('alice');
-        expect(await repository.getSkills('alice'), isEmpty);
-        expect((await repository.getSkills('bob')).length, 1);
-        await workspace.purgeOwnerData(ownerId: 'bob');
-        expect(await repository.getSkills('bob'), isEmpty);
-      },
-    );
+    test('Account purge removes scenarios only for the chosen owner', () async {
+      await repository.saveSkill('alice', assessment());
+      await repository.saveSkill('bob', assessment());
+      await workspace.openWorkspace(ownerId: 'alice');
+      await workspace.purgeOwnerData(ownerId: 'alice');
+      expect(await repository.getSkills('alice'), isEmpty);
+      expect((await repository.getSkills('bob')).length, 1);
+      await workspace.purgeOwnerData(ownerId: 'bob');
+      expect(await repository.getSkills('bob'), isEmpty);
+    });
 
     test(
       'Opening an existing v1 database adds Skills without rewriting its config',

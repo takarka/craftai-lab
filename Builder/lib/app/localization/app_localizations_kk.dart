@@ -9,6 +9,132 @@ class AppLocalizationsKk extends AppLocalizations {
   AppLocalizationsKk([String locale = 'kk']) : super(locale);
 
   @override
+  String get agentsTitle => 'Менің агенттерім';
+
+  @override
+  String agentsCount(int count) {
+    return '$count / 5';
+  }
+
+  @override
+  String get agentsCreate => 'Агент құру';
+
+  @override
+  String get agentsEmpty => 'Оқу тапсырмаңыз үшін агент құрыңыз.';
+
+  @override
+  String get agentsLimit =>
+      'Ең көбі 5 агент құруға болады. Орын босату үшін біреуін жойыңыз.';
+
+  @override
+  String get agentsOffline =>
+      'Сервермен байланыс жоқ. Сақталған көшірме көрсетілді. Өзгерту үшін желіге қосылып, тізімді жаңартыңыз.';
+
+  @override
+  String get agentsError =>
+      'Әрекет орындалмады. Байланысты тексеріп, қайталаудан бұрын тізімді жаңартыңыз.';
+
+  @override
+  String get agentsSessionError =>
+      'Сессия аяқталды немесе өзгерді. Аккаунтқа қайта кіріңіз.';
+
+  @override
+  String get agentsRefresh => 'Жаңарту';
+
+  @override
+  String get agentsOpen => 'Ашу';
+
+  @override
+  String get agentsRename => 'Атауын өзгерту';
+
+  @override
+  String get agentsCopy => 'Көшіру';
+
+  @override
+  String agentsCopyName(String name) {
+    return '$name — көшірме';
+  }
+
+  @override
+  String get agentsReset => 'Деректерді тазалау';
+
+  @override
+  String get agentsDelete => 'Агентті жою';
+
+  @override
+  String get agentsResetBody =>
+      'Осы агенттің диалогтары, материалдары мен жады жойылып, белсенді іске қосулар тоқтатылады. Баптаулары мен курс барысы сақталады. Басқа агенттер өзгермейді.';
+
+  @override
+  String get agentsDeleteBody =>
+      'Агент, оның баптаулары, диалогтары, материалдары мен жады жойылып, белсенді іске қосулар тоқтатылады. Тізімде орын босайды. Басқа агенттер мен курс барысы сақталады.';
+
+  @override
+  String get agentsCancel => 'Бас тарту';
+
+  @override
+  String get agentsSave => 'Сақтау';
+
+  @override
+  String get agentsName => 'Агенттің аты';
+
+  @override
+  String get agentsSubject => 'Пән';
+
+  @override
+  String get agentsGrade => 'Сынып';
+
+  @override
+  String get agentsRequirements => 'Тапсырмаларға қойылатын талаптар';
+
+  @override
+  String get agentsInstruction => 'Агент нұсқаулығы';
+
+  @override
+  String get agentsRequired => 'Өрісті толтырыңыз';
+
+  @override
+  String get agentsPrepareTasks => 'Тапсырмалар дайындау';
+
+  @override
+  String get agentsCustom => 'Шеберсіз';
+
+  @override
+  String get agentsGenerate => 'Нұсқаулық құрастыру';
+
+  @override
+  String get agentsPreview =>
+      'Агентті құрмас бұрын нұсқаулықты тексеріп, өңдеңіз.';
+
+  @override
+  String get agentsDefaultName => 'Тапсырмалар дайындау';
+
+  @override
+  String agentsInstructionTemplate(
+    String subject,
+    String grade,
+    String requirements,
+  ) {
+    return 'Сен мұғалімге тапсырмалар дайындауға көмектесесің. Пән: $subject. Сынып: $grade. Талаптар: $requirements. Жетіспейтін шарттарды нақтыла. Тұжырымдары мен бағалау критерийлері түсінікті тапсырмалар ұсын. Деректерді ойдан шығарма.';
+  }
+
+  @override
+  String get agentsCustomTask => 'Өз тапсырмам';
+
+  @override
+  String agentsUpdated(String date) {
+    return 'Өзгертілді: $date';
+  }
+
+  @override
+  String agentsVersion(int version) {
+    return '$version нұсқасы';
+  }
+
+  @override
+  String get agentsInstructionLimit => 'Нұсқаулық 5 000 таңбадан аспауы керек.';
+
+  @override
   String get appTitle => 'Craft Builder';
 
   @override
@@ -284,7 +410,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get onbName => 'Ассистентті қалай атайсыз?';
 
   @override
-  String get onbCreate => 'Ассистент жасау';
+  String get onbCreate => 'Жалғастыру';
 
   @override
   String get onbCreating => 'Ассистент жасалуда';

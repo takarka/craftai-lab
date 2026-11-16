@@ -5,7 +5,7 @@ import 'package:builder/app/environment/app_config.dart';
 import 'package:builder/app/providers.dart';
 import 'package:builder/core/storage/database/storage_database.dart';
 import 'package:builder/core/storage/schema/storage_schema_v1.dart';
-import 'package:builder/features/assistant/presentation/assistant_page.dart';
+import 'package:builder/features/agents/presentation/agents_page.dart';
 import 'package:builder/features/onboarding/application/onboarding_controller.dart';
 import 'package:builder/features/onboarding/domain/assistant_setup.dart';
 import 'package:builder/features/onboarding/domain/initial_workspace_repository.dart';
@@ -184,7 +184,7 @@ void main() {
 
   group('F05 Onboarding S01-S03 and D02 First Consent Flow', () {
     testWidgets(
-      'Full onboarding: S01 -> S02 -> S03 -> D02 "Понятно" -> S10 Assistant',
+      'Full onboarding: S01 -> S02 -> S03 -> D02 "Понятно" -> My agents',
       (tester) async {
         const ownerId = 'teacher-owner-201';
         final initialWorkspaceRepo = _TestInitialWorkspaceRepository();
@@ -258,11 +258,8 @@ void main() {
         await tester.enterText(nameField, 'Алгоритм');
         await tester.pumpAndSettle();
 
-        // Tap "Создать ассистента" (onbCreate)
-        final createButton = find.widgetWithText(
-          BuilderButton,
-          'Создать ассистента',
-        );
+        // Tap "Продолжить" (onbCreate)
+        final createButton = find.widgetWithText(BuilderButton, 'Продолжить');
         expect(createButton, findsOneWidget);
         final btnWidget = tester.widget<BuilderButton>(createButton);
         expect(btnWidget.onPressed, isNotNull);
@@ -293,14 +290,14 @@ void main() {
         );
         expect(acknowledged, isTrue);
 
-        // Verified: Navigated to /assistant (S10)
-        expect(find.byType(AssistantPage), findsOneWidget);
+        // Verified: Navigated to /agents (S10)
+        expect(find.byType(AgentsPage), findsOneWidget);
         expect(find.byKey(const Key('assistant.cloudAction')), findsNothing);
       },
     );
 
     testWidgets(
-      'Deferred D02 ("Не сейчас"): proceeds in local mode, prompts D02 on cloud attempt',
+      'Deferred D02 ("Не сейчас"): opens agents without granting model consent',
       (tester) async {
         const ownerId = 'teacher-owner-202';
         final initialWorkspaceRepo = _TestInitialWorkspaceRepository();
@@ -355,16 +352,13 @@ void main() {
         await tester.tap(nextButtonS02);
         await tester.pumpAndSettle();
 
-        // S03: name and tap "Создать ассистента"
+        // S03: name and tap "Продолжить"
         final nameField = find.byKey(const Key('onb.name'));
         await tester.ensureVisible(nameField);
         await tester.enterText(nameField, 'Ньютон');
         await tester.pumpAndSettle();
 
-        final createBtn = find.widgetWithText(
-          BuilderButton,
-          'Создать ассистента',
-        );
+        final createBtn = find.widgetWithText(BuilderButton, 'Продолжить');
         await tester.ensureVisible(createBtn);
         await tester.tap(createBtn);
         await tester.pumpAndSettle();
@@ -386,27 +380,9 @@ void main() {
         );
         expect(acknowledged, isFalse);
 
-        // Navigated to /assistant in local mode!
-        expect(find.byType(AssistantPage), findsOneWidget);
+        // Navigated to /agents in local mode!
+        expect(find.byType(AgentsPage), findsOneWidget);
         expect(find.byKey(const Key('assistant.cloudAction')), findsNothing);
-        await tester.tap(find.byKey(const Key('assistant.newChatFab')));
-        await tester.pumpAndSettle();
-        await tester.enterText(
-          find.byKey(const Key('chat.inputField')),
-          'Hello',
-        );
-        await tester.tap(find.byKey(const Key('chat.sendBtn')));
-        await tester.pumpAndSettle();
-        expect(find.byKey(const Key('d02.understand')), findsOneWidget);
-        await tester.tap(find.byKey(const Key('d02.notNow')));
-        await tester.pumpAndSettle();
-        expect(
-          await inMemPolicyRepo.isPolicyAcknowledged(
-            ownerId: ownerId,
-            policyId: 'd02_cross_border_transfer',
-          ),
-          isFalse,
-        );
       },
     );
   });

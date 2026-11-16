@@ -2,9 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/storage/schema/storage_schema_v1.dart';
 import '../../core/storage/storage_providers.dart';
-import '../chat/chat_providers.dart';
 import '../course/course_providers.dart';
-import '../onboarding/application/onboarding_controller.dart';
 import '../onboarding/domain/assistant_setup.dart';
 import '../onboarding/domain/initial_workspace_repository.dart';
 import '../profile/profile_providers.dart';
@@ -310,25 +308,5 @@ class AssistantController {
   Future<void> setRetentionDays(int? days) async {
     await _repo.setStorageRetentionDays(ownerId, days);
     ref.invalidate(storageRetentionDaysProvider(ownerId));
-  }
-
-  Future<void> resetWorkspace() async {
-    // 1. Cancel in-flight chat message if any
-    ref.read(chatSessionProvider(ownerId).notifier).stopGeneration();
-
-    // 2. Perform database purge and epoch fence
-    await _repo.resetAssistantWorkspace(ownerId);
-
-    // 3. Invalidate all local caches and providers
-    ref.invalidate(assistantConfigProvider(ownerId));
-    ref.invalidate(assistantVersionsProvider(ownerId));
-    ref.invalidate(localDataSummaryProvider(ownerId));
-    ref.invalidate(chatSessionProvider(ownerId));
-    ref.invalidate(completedCourseLevelsProvider(ownerId));
-
-    // 4. Reset onboarding controller state to allow S03 setup
-    ref
-        .read(onboardingControllerProvider(ownerId).notifier)
-        .resetForRecreation();
   }
 }

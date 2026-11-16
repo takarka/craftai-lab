@@ -138,17 +138,36 @@ async def test_mcp_tools(client: AsyncClient):
     )
     assert mcp_list.status_code == 200
     tools = mcp_list.json()["result"]["tools"]
-    assert any(t["name"] == "search_lessons" for t in tools)
+    names = {t["name"] for t in tools}
+    assert {"save_material", "search_materials"}.issubset(names)
 
-    mcp_call = await client.post(
+    save_call = await client.post(
         "/mcp/v1",
-        headers=headers,
+        headers={**headers, "X-Agent-Id": "agent-contract-1"},
         json={
             "jsonrpc": "2.0",
             "id": 2,
             "method": "tools/call",
-            "params": {"name": "search_lessons", "arguments": {"query": "дроби"}},
+            "params": {
+                "name": "save_material",
+                "arguments": {"title": "Дроби", "content": "Сложение дробей с общим знаменателем"},
+            },
         },
     )
-    assert mcp_call.status_code == 200
-    assert mcp_call.json()["result"]["isError"] is False
+    assert save_call.status_code == 200
+    material_id = save_call.json()["result"]["material_id"]
+    assert material_id
+
+    search_call = await client.post(
+        "/mcp/v1",
+        headers={**headers, "X-Agent-Id": "agent-contract-1"},
+        json={
+            "jsonrpc": "2.0",
+            "id": 3,
+            "method": "tools/call",
+            "params": {"name": "search_materials", "arguments": {"query": "дроби"}},
+        },
+    )
+    assert search_call.status_code == 200
+    items = search_call.json()["result"]["items"]
+    assert any(item["material_id"] == material_id for item in items)

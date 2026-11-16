@@ -338,7 +338,7 @@ class OnboardingAssistantPage extends ConsumerWidget {
                 await controller.create();
                 if (!context.mounted) return;
                 if (ref.read(onboardingControllerProvider(ownerId)).completed) {
-                  context.go('/assistant');
+                  context.go('/agents');
                 }
               }
             : null,

@@ -151,6 +151,13 @@ final class WorkspaceStorageService {
     }
 
     await database.transaction((txn) async {
+      for (final table in [
+        'lab_agent_drafts',
+        'lab_agent_selection',
+        'lab_agents_cache',
+      ]) {
+        await txn.delete(table, where: 'owner_id = ?', whereArgs: [ownerId]);
+      }
       await txn.delete(
         StorageSchemaV1.tableWorkspaces,
         where: 'owner_id = ?',

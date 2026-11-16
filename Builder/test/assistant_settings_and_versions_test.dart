@@ -16,7 +16,6 @@ import 'package:builder/features/assistant/presentation/assistant_page.dart';
 import 'package:builder/features/assistant/presentation/assistant_settings_page.dart';
 import 'package:builder/features/assistant/presentation/assistant_versions_page.dart';
 import 'package:builder/features/assistant/presentation/local_data_settings_page.dart';
-import 'package:builder/features/assistant/presentation/reset_confirmation_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -248,39 +247,6 @@ void main() {
         expect(summary.conversationsCount, equals(1));
         expect(summary.messagesCount, equals(1));
         expect(summary.memoryFactsCount, equals(1));
-      },
-    );
-
-    test(
-      'F09-10: ResetAssistantWorkspace advances epoch and cleans all local tables',
-      () async {
-        final initialEpoch = wsService.activeEpoch!;
-
-        await repo.resetAssistantWorkspace(testOwner);
-
-        // Epoch fence must be incremented
-        expect(wsService.activeEpoch, equals(initialEpoch + 1));
-
-        // Tables must be empty for owner
-        final versions = await db.db.query(
-          StorageSchemaV1.tableAssistantVersions,
-          where: 'owner_id = ?',
-          whereArgs: [testOwner],
-        );
-        expect(versions, isEmpty);
-
-        final convs = await db.db.query(
-          StorageSchemaV1.tableConversations,
-          where: 'owner_id = ?',
-          whereArgs: [testOwner],
-        );
-        expect(convs, isEmpty);
-
-        // Configuration name is reset to empty baseline
-        final config = await repo.getConfiguration(testOwner);
-        expect(config?.name, isEmpty);
-        expect(config?.selectedCategory, isNull);
-        expect(config?.enabledSkills, isEmpty);
       },
     );
   });
@@ -700,64 +666,6 @@ void main() {
           findsOneWidget,
         );
         expect(find.byKey(const Key('localData.resetBtn')), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'F09-10 & F09-V02: D05 requires typing "СБРОС" to enable reset confirmation',
-      (tester) async {
-        await tester.pumpWidget(
-          createTestApp(
-            Builder(
-              builder: (context) => ElevatedButton(
-                onPressed: () =>
-                    showResetConfirmationDialog(context, ownerId: testOwner),
-                child: const Text('Открыть сброс'),
-              ),
-            ),
-          ),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text('Открыть сброс'));
-        await tester.pumpAndSettle();
-
-        expect(find.text('Сбросить ассистента?'), findsOneWidget);
-        expect(find.text('Будет удалено:'), findsOneWidget);
-
-        // Confirm button is disabled before typing word
-        var confirmBtn = tester.widget<TextButton>(
-          find.descendant(
-            of: find.byKey(const Key('reset.confirmBtn')),
-            matching: find.byType(TextButton),
-          ),
-        );
-        expect(confirmBtn.onPressed, isNull);
-
-        // Enter wrong word
-        final field = find.byKey(const Key('reset.confirmationWordField'));
-        await tester.enterText(field, 'НЕ ТО');
-        await tester.pumpAndSettle();
-
-        confirmBtn = tester.widget<TextButton>(
-          find.descendant(
-            of: find.byKey(const Key('reset.confirmBtn')),
-            matching: find.byType(TextButton),
-          ),
-        );
-        expect(confirmBtn.onPressed, isNull);
-
-        // Enter correct word "СБРОС"
-        await tester.enterText(field, 'СБРОС');
-        await tester.pumpAndSettle();
-
-        confirmBtn = tester.widget<TextButton>(
-          find.descendant(
-            of: find.byKey(const Key('reset.confirmBtn')),
-            matching: find.byType(TextButton),
-          ),
-        );
-        expect(confirmBtn.onPressed, isNotNull);
       },
     );
 

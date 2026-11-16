@@ -227,7 +227,7 @@ void main() {
       await tapKey(tester, 'onb.subject.biology');
       await tapButton(tester, 'Далее');
       expect(container.read(provider).draft.name, ' My teacher helper ');
-      await tapButton(tester, 'Создать ассистента');
+      await tapButton(tester, 'Продолжить');
       expect(repository.calls, 1);
       expect(repository.saved['owner-a']!.setup.name, 'My teacher helper');
       expect(repository.saved['owner-a']!.setup.subject, SchoolSubject.biology);
@@ -242,7 +242,7 @@ void main() {
             .value
             .uri
             .path,
-        '/assistant',
+        '/agents',
       );
       expect(find.byType(NavigationBar), findsOneWidget);
       container.read(appRouterProvider).go('/onboarding');
@@ -254,7 +254,7 @@ void main() {
             .value
             .uri
             .path,
-        '/assistant',
+        '/agents',
       );
       expect(repository.calls, 1);
     },
@@ -288,7 +288,7 @@ void main() {
     expect(
       tester
           .widget<BuilderButton>(
-            find.widgetWithText(BuilderButton, 'Создать ассистента'),
+            find.widgetWithText(BuilderButton, 'Продолжить'),
           )
           .onPressed,
       isNull,
@@ -334,7 +334,7 @@ void main() {
       prepare(controller, name: 'Keep this draft');
       fixture.container.read(appRouterProvider).go('/onboarding/assistant');
       await tester.pumpAndSettle();
-      await tapButton(tester, 'Создать ассистента');
+      await tapButton(tester, 'Продолжить');
       expect(
         find.textContaining('Не удалось сохранить ассистента'),
         findsOneWidget,
@@ -348,7 +348,7 @@ void main() {
         'Keep this draft',
       );
       repository.fail = false;
-      await tapButton(tester, 'Создать ассистента');
+      await tapButton(tester, 'Продолжить');
       expect(repository.calls, 2);
       expect(repository.saved.length, 1);
     },

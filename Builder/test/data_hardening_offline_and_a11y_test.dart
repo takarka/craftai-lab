@@ -18,7 +18,6 @@ import 'package:builder/core/storage/workspace/workspace_storage_service.dart';
 import 'package:builder/features/assistant/assistant_providers.dart';
 import 'package:builder/features/assistant/infrastructure/persistent_assistant_repository.dart';
 import 'package:builder/features/assistant/presentation/assistant_page.dart';
-import 'package:builder/features/assistant/presentation/reset_confirmation_dialog.dart';
 import 'package:builder/features/chat/chat_providers.dart';
 import 'package:builder/features/chat/domain/chat_message.dart';
 import 'package:builder/features/chat/domain/chat_repository.dart';
@@ -395,40 +394,6 @@ void main() {
           loadedTrace.layers.first.contentSnippet,
           contains('План факультатива'),
         );
-      },
-    );
-
-    testWidgets(
-      'F18-10: D05 reset dialog explicitly scopes to assistant workspace only',
-      (tester) async {
-        await tester.pumpWidget(
-          buildTestApp(
-            child: Builder(
-              builder: (context) => ElevatedButton(
-                onPressed: () =>
-                    showResetConfirmationDialog(context, ownerId: testOwner),
-                child: const Text('Open Reset Dialog'),
-              ),
-            ),
-          ),
-        );
-        await tester.runAsync(
-          () => Future.delayed(const Duration(milliseconds: 200)),
-        );
-        await tester.pumpAndSettle();
-
-        await tester.tap(find.text('Open Reset Dialog'));
-        await tester.runAsync(
-          () => Future.delayed(const Duration(milliseconds: 200)),
-        );
-        await tester.pumpAndSettle();
-
-        expect(
-          find.byKey(const Key('reset.confirmationWordField')),
-          findsOneWidget,
-        );
-        expect(find.byKey(const Key('reset.confirmBtn')), findsOneWidget);
-        expect(find.byKey(const Key('reset.cancelBtn')), findsOneWidget);
       },
     );
   });

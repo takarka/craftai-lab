@@ -227,7 +227,7 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
           .completeLevel(widget.levelId);
     }
     if (context.mounted) {
-      await context.push('/chat');
+      await context.push('/agents');
     }
   }
 
