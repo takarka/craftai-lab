@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: craftai-lab-api
+    runtime: docker
+    plan: free
+    branch: feat/prd-0.2-mobile-mvp
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: "5001"
+      - key: CRAFTAI_APP_ENV
+        value: production
+      - key: CRAFTAI_JWT_SECRET
+        generateValue: true
+      - key: CRAFTAI_OPENROUTER_API_KEY
+        sync: false

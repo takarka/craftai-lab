@@ -11,7 +11,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import delete, select
 
-from app.core.config import settings
+from app.core.config import Settings, settings
 from app.core.database import (
     AttachmentModel,
     Base,
@@ -90,7 +90,11 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     Path(settings.storage_dir).mkdir(parents=True, exist_ok=True)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    await seed_default_dev_user()
+    if settings.app_env == "dev":
+        # Known SuperAdmin credentials are only acceptable on a local machine.
+        await seed_default_dev_user()
+    elif settings.jwt_secret == Settings.model_fields["jwt_secret"].default:
+        raise RuntimeError("CRAFTAI_JWT_SECRET must be set outside the dev environment.")
 
     async with SessionLocal() as db:
         await seed_catalog(db)
