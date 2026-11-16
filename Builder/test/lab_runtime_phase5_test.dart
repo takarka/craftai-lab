@@ -19,6 +19,16 @@ class FakeLabRuntimeApi implements LabRuntimeApi {
   LabRun? runByIdResponse;
 
   @override
+  Future<List<LabModelInfo>> listModels() async => const [
+    LabModelInfo(
+      modelId: 'google/gemini-2.5-flash',
+      available: true,
+      supportsTools: true,
+      supportsVision: true,
+    ),
+  ];
+
+  @override
   Future<LabRun> createRun({
     required String agentId,
     required String prompt,
@@ -79,16 +89,15 @@ class FakeLabRuntimeApi implements LabRuntimeApi {
   }
 
   @override
-  Future<LabRun> cancelRun(String runId) async =>
-      LabRun(
-        id: runId,
-        agentId: 'agent-1',
-        agentVersionId: 'ver-1',
-        epoch: 1,
-        modelId: 'google/gemini-2.5-flash',
-        status: 'cancelled',
-        stopReason: 'cancelled',
-      );
+  Future<LabRun> cancelRun(String runId) async => LabRun(
+    id: runId,
+    agentId: 'agent-1',
+    agentVersionId: 'ver-1',
+    epoch: 1,
+    modelId: 'google/gemini-2.5-flash',
+    status: 'cancelled',
+    stopReason: 'cancelled',
+  );
 
   @override
   Future<LabRun> resolveAction({
@@ -96,17 +105,16 @@ class FakeLabRuntimeApi implements LabRuntimeApi {
     required String actionId,
     required String decision,
     Map<String, dynamic>? params,
-  }) async =>
-      LabRun(
-        id: runId,
-        agentId: 'agent-1',
-        agentVersionId: 'ver-1',
-        epoch: 1,
-        modelId: 'google/gemini-2.5-flash',
-        status: 'completed',
-        stopReason: 'completed',
-        finalOutput: 'Сохранено.',
-      );
+  }) async => LabRun(
+    id: runId,
+    agentId: 'agent-1',
+    agentVersionId: 'ver-1',
+    epoch: 1,
+    modelId: 'google/gemini-2.5-flash',
+    status: 'completed',
+    stopReason: 'completed',
+    finalOutput: 'Сохранено.',
+  );
 
   @override
   Future<List<LabMaterialItem>> listMaterials(String agentId) async => const [];
@@ -117,15 +125,14 @@ class FakeLabRuntimeApi implements LabRuntimeApi {
     required String title,
     required String content,
     String source = 'text',
-  }) async =>
-      LabMaterialItem(
-        id: 'm1',
-        agentId: agentId,
-        title: title,
-        content: content,
-        source: source,
-        createdAtUtc: '',
-      );
+  }) async => LabMaterialItem(
+    id: 'm1',
+    agentId: agentId,
+    title: title,
+    content: content,
+    source: source,
+    createdAtUtc: '',
+  );
 
   @override
   Future<void> deleteMaterial({
@@ -138,12 +145,11 @@ class FakeLabRuntimeApi implements LabRuntimeApi {
     required String agentId,
     required String fileName,
     required List<int> bytes,
-  }) async =>
-      const LabPhotoExtraction(
-        photoId: 'p1',
-        extractedText: 'Текст с фото',
-        expiresAtUtc: '',
-      );
+  }) async => const LabPhotoExtraction(
+    photoId: 'p1',
+    extractedText: 'Текст с фото',
+    expiresAtUtc: '',
+  );
 
   @override
   Future<List<LabMemoryItem>> listMemory(String agentId) async => const [];
@@ -152,13 +158,12 @@ class FakeLabRuntimeApi implements LabRuntimeApi {
   Future<LabMemoryItem> createMemory({
     required String agentId,
     required String content,
-  }) async =>
-      LabMemoryItem(
-        id: 'mem-1',
-        agentId: agentId,
-        content: content,
-        createdAtUtc: '',
-      );
+  }) async => LabMemoryItem(
+    id: 'mem-1',
+    agentId: agentId,
+    content: content,
+    createdAtUtc: '',
+  );
 
   @override
   Future<void> deleteMemory({
@@ -177,16 +182,15 @@ class FakeLabRuntimeApi implements LabRuntimeApi {
     required String overrideText,
     required bool allowSave,
     required bool allowSearch,
-  }) async =>
-      LabSkillItem(
-        slug: slug,
-        title: slug,
-        version: '1.0.0',
-        baseContent: '',
-        enabled: enabled,
-        overrideText: overrideText,
-        revision: 1,
-      );
+  }) async => LabSkillItem(
+    slug: slug,
+    title: slug,
+    version: '1.0.0',
+    baseContent: '',
+    enabled: enabled,
+    overrideText: overrideText,
+    revision: 1,
+  );
 }
 
 void main() {
@@ -207,10 +211,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          home: LabAgentChatPage(
-            agentName: 'Агент 1',
-            controller: controller,
-          ),
+          home: LabAgentChatPage(agentName: 'Агент 1', controller: controller),
         ),
       ),
     );
@@ -251,7 +252,9 @@ void main() {
     expect(find.text('Тест готов.'), findsOneWidget);
   });
 
-  testWidgets('camera permission denial preserves material draft', (tester) async {
+  testWidgets('camera permission denial preserves material draft', (
+    tester,
+  ) async {
     final api = FakeLabRuntimeApi();
 
     await tester.pumpWidget(
@@ -260,7 +263,11 @@ void main() {
           agentId: 'agent-1',
           api: api,
           availableModels: const [
-            LabModelInfo(modelId: 'google/gemini-2.5-flash', supportsTools: true, supportsVision: true),
+            LabModelInfo(
+              modelId: 'google/gemini-2.5-flash',
+              supportsTools: true,
+              supportsVision: true,
+            ),
           ],
           initialModelId: 'google/gemini-2.5-flash',
           initialInstruction: 'Инструкция',
@@ -277,7 +284,11 @@ void main() {
     // Scroll to material section and enter draft text
     final listScrollable = find.byType(Scrollable).first;
     final contentField = find.byKey(const Key('material_content_field'));
-    await tester.scrollUntilVisible(contentField, 300, scrollable: listScrollable);
+    await tester.scrollUntilVisible(
+      contentField,
+      300,
+      scrollable: listScrollable,
+    );
     await tester.enterText(contentField, 'Мой черновик материала');
     await tester.pump();
 
@@ -315,10 +326,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         child: MaterialApp(
-          home: LabAgentChatPage(
-            agentName: 'Агент 1',
-            controller: controller,
-          ),
+          home: LabAgentChatPage(agentName: 'Агент 1', controller: controller),
         ),
       ),
     );
@@ -331,65 +339,71 @@ void main() {
     expect(find.text('Модель несовместима'), findsOneWidget);
   });
 
-  testWidgets('tool error is not shown as clean success and trace shows material_id', (tester) async {
-    final api = FakeLabRuntimeApi()
-      ..nextRunResponse = const LabRun(
-        id: 'run-err',
-        agentId: 'agent-1',
-        agentVersionId: 'ver-1',
-        epoch: 1,
-        modelId: 'google/gemini-2.5-flash',
-        status: 'completed',
-        stopReason: 'completed',
-        finalOutput: 'Ответ модели.',
-        events: [
-          LabRunEvent(
-            id: 'e-rej',
-            sequence: 1,
-            epoch: 1,
-            eventType: 'tool_rejected',
-            payload: {'tool_name': 'save_material', 'reason': 'permission_denied'},
-            createdAtUtc: '',
+  testWidgets(
+    'tool error is not shown as clean success and trace shows material_id',
+    (tester) async {
+      final api = FakeLabRuntimeApi()
+        ..nextRunResponse = const LabRun(
+          id: 'run-err',
+          agentId: 'agent-1',
+          agentVersionId: 'ver-1',
+          epoch: 1,
+          modelId: 'google/gemini-2.5-flash',
+          status: 'completed',
+          stopReason: 'completed',
+          finalOutput: 'Ответ модели.',
+          events: [
+            LabRunEvent(
+              id: 'e-rej',
+              sequence: 1,
+              epoch: 1,
+              eventType: 'tool_rejected',
+              payload: {
+                'tool_name': 'save_material',
+                'reason': 'permission_denied',
+              },
+              createdAtUtc: '',
+            ),
+          ],
+        );
+
+      final controller = LabRunController(
+        api: api,
+        config: const LabAgentRunConfig(
+          agentId: 'agent-1',
+          model: LabModelInfo(
+            modelId: 'google/gemini-2.5-flash',
+            supportsTools: true,
+            supportsVision: true,
           ),
-        ],
+        ),
       );
 
-    final controller = LabRunController(
-      api: api,
-      config: const LabAgentRunConfig(
-        agentId: 'agent-1',
-        model: LabModelInfo(
-          modelId: 'google/gemini-2.5-flash',
-          supportsTools: true,
-          supportsVision: true,
-        ),
-      ),
-    );
-
-    await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: LabAgentChatPage(
-            agentName: 'Агент 1',
-            controller: controller,
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            home: LabAgentChatPage(
+              agentName: 'Агент 1',
+              controller: controller,
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.enterText(find.byType(TextField), 'Проверь');
-    await tester.tap(find.byIcon(Icons.send));
-    await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'Проверь');
+      await tester.tap(find.byIcon(Icons.send));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Инструмент завершился с ошибкой'), findsOneWidget);
+      expect(find.text('Инструмент завершился с ошибкой'), findsOneWidget);
 
-    // Open trace page
-    await tester.pumpWidget(
-      MaterialApp(
-        home: LabRunTracePage(runId: 'run-1', api: api),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('ID материала: mat-999'), findsOneWidget);
-  });
+      // Open trace page
+      await tester.pumpWidget(
+        MaterialApp(
+          home: LabRunTracePage(runId: 'run-1', api: api),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('ID материала: mat-999'), findsOneWidget);
+    },
+  );
 }

@@ -31,6 +31,8 @@ async def owners(client, monkeypatch):
     monkeypatch.setattr(settings, "lab_model_1_supports_tools", True)
     monkeypatch.setattr(settings, "lab_model_1_supports_vision", True)
     monkeypatch.setattr(settings, "lab_model_2_id", "test/model-b")
+    monkeypatch.setattr(settings, "lab_model_2_supports_tools", False)
+    monkeypatch.setattr(settings, "lab_model_2_supports_vision", False)
     login = await client.post(
         "/mobile/auth/login",
         json={

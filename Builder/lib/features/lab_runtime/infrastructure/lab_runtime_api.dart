@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import '../domain/lab_run_models.dart';
 
 abstract class LabRuntimeApi {
+  Future<List<LabModelInfo>> listModels() async => const [];
+
   Future<LabRun> createRun({
     required String agentId,
     required String prompt,
@@ -51,10 +53,7 @@ abstract class LabRuntimeApi {
     required String content,
   });
 
-  Future<void> deleteMemory({
-    required String agentId,
-    required String entryId,
-  });
+  Future<void> deleteMemory({required String agentId, required String entryId});
 
   Future<List<LabSkillItem>> listSkills(String agentId);
 
@@ -96,7 +95,8 @@ class HttpLabRuntimeApi implements LabRuntimeApi {
       final decoded = jsonDecode(resp.body) as Map<String, dynamic>;
       final code = (decoded['code'] as String?) ?? 'http.${resp.statusCode}';
       final message =
-          (decoded['message'] as String?) ?? 'Ошибка сервера (${resp.statusCode}).';
+          (decoded['message'] as String?) ??
+          'Ошибка сервера (${resp.statusCode}).';
       throw LabApiException(
         code: code,
         message: message,
@@ -172,6 +172,17 @@ class HttpLabRuntimeApi implements LabRuntimeApi {
   }
 
   @override
+  Future<List<LabModelInfo>> listModels() async {
+    final data = await _sendJson('GET', '/lab/v1/models');
+    final items = (data['models'] as List?) ?? const [];
+    return items
+        .whereType<Map>()
+        .map((e) => LabModelInfo.fromJson(Map<String, dynamic>.from(e)))
+        .where((m) => m.available && m.modelId.isNotEmpty)
+        .toList();
+  }
+
+  @override
   Future<LabRun> createRun({
     required String agentId,
     required String prompt,
@@ -182,10 +193,7 @@ class HttpLabRuntimeApi implements LabRuntimeApi {
       'POST',
       '/lab/v1/agents/$agentId/runs',
       idempotencyKey: idempotencyKey,
-      body: {
-        'prompt': prompt,
-        'image_data_uris': imageDataUris,
-      },
+      body: {'prompt': prompt, 'image_data_uris': imageDataUris},
     );
     return LabRun.fromJson(data);
   }
@@ -212,10 +220,7 @@ class HttpLabRuntimeApi implements LabRuntimeApi {
     final data = await _sendJson(
       'POST',
       '/lab/v1/runs/$runId/actions/$actionId',
-      body: {
-        'decision': decision,
-        if (params != null) 'params': params,
-      },
+      body: {'decision': decision, if (params != null) 'params': params},
     );
     return LabRun.fromJson(data);
   }
@@ -250,10 +255,7 @@ class HttpLabRuntimeApi implements LabRuntimeApi {
     required String agentId,
     required String materialId,
   }) async {
-    await _sendJson(
-      'DELETE',
-      '/lab/v1/agents/$agentId/materials/$materialId',
-    );
+    await _sendJson('DELETE', '/lab/v1/agents/$agentId/materials/$materialId');
   }
 
   @override

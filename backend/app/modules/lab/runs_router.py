@@ -54,11 +54,15 @@ async def default_get_agent_snapshot(
 
     model_id = cfg.get("model_id")
     if not model_id:
-        raise ApiError(
-            status_code=422,
-            code="model.not-selected",
-            message="Для агента не выбрана модель.",
-        )
+        available = [m["model_id"] for m in model_catalog() if m.get("available") and m.get("model_id")]
+        if available:
+            model_id = available[0]
+        else:
+            raise ApiError(
+                status_code=422,
+                code="model.not-selected",
+                message="Для агента не выбрана модель.",
+            )
 
     perms = cfg.get("permissions") or {}
     allow_save = bool(perms.get("save_material", cfg.get("allow_save", False)))

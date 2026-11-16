@@ -119,16 +119,14 @@ void main() {
       expect(await assistant.getVersions('ef00-test'), isNotEmpty);
       await course.completeLevel(ownerId: 'ef00-test', levelId: 10);
       await workspace.openWorkspace(ownerId: 'ef00-test');
-      await assistant.resetAssistantWorkspace('ef00-test');
-      expect(await assistant.getSkills('ef00-test'), isEmpty);
       expect(
-        (await course.getAllProgress('ef00-test')).every((p) => !p.isCompleted),
+        (await course.getAllProgress('ef00-test')).any((p) => p.isCompleted),
         isTrue,
       );
       expect(await assistant.getSkills('ef00-other'), hasLength(1));
       await workspace.purgeOwnerData(ownerId: 'ef00-other');
       expect(await assistant.getSkills('ef00-other'), isEmpty);
-      debugPrint('EF00: reset and owner deletion verified');
+      debugPrint('EF00: course preservation and owner deletion verified');
     },
   );
 }

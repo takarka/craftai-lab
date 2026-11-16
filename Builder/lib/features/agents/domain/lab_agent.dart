@@ -9,6 +9,10 @@ class LabAgent {
   String get subject => json['subject'] as String? ?? '';
   String get grade => json['grade'] as String? ?? '';
   String get instruction => json['instruction'] as String? ?? '';
+  String? get modelId => json['model_id'] as String?;
+  bool get allowSave => (json['permissions'] as Map?)?['save_material'] == true;
+  bool get allowSearch =>
+      (json['permissions'] as Map?)?['search_materials'] == true;
   int get epoch => json['epoch'] as int? ?? 0;
   int get version => json['version'] as int? ?? 1;
   DateTime? get updatedAt =>

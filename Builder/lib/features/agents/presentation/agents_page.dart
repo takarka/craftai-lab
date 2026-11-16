@@ -230,24 +230,50 @@ class _AgentsPageState extends ConsumerState<AgentsPage> {
                               ).add_Hm().format(agent.updatedAt!.toLocal()),
                             ),
                           ),
-                        TextButton(
-                          onPressed: _busy
-                              ? null
-                              : () async {
-                                  await ref
-                                      .read(
-                                        currentAgentIdProvider(
-                                          widget.ownerId,
-                                        ).notifier,
-                                      )
-                                      .select(agent.id);
-                                  if (context.mounted) {
-                                    context.push(
-                                      '/agents/${Uri.encodeComponent(agent.id)}',
-                                    );
-                                  }
-                                },
-                          child: Text(s.agentsOpen),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            FilledButton.tonalIcon(
+                              key: ValueKey('agent-chat-${agent.id}'),
+                              onPressed: _busy
+                                  ? null
+                                  : () async {
+                                      await ref
+                                          .read(
+                                            currentAgentIdProvider(
+                                              widget.ownerId,
+                                            ).notifier,
+                                          )
+                                          .select(agent.id);
+                                      if (context.mounted) {
+                                        context.push(
+                                          '/agents/${Uri.encodeComponent(agent.id)}/chat',
+                                        );
+                                      }
+                                    },
+                              icon: const Icon(Icons.chat_bubble_outline),
+                              label: const Text('Диалог'),
+                            ),
+                            TextButton(
+                              onPressed: _busy
+                                  ? null
+                                  : () async {
+                                      await ref
+                                          .read(
+                                            currentAgentIdProvider(
+                                              widget.ownerId,
+                                            ).notifier,
+                                          )
+                                          .select(agent.id);
+                                      if (context.mounted) {
+                                        context.push(
+                                          '/agents/${Uri.encodeComponent(agent.id)}',
+                                        );
+                                      }
+                                    },
+                              child: Text(s.agentsOpen),
+                            ),
+                          ],
                         ),
                       ],
                     ),
