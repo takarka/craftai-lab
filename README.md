@@ -2,7 +2,8 @@
 
 Мобильное приложение и серверная платформа для создания, настройки и безопасного использования учебных ИИ-агентов преподавателями.
 
-> **Статус репозитория:** в репозитории размещён исходный код стадии MVP (ветка `feat/prd-0.2-mobile-mvp`). Подробная инструкция локального запуска разработчика также находится в [HOW_TO_RUN.md](HOW_TO_RUN.md).
+> **Статус репозитория:**
+> Подробная инструкция локального запуска разработчика также находится в [HOW_TO_RUN.md](HOW_TO_RUN.md).
 
 ---
 
@@ -35,7 +36,7 @@
 - **Workspace ChatGPT Edu организации:** **Startup_ecosystem**.
 - **Название опубликованного объекта в workspace:** **Craftai Lab**.
 - **Ссылка на репозиторий:** `https://github.com/takarka/craftai-lab` (ветка `feat/prd-0.2-mobile-mvp`).
-- **Ссылка на готовую сборку или способ запуска:** Android APK `0.1.0+1` опубликован в GitHub Release [v0.1.0](https://github.com/takarka/craftai-lab/releases/tag/v0.1.0) — [craftai-lab-0.1.0-arm64.apk](https://github.com/takarka/craftai-lab/releases/download/v0.1.0/craftai-lab-0.1.0-arm64.apk) (arm64, ~25 МБ), подключён к серверу `https://craftai-lab-api.onrender.com` (Render, бесплатный тариф). Сборки iOS и веб-версии нет.
+- **Ссылка на готовую сборку или способ запуска:** Android APK `0.1.0+1` опубликован в GitHub Release [v0.1.0](https://github.com/takarka/craftai-lab/releases/tag/v0.1.0) — [craftai-lab-0.1.0-arm64.apk](https://github.com/takarka/craftai-lab/releases/download/v0.1.0/craftai-lab-0.1.0-arm64.apk) (arm64, ~25 МБ), подключён к серверу `https://craftai-lab-api.onrender.com` (Render, бесплатный тариф). Веб-версия для проверки без установки: **https://takarka.github.io/craftai-lab/** (тот же сервер). Сборки iOS нет.
 
 ---
 
@@ -47,7 +48,7 @@
 
 1. Откройте [Startup_ecosystem - ChatGPT](https://chatgpt.com/spaces/page_space_47402f4174b081a4a784f9b0bd53c4bb?view=overview).
 2. Перейдите по ссылке на репозиторий или скачайте сборку: [craftai-lab-0.1.0-arm64.apk](https://github.com/takarka/craftai-lab/releases/download/v0.1.0/craftai-lab-0.1.0-arm64.apk) (GitHub Release [v0.1.0](https://github.com/takarka/craftai-lab/releases/tag/v0.1.0)).
-3. Установите приложение на устройство (или откройте веб-версию по ссылке выше) и запустите **Craftai Lab**.
+3. Установите приложение на устройство (или откройте веб-версию https://takarka.github.io/craftai-lab/) и запустите **Craftai Lab**.
 4. Зарегистрируйтесь в приложении с любым email и паролем (см. раздел 5) и пройдите стартовый онбординг, если он отображается.
 5. На главном экране **«Мои агенты»** откройте существующего агента или создайте нового (лимит — 5 агентов).
 6. Задайте параметры агента (название, предмет, класс, инструкция) и сохраните изменения.
