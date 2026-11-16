@@ -161,7 +161,7 @@ class _StartupPageState extends ConsumerState<StartupPage>
                         ],
                       ),
                       const SizedBox(height: 28),
-                      // Title: Craft Builder
+                      // Title: Craftai Lab
                       Text(
                         strings.appTitle,
                         style: BuilderType.h1.copyWith(
@@ -171,7 +171,7 @@ class _StartupPageState extends ConsumerState<StartupPage>
                         ),
                       ),
                       const SizedBox(height: 8),
-                      // Localized status (e.g. "Запуск Craft Builder")
+                      // Localized status (e.g. "Запуск Craftai Lab")
                       Text(
                         strings.starting,
                         style: BuilderType.body.copyWith(

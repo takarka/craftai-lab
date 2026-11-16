@@ -9,6 +9,23 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
+  String get demoBanner =>
+      'ДЕМО · Без сервера и ИИ. Данные сбросятся при обновлении страницы.';
+
+  @override
+  String get demoWelcome => 'Попробуйте агента';
+
+  @override
+  String get demoGuide =>
+      'Откройте диалог и отправьте любой запрос — получите ответ по шаблону. «Сохрани материал» покажет подтверждение записи, «Найди материалы» — примеры этого агента. В настройках доступны материалы, память и разрешения. Чтобы сравнить ответы, добавьте в инструкцию слово «кратко».';
+
+  @override
+  String get demoChat => 'Открыть демодиалог';
+
+  @override
+  String get demoResources => 'Материалы, память и настройки';
+
+  @override
   String get agentsTitle => 'Мои агенты';
 
   @override
@@ -136,7 +153,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Инструкция должна содержать не более 5 000 символов.';
 
   @override
-  String get appTitle => 'Craft Builder';
+  String get appTitle => 'Craftai Lab';
 
   @override
   String get assistantTab => 'Ассистент';
@@ -151,7 +168,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get languageLabel => 'Язык интерфейса';
 
   @override
-  String get starting => 'Запуск Craft Builder';
+  String get starting => 'Запуск Craftai Lab';
 
   @override
   String get configurationError =>
@@ -266,7 +283,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get authHidePassword => 'Скрыть пароль';
 
   @override
-  String get authHeroLabel => 'Символ Craft Builder';
+  String get authHeroLabel => 'Символ Craftai Lab';
 
   @override
   String get fieldRequired => 'Заполните поле.';
@@ -438,7 +455,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'DEV · Предпросмотр онбординга. Данные только в памяти, без API.';
 
   @override
-  String get onbHeroLabel => 'Базовый персонаж Craft Builder';
+  String get onbHeroLabel => 'Базовый персонаж Craftai Lab';
 
   @override
   String onbDefaultName(String subject) {

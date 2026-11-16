@@ -1,4 +1,4 @@
-# Craft AI Builder — Standalone Backend
+# Craftai Lab — Standalone Backend
 
 Автономный модульный монолит на **Python 3.12+ / FastAPI / SQLAlchemy 2.0 (Async)**, полностью реализующий все 32 HTTP/SSE/JSON-RPC эндпоинта мобильного приложения `Builder` (Craft AI).
 

@@ -1,1 +1,1 @@
-"""Craft Builder Standalone Backend."""
+"""Craftai Lab Standalone Backend."""

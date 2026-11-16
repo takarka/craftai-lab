@@ -1,1 +1,1 @@
-"""Feature modules for Craft Builder backend."""
+"""Feature modules for Craftai Lab backend."""

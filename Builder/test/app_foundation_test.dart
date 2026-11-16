@@ -138,7 +138,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Craft Builder'), findsOneWidget);
+      expect(find.text('Craftai Lab'), findsOneWidget);
       expect(
         find.textContaining('Вход и регистрация пока недоступны'),
         findsOneWidget,

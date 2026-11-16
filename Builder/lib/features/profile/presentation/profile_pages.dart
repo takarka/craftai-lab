@@ -163,7 +163,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 const SizedBox(height: 6),
                 const Text(
-                  'Craft Builder 0.1 · MVP',
+                  'Craftai Lab 0.1 · MVP',
                   style: BuilderType.mono,
                   textAlign: TextAlign.center,
                 ),
@@ -435,7 +435,7 @@ class ProfileSettingsPage extends ConsumerWidget {
         const _RemindersCard(),
         _InfoCard(
           title: s.about,
-          body: 'Craft Builder · $profileAppVersion\n\n${s.localStorage}',
+          body: 'Craftai Lab · $profileAppVersion\n\n${s.localStorage}',
         ),
       ],
     );

@@ -1,7 +1,7 @@
 [project]
 name = "craft-builder-backend"
 version = "0.1.0"
-description = "Standalone backend for Craft Builder (FastAPI + SQLAlchemy + Document Worker + AI Scheduler)"
+description = "Standalone backend for Craftai Lab (FastAPI + SQLAlchemy + Document Worker + AI Scheduler)"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

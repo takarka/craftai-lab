@@ -13,7 +13,7 @@ class BuilderGalleryApp extends StatelessWidget {
       Uri.base.queryParameters['section'] ?? 'foundations',
     );
     return MaterialApp(
-      title: 'Craft Builder · UI Kit · DEV',
+      title: 'Craftai Lab · UI Kit · DEV',
       debugShowCheckedModeBanner: false,
       theme: BuilderTheme.light,
       home: BuilderCatalog(initialSection: section < 0 ? 0 : section),

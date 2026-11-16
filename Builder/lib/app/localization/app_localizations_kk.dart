@@ -9,6 +9,23 @@ class AppLocalizationsKk extends AppLocalizations {
   AppLocalizationsKk([String locale = 'kk']) : super(locale);
 
   @override
+  String get demoBanner =>
+      'ДЕМО · Серверсіз және ЖИ-сіз. Бет жаңартылғанда деректер бастапқы күйге келеді.';
+
+  @override
+  String get demoWelcome => 'Агентті қолданып көріңіз';
+
+  @override
+  String get demoGuide =>
+      'Диалогта кез келген сұрау жіберіп, үлгі жауап алыңыз. «Сохрани материал» сақтау растауын, «Найди материалы» осы агенттің мысалдарын көрсетеді. Баптауларда материалдар, жад және рұқсаттар бар. Жауаптарды салыстыру үшін нұсқаулыққа «кратко» сөзін қосыңыз.';
+
+  @override
+  String get demoChat => 'Демодиалогты ашу';
+
+  @override
+  String get demoResources => 'Материалдар, жад және баптаулар';
+
+  @override
   String get agentsTitle => 'Менің агенттерім';
 
   @override
@@ -135,7 +152,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get agentsInstructionLimit => 'Нұсқаулық 5 000 таңбадан аспауы керек.';
 
   @override
-  String get appTitle => 'Craft Builder';
+  String get appTitle => 'Craftai Lab';
 
   @override
   String get assistantTab => 'Ассистент';
@@ -150,7 +167,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get languageLabel => 'Интерфейс тілі';
 
   @override
-  String get starting => 'Craft Builder іске қосылуда';
+  String get starting => 'Craftai Lab іске қосылуда';
 
   @override
   String get configurationError =>
@@ -266,7 +283,7 @@ class AppLocalizationsKk extends AppLocalizations {
   String get authHidePassword => 'Құпиясөзді жасыру';
 
   @override
-  String get authHeroLabel => 'Craft Builder белгісі';
+  String get authHeroLabel => 'Craftai Lab белгісі';
 
   @override
   String get fieldRequired => 'Өрісті толтырыңыз.';
@@ -439,7 +456,7 @@ class AppLocalizationsKk extends AppLocalizations {
       'DEV · Онбордингті алдын ала қарау. Деректер тек жадта, API жоқ.';
 
   @override
-  String get onbHeroLabel => 'Craft Builder базалық кейіпкері';
+  String get onbHeroLabel => 'Craftai Lab базалық кейіпкері';
 
   @override
   String onbDefaultName(String subject) {

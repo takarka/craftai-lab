@@ -1,4 +1,4 @@
-# Fastlane config for building Craft Builder iOS and uploading to TestFlight.
+# Fastlane config for building Craftai Lab iOS and uploading to TestFlight.
 # Runs on a macOS CI runner (see .github/workflows/ios-testflight.yml).
 # Signing and upload both authenticate with an App Store Connect API key
 # (ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_CONTENT_BASE64), so no Apple ID

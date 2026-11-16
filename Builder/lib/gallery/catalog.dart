@@ -230,7 +230,7 @@ class _BuilderCatalogState extends State<BuilderCatalog> {
                                   const Divider(),
                                   const SizedBox(height: 16),
                                   const Text(
-                                    'CRAFT BUILDER · CRAFTAI',
+                                    'CRAFTAI LAB · CRAFTAI',
                                     style: BuilderType.label,
                                   ),
                                   const SizedBox(height: 8),
@@ -267,7 +267,7 @@ class _Brand extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Craft Builder', style: BuilderType.title),
+            Text('Craftai Lab', style: BuilderType.title),
             SizedBox(height: 2),
             Text('by CraftAI', style: BuilderType.small),
           ],

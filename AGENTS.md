@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-This repository contains two independent Flutter applications: `Builder/` (Craft Builder, the main application) and `mobile/` (a minimal Flutter scaffold). Run Flutter commands from the relevant application directory; keep their dependencies separate.
+This repository contains two independent Flutter applications: `Builder/` (Craftai Lab, the main application) and `mobile/` (a minimal Flutter scaffold). Run Flutter commands from the relevant application directory; keep their dependencies separate.
 
 In `Builder/lib/`, use `app/` for bootstrap, routing, and localization; `core/` for shared infrastructure; `features/` for domain features; and `ui_kit/` for reusable components. Features organize code into `domain/`, `infrastructure/`, and `presentation/` layers where applicable. Component examples live in `gallery/`. Assets belong in `Builder/assets/`, tests in `Builder/test/` and `Builder/integration_test/`, and specifications, plans, and design references in `Builder/docs/` and `Builder/design/`.
 

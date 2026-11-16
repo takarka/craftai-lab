@@ -98,6 +98,36 @@ abstract class AppLocalizations {
     Locale('kk'),
   ];
 
+  /// No description provided for @demoBanner.
+  ///
+  /// In ru, this message translates to:
+  /// **'ДЕМО · Без сервера и ИИ. Данные сбросятся при обновлении страницы.'**
+  String get demoBanner;
+
+  /// No description provided for @demoWelcome.
+  ///
+  /// In ru, this message translates to:
+  /// **'Попробуйте агента'**
+  String get demoWelcome;
+
+  /// No description provided for @demoGuide.
+  ///
+  /// In ru, this message translates to:
+  /// **'Откройте диалог и отправьте любой запрос — получите ответ по шаблону. «Сохрани материал» покажет подтверждение записи, «Найди материалы» — примеры этого агента. В настройках доступны материалы, память и разрешения. Чтобы сравнить ответы, добавьте в инструкцию слово «кратко».'**
+  String get demoGuide;
+
+  /// No description provided for @demoChat.
+  ///
+  /// In ru, this message translates to:
+  /// **'Открыть демодиалог'**
+  String get demoChat;
+
+  /// No description provided for @demoResources.
+  ///
+  /// In ru, this message translates to:
+  /// **'Материалы, память и настройки'**
+  String get demoResources;
+
   /// No description provided for @agentsTitle.
   ///
   /// In ru, this message translates to:
@@ -315,7 +345,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In ru, this message translates to:
-  /// **'Craft Builder'**
+  /// **'Craftai Lab'**
   String get appTitle;
 
   /// No description provided for @assistantTab.
@@ -345,7 +375,7 @@ abstract class AppLocalizations {
   /// No description provided for @starting.
   ///
   /// In ru, this message translates to:
-  /// **'Запуск Craft Builder'**
+  /// **'Запуск Craftai Lab'**
   String get starting;
 
   /// No description provided for @configurationError.
@@ -549,7 +579,7 @@ abstract class AppLocalizations {
   /// No description provided for @authHeroLabel.
   ///
   /// In ru, this message translates to:
-  /// **'Символ Craft Builder'**
+  /// **'Символ Craftai Lab'**
   String get authHeroLabel;
 
   /// No description provided for @fieldRequired.
@@ -861,7 +891,7 @@ abstract class AppLocalizations {
   /// No description provided for @onbHeroLabel.
   ///
   /// In ru, this message translates to:
-  /// **'Базовый персонаж Craft Builder'**
+  /// **'Базовый персонаж Craftai Lab'**
   String get onbHeroLabel;
 
   /// No description provided for @onbDefaultName.
