@@ -190,6 +190,10 @@ void main() {
       await tester.scrollUntilVisible(saveSwitch, -350, scrollable: scrollable);
       await tap(tester, saveSwitch);
       await tap(tester, find.widgetWithText(TextButton, 'Сохранить'));
+      expect(find.text('Настройки применены'), findsOneWidget);
+      // Let the save notification expire before tapping the chat input bar.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
       await back(tester);
       await tap(tester, find.text('Открыть демодиалог'));
       await send(tester, 'Сохрани материал');
