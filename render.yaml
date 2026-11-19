@@ -13,6 +13,9 @@ services:
         value: "5001"
       - key: CRAFTAI_APP_ENV
         value: production
+      # Supply a persistent PostgreSQL URL before deploying this revision.
+      - key: CRAFTAI_DATABASE_URL
+        sync: false
       - key: CRAFTAI_JWT_SECRET
         generateValue: true
       - key: CRAFTAI_OPENROUTER_API_KEY

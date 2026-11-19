@@ -41,6 +41,17 @@ MCP_TOOLS: list[dict[str, Any]] = [
 ]
 
 
+async def require_agent_epoch(db: AsyncSession, *, owner_id: str, agent_id: str) -> int:
+    epoch = await db.scalar(select(AgentModel.epoch).where(
+        AgentModel.id == agent_id,
+        AgentModel.owner_id == owner_id,
+        AgentModel.deleted_at.is_(None),
+    ))
+    if epoch is None:
+        raise ApiError(status_code=404, code="agents.not-found", message="Агент не найден.")
+    return epoch
+
+
 async def save_material_record(
     db: AsyncSession,
     *,
@@ -65,21 +76,13 @@ async def save_material_record(
             message="Текст материала превышает 10 000 знаков.",
         )
 
-    agent_epoch = (
-        await db.execute(
-            select(AgentModel.epoch).where(
-                AgentModel.id == agent_id,
-                AgentModel.owner_id == owner_id,
-                AgentModel.deleted_at.is_(None),
-            )
-        )
-    ).scalar_one_or_none()
+    agent_epoch = await require_agent_epoch(db, owner_id=owner_id, agent_id=agent_id)
 
     row = MaterialModel(
         id=str(uuid.uuid4()),
         owner_id=owner_id,
         agent_id=agent_id,
-        epoch=int(agent_epoch or 0),
+        epoch=agent_epoch,
         title=clean_title,
         text=clean_content,
         source=source if source in ("text", "photo") else "text",
@@ -98,6 +101,7 @@ async def search_materials_records(
     query: str,
     limit: int = 10,
 ) -> list[MaterialModel]:
+    await require_agent_epoch(db, owner_id=owner_id, agent_id=agent_id)
     # Strictly isolated by (owner_id, agent_id) from run context; never from model arguments.
     stmt = (
         select(MaterialModel)

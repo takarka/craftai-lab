@@ -40,4 +40,62 @@ jobs:
           cache: pip
           cache-dependency-path: backend/pyproject.toml
       - run: python -m pip install -e '.[dev]'
+      - run: ruff check app/core/migrations.py app/manage.py app/migrations tests/test_persistence.py
+      - run: sh -n ops/postgres-backup.sh
+      - name: Check migrations are included in the installable wheel
+        run: |
+          python -m pip wheel --no-deps . --wheel-dir /tmp/backend-wheel
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          with ZipFile(next(Path('/tmp/backend-wheel').glob('*.whl'))) as archive:
+              expected = {'app/migrations/schema_v1.py', 'app/migrations/versions/0001_initial.py', 'app/migrations/script.py.mako'}
+              assert expected <= set(archive.namelist())
+          PY
       - run: python -m pytest -q
+
+  postgres:
+    name: PostgreSQL migration, persistence and restore
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: craftai
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: test_craftai
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U craftai -d test_craftai"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      CRAFTAI_APP_ENV: test
+      CRAFTAI_TEST_DATABASE_URL: postgresql+asyncpg://craftai:ci-only-password@127.0.0.1:5432/test_craftai
+      CRAFTAI_OPENROUTER_API_KEY: ""
+      CRAFTAI_ENABLE_EMBEDDED_WORKER: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+      - run: python -m pip install -e '.[dev]'
+      - run: python -m pytest -q
+      - name: Dump, restore to a separate database and compare every row
+        env:
+          POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          docker exec -i -e PGUSER=craftai -e PGDATABASE=test_craftai -e BACKUP_DIR=/tmp/backups "$POSTGRES_CONTAINER" sh -s -- --once < ops/postgres-backup.sh
+          docker exec "$POSTGRES_CONTAINER" createdb -U craftai test_restore
+          docker exec "$POSTGRES_CONTAINER" sh -c 'pg_restore -U craftai --dbname=test_restore --exit-on-error --no-owner --no-acl /tmp/backups/craftai-*.dump'
+          CRAFTAI_IMPORT_SOURCE_URL="$CRAFTAI_TEST_DATABASE_URL" \
+          CRAFTAI_DATABASE_URL=postgresql+asyncpg://craftai:ci-only-password@127.0.0.1:5432/test_restore \
+          python -m app.manage verify-copy
