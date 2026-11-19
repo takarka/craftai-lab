@@ -77,9 +77,10 @@ Future<void> send(WidgetTester tester, String prompt) async {
 
 String output(WidgetTester tester) {
   final result = find.byType(SelectableText);
-  final visibleText = find.byType(Text).evaluate().map(
-    (element) => (element.widget as Text).data,
-  );
+  final visibleText = [
+    for (final element in find.byType(Text).evaluate())
+      (element.widget as Text).data,
+  ];
   expect(result, findsWidgets, reason: visibleText.join('\n'));
   return tester.widget<SelectableText>(result.last).data!;
 }
