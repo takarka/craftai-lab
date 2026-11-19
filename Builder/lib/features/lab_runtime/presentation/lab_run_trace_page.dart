@@ -7,11 +7,7 @@ class LabRunTracePage extends StatefulWidget {
   final String runId;
   final LabRuntimeApi api;
 
-  const LabRunTracePage({
-    super.key,
-    required this.runId,
-    required this.api,
-  });
+  const LabRunTracePage({super.key, required this.runId, required this.api});
 
   @override
   State<LabRunTracePage> createState() => _LabRunTracePageState();
@@ -105,10 +101,14 @@ class _LabRunTracePageState extends State<LabRunTracePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Модель: ${run.modelId}',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Модель: ${run.modelId}',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const SizedBox(height: 4),
-                Text('Версия конфигурации: ${run.agentVersionId} (epoch ${run.epoch})'),
+                Text(
+                  'Версия конфигурации: ${run.agentVersionId} (epoch ${run.epoch})',
+                ),
                 Text('Статус: ${_statusLabel(run.status)}'),
                 if (run.stopReason != null)
                   Text('Причина остановки: ${run.stopReason}'),
@@ -131,8 +131,7 @@ class _LabRunTracePageState extends State<LabRunTracePage> {
 
   Widget _buildEventCard(LabRun run, LabRunEvent evt) {
     final result = evt.payload['result'];
-    final materialId =
-        result is Map ? result['material_id'] as String? : null;
+    final materialId = result is Map ? result['material_id'] as String? : null;
     final hasError =
         evt.eventType == 'tool_rejected' ||
         (result is Map && result['error'] != null);
@@ -201,3 +200,4 @@ class _LabRunTracePageState extends State<LabRunTracePage> {
     };
   }
 }
+

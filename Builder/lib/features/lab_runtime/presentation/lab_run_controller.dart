@@ -107,10 +107,7 @@ class LabRunController extends Notifier<LabRunState> {
   final LabAgentRunConfig config;
   bool _inFlight = false;
 
-  LabRunController({
-    required this.api,
-    required this.config,
-  });
+  LabRunController({required this.api, required this.config});
 
   @override
   LabRunState build() => const LabRunState();
@@ -150,14 +147,20 @@ class LabRunController extends Notifier<LabRunState> {
     final prompt = (overrideText ?? state.draftText).trim();
     if (prompt.isEmpty) return;
 
-    final blockReason = checkCompatibility(hasImages: state.pendingImages.isNotEmpty);
+    final blockReason = checkCompatibility(
+      hasImages: state.pendingImages.isNotEmpty,
+    );
     if (blockReason != null) {
       state = state.copyWith(compatibilityBlockReason: blockReason);
       return;
     }
 
     final key = _generateIdempotencyKey();
-    await _executeRun(prompt: prompt, idempotencyKey: key, clearDraftOnSuccess: true);
+    await _executeRun(
+      prompt: prompt,
+      idempotencyKey: key,
+      clearDraftOnSuccess: true,
+    );
   }
 
   Future<void> retryLast() async {
@@ -166,7 +169,11 @@ class LabRunController extends Notifier<LabRunState> {
     if (prompt.isEmpty) return;
     // Reuse the same Idempotency-Key across retries / double-taps
     final key = state.activeIdempotencyKey ?? _generateIdempotencyKey();
-    await _executeRun(prompt: prompt, idempotencyKey: key, clearDraftOnSuccess: true);
+    await _executeRun(
+      prompt: prompt,
+      idempotencyKey: key,
+      clearDraftOnSuccess: true,
+    );
   }
 
   Future<void> _executeRun({
@@ -285,3 +292,4 @@ class LabRunController extends Notifier<LabRunState> {
     }
   }
 }
+

@@ -35,7 +35,10 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get --enforce-lockfile
-      - run: dart format --output=none --set-exit-if-changed lib test
+      - name: Check Dart formatting
+        run: |
+          dart format lib test test_live
+          git diff --exit-code -- lib test test_live
       - run: flutter analyze
       - run: flutter test --reporter expanded
 
@@ -76,3 +79,4 @@ jobs:
           cache: true
       - run: flutter pub get --enforce-lockfile
       - run: flutter build ios --release --no-codesign --dart-define=APP_ENV=staging
+
