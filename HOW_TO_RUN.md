@@ -124,6 +124,46 @@ Flutter откроет Chrome. Адрес приложения:
 Готовность остальных функций отражена в
 [плане и прогрессе](docs/plans/01-prd-0-2-mobile-mvp-progress.md).
 
+
+## Проверки перед PR
+
+Обычные тесты Flutter запускаются без backend (из папки `Builder`):
+
+```powershell
+flutter test --reporter expanded
+```
+
+Проверка форматирования охватывает также отдельные тесты с живым API:
+
+```powershell
+dart format --output=none --set-exit-if-changed lib test test_live
+flutter analyze
+```
+
+Для сквозной проверки авторизации и API сначала запустите локальный backend
+в режиме `CRAFTAI_APP_ENV=dev`, затем из `Builder` выполните:
+
+```powershell
+flutter test test_live/live_backend_e2e_test.dart
+```
+
+Этот набор создаёт тестового пользователя и использует локальную dev-учётную
+запись. По умолчанию он обращается к `http://127.0.0.1:5001`. Другой адрес
+задаётся явно: `--dart-define=LIVE_BACKEND_BASE_URL=https://<TEST_SERVER>`.
+Для HTTPS требуется доверенный сертификат.
+
+Backend-тесты запускайте из `backend` в отдельном тестовом окружении:
+
+```powershell
+& ./.venv/Scripts/python.exe -m pip install -e ".[dev]"
+& ./.venv/Scripts/python.exe -m pytest -q
+```
+
+Они пересоздают тестовую БД `test_craftai.db` и подменяют провайдера моделей;
+живой API и ключ OpenRouter не требуются. GitHub Actions запускает обычные
+Flutter-тесты в Builder CI и backend-тесты в Backend CI. Сквозная проверка
+с живыми моделями и приёмка на устройстве выполняются отдельно.
+
 ## Остановка и частые проблемы
 
 - Остановить Flutter: `q` в его терминале; остановить API: `Ctrl+C`.
@@ -135,3 +175,4 @@ Flutter откроет Chrome. Адрес приложения:
   его и в `--port` сервера, и в `CRAFTAI_API_BASE_URL` приложения.
 - После изменения `.env` или `--dart-define` полностью перезапустите
   соответствующий процесс.
+

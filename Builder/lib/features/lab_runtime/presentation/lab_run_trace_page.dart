@@ -58,9 +58,9 @@ class _LabRunTracePageState extends State<LabRunTracePage> {
       );
     } on LabApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     }
   }
 
@@ -71,23 +71,23 @@ class _LabRunTracePageState extends State<LabRunTracePage> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_error!, textAlign: TextAlign.center),
-                        const SizedBox(height: 12),
-                        FilledButton(
-                          onPressed: _load,
-                          child: const Text('Повторить'),
-                        ),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_error!, textAlign: TextAlign.center),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: _load,
+                      child: const Text('Повторить'),
                     ),
-                  ),
-                )
-              : _buildTraceBody(_run!),
+                  ],
+                ),
+              ),
+            )
+          : _buildTraceBody(_run!),
     );
   }
 
@@ -200,4 +200,3 @@ class _LabRunTracePageState extends State<LabRunTracePage> {
     };
   }
 }
-

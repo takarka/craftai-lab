@@ -71,7 +71,8 @@ class LabAgentSettingsPage extends StatefulWidget {
     required String instruction,
     required bool allowSave,
     required bool allowSearch,
-  })? onSaveCoreSettings;
+  })?
+  onSaveCoreSettings;
 
   const LabAgentSettingsPage({
     super.key,
@@ -222,9 +223,13 @@ class _LabAgentSettingsPageState extends State<LabAgentSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedModel = widget.availableModels.where((m) => m.modelId == _modelId).firstOrNull;
+    final selectedModel = widget.availableModels
+        .where((m) => m.modelId == _modelId)
+        .firstOrNull;
     final toolsIncompatible =
-        selectedModel != null && (_allowSave || _allowSearch) && !selectedModel.supportsTools;
+        selectedModel != null &&
+        (_allowSave || _allowSearch) &&
+        !selectedModel.supportsTools;
 
     return Scaffold(
       appBar: AppBar(
@@ -261,7 +266,10 @@ class _LabAgentSettingsPageState extends State<LabAgentSettingsPage> {
                   child: ListView(
                     padding: const EdgeInsets.all(16),
                     children: [
-                      Text('Модель', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'Модель',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       RadioGroup<String>(
                         groupValue: _modelId,
                         onChanged: (val) {
@@ -285,37 +293,53 @@ class _LabAgentSettingsPageState extends State<LabAgentSettingsPage> {
                           padding: const EdgeInsets.only(bottom: 8),
                           child: Text(
                             'Выбранная модель не поддерживает инструменты. Отправка будет заблокирована.',
-                            style: TextStyle(color: Theme.of(context).colorScheme.error),
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
                           ),
                         ),
                       const Divider(),
-                      Text('Инструменты', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'Инструменты',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       SwitchListTile(
-                        title: const Text('Сохранение материалов (save_material)'),
+                        title: const Text(
+                          'Сохранение материалов (save_material)',
+                        ),
                         value: _allowSave,
                         onChanged: (v) => setState(() => _allowSave = v),
                       ),
                       SwitchListTile(
-                        title: const Text('Поиск по материалам (search_materials)'),
+                        title: const Text(
+                          'Поиск по материалам (search_materials)',
+                        ),
                         value: _allowSearch,
                         onChanged: (v) => setState(() => _allowSearch = v),
                       ),
                       const Divider(),
-                      Text('Инструкция (${_instructionCtrl.text.length}/5000)',
-                          style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'Инструкция (${_instructionCtrl.text.length}/5000)',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _instructionCtrl,
                         maxLength: 5000,
                         maxLines: 4,
                         onChanged: (_) => setState(() {}),
-                        decoration: const InputDecoration(border: OutlineInputBorder()),
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                        ),
                       ),
                       const Divider(),
                       Row(
                         children: [
                           Expanded(
-                            child: Text('Материалы', style: Theme.of(context).textTheme.titleMedium),
+                            child: Text(
+                              'Материалы',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
                           ),
                           TextButton(
                             onPressed: () {
@@ -365,7 +389,11 @@ class _LabAgentSettingsPageState extends State<LabAgentSettingsPage> {
                       for (final mat in _materials)
                         ListTile(
                           title: Text(mat.title),
-                          subtitle: Text(mat.content, maxLines: 2, overflow: TextOverflow.ellipsis),
+                          subtitle: Text(
+                            mat.content,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                           trailing: IconButton(
                             icon: const Icon(Icons.delete_outline),
                             onPressed: () async {
@@ -374,13 +402,18 @@ class _LabAgentSettingsPageState extends State<LabAgentSettingsPage> {
                                 materialId: mat.id,
                               );
                               setState(() {
-                                _materials = _materials.where((e) => e.id != mat.id).toList();
+                                _materials = _materials
+                                    .where((e) => e.id != mat.id)
+                                    .toList();
                               });
                             },
                           ),
                         ),
                       const Divider(),
-                      Text('Скиллы', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'Скиллы',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       for (final sk in _skills)
                         Card(
                           child: Padding(
@@ -389,31 +422,44 @@ class _LabAgentSettingsPageState extends State<LabAgentSettingsPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 SwitchListTile(
-                                  title: Text('${sk.title} (v${sk.version}, rev ${sk.revision})'),
+                                  title: Text(
+                                    '${sk.title} (v${sk.version}, rev ${sk.revision})',
+                                  ),
                                   subtitle: Text(sk.baseContent),
                                   value: sk.enabled,
                                   onChanged: (val) async {
-                                    final updated = await widget.api.updateSkill(
-                                      agentId: widget.agentId,
-                                      slug: sk.slug,
-                                      enabled: val,
-                                      overrideText: sk.overrideText,
-                                      allowSave: _allowSave,
-                                      allowSearch: _allowSearch,
-                                    );
+                                    final updated = await widget.api
+                                        .updateSkill(
+                                          agentId: widget.agentId,
+                                          slug: sk.slug,
+                                          enabled: val,
+                                          overrideText: sk.overrideText,
+                                          allowSave: _allowSave,
+                                          allowSearch: _allowSearch,
+                                        );
                                     setState(() {
                                       _skills = _skills
-                                          .map((e) => e.slug == sk.slug ? updated : e)
+                                          .map(
+                                            (e) =>
+                                                e.slug == sk.slug ? updated : e,
+                                          )
                                           .toList();
                                     });
                                   },
                                 ),
                                 for (final c in sk.collisions)
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 4,
+                                    ),
                                     child: Text(
                                       c,
-                                      style: TextStyle(color: Theme.of(context).colorScheme.error),
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.error,
+                                      ),
                                     ),
                                   ),
                               ],
@@ -421,7 +467,10 @@ class _LabAgentSettingsPageState extends State<LabAgentSettingsPage> {
                           ),
                         ),
                       const Divider(),
-                      Text('Память', style: Theme.of(context).textTheme.titleMedium),
+                      Text(
+                        'Память',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
                       Row(
                         children: [
                           Expanded(
@@ -462,7 +511,9 @@ class _LabAgentSettingsPageState extends State<LabAgentSettingsPage> {
                                 entryId: m.id,
                               );
                               setState(() {
-                                _memory = _memory.where((e) => e.id != m.id).toList();
+                                _memory = _memory
+                                    .where((e) => e.id != m.id)
+                                    .toList();
                               });
                             },
                           ),
@@ -475,4 +526,3 @@ class _LabAgentSettingsPageState extends State<LabAgentSettingsPage> {
     );
   }
 }
-
