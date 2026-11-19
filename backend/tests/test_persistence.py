@@ -1,9 +1,11 @@
 import asyncio
 import os
+import socket
 import subprocess
 import sys
 
 import pytest
+import httpx
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
 from pydantic import ValidationError
@@ -13,7 +15,6 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from app.core.config import Settings, normalize_database_url, settings
 from app.core.database import Base, engine
 from app.core.migrations import adopt_legacy_schema, initialize_database
-from app.main import app, lifespan
 from app.manage import fingerprint, transfer_database, verify_copy
 
 
@@ -155,11 +156,42 @@ async def test_api_state_survives_new_migration_process_and_startup(client, tmp_
         env=os.environ.copy(), capture_output=True, text=True, timeout=30,
     )
     assert process.returncode == 0, process.stderr
-    async with lifespan(app):
-        restored = await client.get(f"/lab/v1/agents/{agent['id']}", headers=headers)
-        assert restored.json() == agent
-        progress = await client.get("/lab/v1/course/progress", headers=headers)
-        assert progress.json()["completed_lessons"] == [1]
-        assert marker.read_text() == "Учебный текст"
-        async with engine.connect() as connection:
-            assert await fingerprint(connection) == before
+    environment = {**os.environ, "CRAFTAI_STORAGE_DIR": str(storage)}
+    # Start and stop two fresh API interpreters against the same database/files.
+    for _ in range(2):
+        with socket.socket() as reservation:
+            reservation.bind(("127.0.0.1", 0))
+            port = reservation.getsockname()[1]
+        server = await asyncio.create_subprocess_exec(
+            sys.executable, "-m", "uvicorn", "app.main:app", "--host", "127.0.0.1", "--port", str(port),
+            env=environment, stdout=asyncio.subprocess.DEVNULL, stderr=asyncio.subprocess.PIPE,
+        )
+        try:
+            async with httpx.AsyncClient(base_url=f"http://127.0.0.1:{port}", timeout=2) as restarted:
+                ready = False
+                for _ in range(100):
+                    try:
+                        if (await restarted.get("/health")).status_code == 200:
+                            ready = True
+                            break
+                    except httpx.TransportError:
+                        pass
+                    if server.returncode is not None:
+                        break
+                    await asyncio.sleep(0.1)
+                assert ready, "Fresh API process did not become ready"
+                restored = await restarted.get(f"/lab/v1/agents/{agent['id']}", headers=headers)
+                assert restored.json() == agent
+                progress = await restarted.get("/lab/v1/course/progress", headers=headers)
+                assert progress.json()["completed_lessons"] == [1]
+                assert marker.read_text() == "Учебный текст"
+        finally:
+            if server.returncode is None:
+                server.terminate()
+            try:
+                await asyncio.wait_for(server.communicate(), timeout=10)
+            except TimeoutError:
+                server.kill()
+                await server.communicate()
+    async with engine.connect() as connection:
+        assert await fingerprint(connection) == before
