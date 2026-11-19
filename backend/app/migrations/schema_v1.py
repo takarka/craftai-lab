@@ -1,6 +1,19 @@
 """Immutable SQLAlchemy Core snapshot of schema 0001. Do not import live models here."""
 
-from sqlalchemy import JSON, Boolean, CheckConstraint, Column, Float, ForeignKey, Integer, MetaData, String, Table, Text, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    CheckConstraint,
+    Column,
+    Float,
+    ForeignKey,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    Text,
+    UniqueConstraint,
+)
 
 metadata = MetaData()
 

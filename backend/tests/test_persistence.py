@@ -4,8 +4,8 @@ import socket
 import subprocess
 import sys
 
-import pytest
 import httpx
+import pytest
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
 from pydantic import ValidationError
@@ -132,6 +132,7 @@ async def test_sqlite_import_preserves_every_row_resets_sequence_and_refuses_ove
 
 
 async def test_api_state_survives_new_migration_process_and_startup(client, tmp_path, monkeypatch):
+    await seed_sample(engine)
     login = await client.post("/mobile/auth/login", json={
         "email": "local-dev@craft-ai.local", "password": "LocalDevPass123!",
     })
