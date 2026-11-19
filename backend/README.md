@@ -33,6 +33,11 @@ docker compose up --build -d
 
 ## Запуск тестов
 
+Постоянное хранение, миграции, перенос существующей SQLite и проверка
+восстановления описаны в [PERSISTENCE.md](PERSISTENCE.md). Вне `dev`/`test`
+обязателен `CRAFTAI_DATABASE_URL` PostgreSQL. При наличии старой БД без версии
+сначала сделайте копию и выполните проверенное принятие legacy-схемы.
+
 ```bash
 cd backend
 uv run pytest -v

@@ -1,4 +1,26 @@
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import make_url
+
+
+def normalize_database_url(value: str) -> str:
+    """Accept provider URLs while always selecting an asynchronous driver."""
+    try:
+        url = make_url(value)
+    except Exception:
+        raise ValueError("Invalid database URL.") from None
+    if url.drivername in {"postgres", "postgresql"}:
+        url = url.set(drivername="postgresql+asyncpg")
+    elif url.drivername == "sqlite":
+        url = url.set(drivername="sqlite+aiosqlite")
+    if url.drivername not in {"postgresql+asyncpg", "sqlite+aiosqlite"}:
+        raise ValueError("Use PostgreSQL/asyncpg or SQLite/aiosqlite.")
+    if url.drivername == "postgresql+asyncpg" and "sslmode" in url.query:
+        if "ssl" in url.query:
+            raise ValueError("Specify only one of ssl or sslmode.")
+        ssl = url.query["sslmode"]
+        url = url.difference_update_query(["sslmode"]).update_query_dict({"ssl": ssl})
+    return url.render_as_string(hide_password=False)
 
 
 class Settings(BaseSettings):
@@ -6,6 +28,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_prefix="CRAFTAI_",
         extra="ignore",
+        hide_input_in_errors=True,
     )
 
     app_env: str = "dev"
@@ -15,6 +38,17 @@ class Settings(BaseSettings):
     # Database: defaults to local async SQLite for instant zero-config startup,
     # or PostgreSQL (postgresql+asyncpg://...) in Docker/production.
     database_url: str = "sqlite+aiosqlite:///./data/builder.db"
+
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def async_database_driver(cls, value: str) -> str:
+        return normalize_database_url(value)
+
+    @model_validator(mode="after")
+    def persistent_production_database(self):
+        if self.app_env not in {"dev", "test"} and not self.database_url.startswith("postgresql+asyncpg://"):
+            raise ValueError("Set CRAFTAI_DATABASE_URL to PostgreSQL outside dev/test; ephemeral SQLite is disabled.")
+        return self
 
     # File storage directory (or S3/MinIO bucket path)
     storage_dir: str = "./data/storage"

@@ -14,13 +14,13 @@ from sqlalchemy import delete, select
 from app.core.config import Settings, settings
 from app.core.database import (
     AttachmentModel,
-    Base,
     IdempotencyRecordModel,
     SessionLocal,
     UserModel,
     engine,
 )
 from app.core.errors import get_request_id, register_exception_handlers
+from app.core.migrations import initialize_database
 from app.core.security import format_utc, hash_password, utc_now
 from app.modules import auth, documents, mcp, models_and_chat
 from app.modules.lab.catalog import seed_catalog
@@ -88,8 +88,7 @@ async def background_worker_loop(stop_event: asyncio.Event) -> None:
 @asynccontextmanager
 async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     Path(settings.storage_dir).mkdir(parents=True, exist_ok=True)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    await initialize_database(engine)
     if settings.app_env == "dev":
         # Known SuperAdmin credentials are only acceptable on a local machine.
         await seed_default_dev_user()
