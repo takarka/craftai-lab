@@ -186,6 +186,7 @@ void main() {
       await back(tester);
       await tap(tester, find.text('Открыть демодиалог'));
       await send(tester, 'Сохрани материал');
+      await reveal(tester, find.byType(SelectableText));
       expect(output(tester), contains('сохранение запрещено'));
       expect(find.text('Подтвердить'), findsNothing);
       expect(
