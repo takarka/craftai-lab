@@ -35,9 +35,29 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get --enforce-lockfile
-      - run: dart format --output=none --set-exit-if-changed lib test
+      - name: Check Dart formatting
+        run: |
+          dart format lib test test_live
+          git diff --exit-code -- lib test test_live
       - run: flutter analyze
       - run: flutter test --reporter expanded
+
+  web-release-build:
+    name: Web release compile
+    needs: validate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Builder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: Builder/.fvmrc
+          channel: stable
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: flutter build web --release --dart-define=APP_ENV=staging
 
   android-release-build:
     name: Android arm64 release compile
@@ -76,3 +96,4 @@ jobs:
           cache: true
       - run: flutter pub get --enforce-lockfile
       - run: flutter build ios --release --no-codesign --dart-define=APP_ENV=staging
+

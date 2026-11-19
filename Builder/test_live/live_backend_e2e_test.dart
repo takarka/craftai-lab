@@ -8,11 +8,14 @@ import 'package:builder/features/session/infrastructure/secure_token_storage.dar
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  const backendBaseUrl = 'https://localhost:5001';
+  const backendBaseUrl = String.fromEnvironment(
+    'LIVE_BACKEND_BASE_URL',
+    defaultValue: 'http://127.0.0.1:5001',
+  );
   final baseUri = Uri.parse(backendBaseUrl);
 
-  final io = HttpClient()..badCertificateCallback = (cert, host, port) => true;
-  final httpClient = IOClient(io);
+  final httpClient = IOClient(HttpClient());
+  tearDownAll(httpClient.close);
 
   group('F20 Live Backend End-to-End Integration Tests', () {
     test('1. Fetch legal documents in RU and KK', () async {
