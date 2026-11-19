@@ -11,6 +11,7 @@ from sqlalchemy import inspect, text
 
 def application_metadata():
     from app.core.database import Base
+
     # Register all tables without importing the HTTP application or its lifespan.
     from app.modules.lab import materials_models, models, runtime_models  # noqa: F401
 

@@ -9,7 +9,8 @@ import pytest
 from alembic.autogenerate import compare_metadata
 from alembic.migration import MigrationContext
 from pydantic import ValidationError
-from sqlalchemy import func, inspect, select, text
+from sqlalchemy import event, func, inspect, select, text
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from app.core.config import Settings, normalize_database_url, settings
@@ -129,6 +130,39 @@ async def test_sqlite_import_preserves_every_row_resets_sequence_and_refuses_ove
             assert inserted.scalar_one() == 42
     finally:
         await source.dispose()
+
+
+async def test_failed_import_rolls_back_all_rows_and_can_be_retried(tmp_path):
+    source = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'damaged-source.db'}")
+    target = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'empty-target.db'}")
+
+    @event.listens_for(target.sync_engine, "connect")
+    def enforce_references(connection, _):
+        cursor = connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+    try:
+        await initialize_database(source)
+        await seed_sample(source)
+        memory = Base.metadata.tables["lab_memory_entries"]
+        # Old SQLite deployments could contain orphan rows with FK checks off.
+        async with source.begin() as connection:
+            await connection.execute(memory.insert(), {
+                "id": "orphan-memory", "owner_id": "persistent-owner",
+                "agent_id": "missing-agent", "text": "Invalid old reference",
+            })
+        with pytest.raises(IntegrityError):
+            await transfer_database(source, target)
+        async with target.connect() as connection:
+            assert all(value["rows"] == 0 for value in (await fingerprint(connection)).values())
+        async with source.begin() as connection:
+            await connection.execute(memory.delete().where(memory.c.id == "orphan-memory"))
+        await transfer_database(source, target)
+        await verify_copy(source, target)
+    finally:
+        await source.dispose()
+        await target.dispose()
 
 
 async def test_api_state_survives_new_migration_process_and_startup(client, tmp_path, monkeypatch):
