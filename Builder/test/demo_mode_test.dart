@@ -75,8 +75,14 @@ Future<void> send(WidgetTester tester, String prompt) async {
   await tap(tester, find.byTooltip('Отправить'));
 }
 
-String output(WidgetTester tester) =>
-    tester.widget<SelectableText>(find.byType(SelectableText).last).data!;
+String output(WidgetTester tester) {
+  final result = find.byType(SelectableText);
+  final visibleText = find.byType(Text).evaluate().map(
+    (element) => (element.widget as Text).data,
+  );
+  expect(result, findsWidgets, reason: visibleText.join('\n'));
+  return tester.widget<SelectableText>(result.last).data!;
+}
 
 void main() {
   testWidgets('demo starts with two agents and a persistent disclosure', (
@@ -186,7 +192,6 @@ void main() {
       await back(tester);
       await tap(tester, find.text('Открыть демодиалог'));
       await send(tester, 'Сохрани материал');
-      await reveal(tester, find.byType(SelectableText));
       expect(output(tester), contains('сохранение запрещено'));
       expect(find.text('Подтвердить'), findsNothing);
       expect(
