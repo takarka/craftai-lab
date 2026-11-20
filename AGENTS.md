@@ -13,7 +13,7 @@ Use the Flutter version pinned in `Builder/.fvmrc`. From `Builder/`:
 - `flutter pub get --enforce-lockfile` — install locked dependencies, matching CI.
 - `flutter run -d chrome --dart-define=APP_ENV=dev` — run the development web app.
 - `flutter run -t lib/main_gallery.dart -d chrome` — open the UI component gallery.
-- `dart format lib test` — format application and test code.
+- `dart format lib test test_live` — format application and test code.
 - `flutter analyze` — run static analysis and Flutter lint rules.
 - `flutter test --reporter expanded` — run the test suite.
 - `flutter build apk --release --target-platform android-arm64 --dart-define=APP_ENV=staging` — compile the Android release used by CI; requires Android SDK and JDK 17.
@@ -26,7 +26,7 @@ Use Dart's formatter, two-space indentation, and each app's `analysis_options.ya
 
 Do not run the full test suite after every task or edit. Run focused checks for affected behavior; use the full suite when changes have broad impact, CI requires it, or the user requests it. Skip tests for documentation-only changes. Repeat passing checks only when further changes or new evidence justify it.
 
-Use `flutter_test` for unit and widget tests, named `*_test.dart`. Run focused checks with `flutter test test/auth_flow_test.dart`. Native integration tests use `integration_test`: run `flutter test integration_test/ef00_upgrade_test.dart -d <device-id>`. The live backend suite requires a configured service at `https://localhost:5001`. No numeric coverage threshold is configured; cover changed behavior and regressions.
+Use `flutter_test` for unit and widget tests, named `*_test.dart`. Run focused checks with `flutter test test/auth_flow_test.dart`. Native integration tests use `integration_test`: run `flutter test integration_test/ef00_upgrade_test.dart -d <device-id>`. Live backend tests live separately in `Builder/test_live/` and are excluded from the default `flutter test` discovery. With a local dev API running, execute `flutter test test_live/live_backend_e2e_test.dart`; the default URL is `http://127.0.0.1:5001`. Override it with `--dart-define=LIVE_BACKEND_BASE_URL=<URL>`; HTTPS certificates are verified. No numeric coverage threshold is configured; cover changed behavior and regressions.
 
 ## Commit & Pull Request Guidelines
 
@@ -44,3 +44,4 @@ Configure public settings through `APP_ENV` and `CRAFTAI_API_BASE_URL`. Keep cre
 - Keep explanations concise.
 - Do not produce lengthy plans for straightforward tasks.
 - Prioritize implementation over unnecessary commentary.
+

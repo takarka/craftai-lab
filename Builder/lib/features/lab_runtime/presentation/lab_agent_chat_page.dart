@@ -112,12 +112,18 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
                 if (state.error != null)
                   _buildErrorCard(context, state.error!, notifier),
                 if (pendingAction != null)
-                  _buildConfirmationCard(context, pendingAction, notifier, state.isSending),
+                  _buildConfirmationCard(
+                    context,
+                    pendingAction,
+                    notifier,
+                    state.isSending,
+                  ),
                 if (state.hasToolFailure && run != null)
                   _buildAlertCard(
                     context,
                     title: 'Инструмент завершился с ошибкой',
-                    message: 'Не все вызовы инструментов прошли успешно. Проверьте детали в разделе «Как выполнено».',
+                    message:
+                        'Не все вызовы инструментов прошли успешно. Проверьте детали в разделе «Как выполнено».',
                     isError: true,
                   ),
                 if (output != null && output.isNotEmpty)
@@ -133,7 +139,9 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
 
   Widget _buildLimitsBanner(BuildContext context, LabRun? run) {
     final used = run?.toolCallsCount ?? 0;
-    final stopText = run?.stopReason != null ? ' · Остановка: ${run!.stopReason}' : '';
+    final stopText = run?.stopReason != null
+        ? ' · Остановка: ${run!.stopReason}'
+        : '';
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -164,14 +172,18 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
               title,
               style: TextStyle(
                 fontWeight: FontWeight.w700,
-                color: isError ? scheme.onErrorContainer : scheme.onSecondaryContainer,
+                color: isError
+                    ? scheme.onErrorContainer
+                    : scheme.onSecondaryContainer,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               message,
               style: TextStyle(
-                color: isError ? scheme.onErrorContainer : scheme.onSecondaryContainer,
+                color: isError
+                    ? scheme.onErrorContainer
+                    : scheme.onSecondaryContainer,
               ),
             ),
           ],
@@ -284,7 +296,9 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
                   TextButton(
                     onPressed: notifier.toggleBeforeAfter,
                     child: Text(
-                      state.showPreviousVersion ? 'Показать «после»' : 'Показать «до»',
+                      state.showPreviousVersion
+                          ? 'Показать «после»'
+                          : 'Показать «до»',
                     ),
                   ),
               ],

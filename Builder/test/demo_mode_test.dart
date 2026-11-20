@@ -75,8 +75,15 @@ Future<void> send(WidgetTester tester, String prompt) async {
   await tap(tester, find.byTooltip('Отправить'));
 }
 
-String output(WidgetTester tester) =>
-    tester.widget<SelectableText>(find.byType(SelectableText).last).data!;
+String output(WidgetTester tester) {
+  final result = find.byType(SelectableText);
+  final visibleText = [
+    for (final element in find.byType(Text).evaluate())
+      (element.widget as Text).data,
+  ];
+  expect(result, findsWidgets, reason: visibleText.join('\n'));
+  return tester.widget<SelectableText>(result.last).data!;
+}
 
 void main() {
   testWidgets('demo starts with two agents and a persistent disclosure', (
@@ -183,6 +190,10 @@ void main() {
       await tester.scrollUntilVisible(saveSwitch, -350, scrollable: scrollable);
       await tap(tester, saveSwitch);
       await tap(tester, find.widgetWithText(TextButton, 'Сохранить'));
+      expect(find.text('Настройки применены'), findsOneWidget);
+      // Let the save notification expire before tapping the chat input bar.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
       await back(tester);
       await tap(tester, find.text('Открыть демодиалог'));
       await send(tester, 'Сохрани материал');

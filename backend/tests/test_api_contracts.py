@@ -141,9 +141,13 @@ async def test_mcp_tools(client: AsyncClient):
     names = {t["name"] for t in tools}
     assert {"save_material", "search_materials"}.issubset(names)
 
+    agent = await client.post("/lab/v1/agents", headers=headers, json={"name": "MCP contract agent"})
+    assert agent.status_code == 201
+    agent_id = agent.json()["id"]
+
     save_call = await client.post(
         "/mcp/v1",
-        headers={**headers, "X-Agent-Id": "agent-contract-1"},
+        headers={**headers, "X-Agent-Id": agent_id},
         json={
             "jsonrpc": "2.0",
             "id": 2,
@@ -160,7 +164,7 @@ async def test_mcp_tools(client: AsyncClient):
 
     search_call = await client.post(
         "/mcp/v1",
-        headers={**headers, "X-Agent-Id": "agent-contract-1"},
+        headers={**headers, "X-Agent-Id": agent_id},
         json={
             "jsonrpc": "2.0",
             "id": 3,
@@ -171,3 +175,30 @@ async def test_mcp_tools(client: AsyncClient):
     assert search_call.status_code == 200
     items = search_call.json()["result"]["items"]
     assert any(item["material_id"] == material_id for item in items)
+
+
+@pytest.mark.parametrize("tool", ["save_material", "search_materials"])
+async def test_mcp_rejects_missing_foreign_and_deleted_agents(client: AsyncClient, tool):
+    tokens = await _login_dev(client)
+    owner = {"Authorization": f"Bearer {tokens['accessToken']}"}
+    registered = await client.post("/mobile/auth/register", json={
+        "name": "Other teacher", "email": "mcp-other@craft-ai.local", "password": "StrongPassword123",
+        "termsRevision": "2026.1-ru", "privacyRevision": "2026.1-ru", "language": "ru",
+    })
+    assert registered.status_code == 200
+    foreign = {"Authorization": f"Bearer {registered.json()['accessToken']}"}
+    created = await client.post("/lab/v1/agents", headers=owner, json={"name": "Owned agent"})
+    assert created.status_code == 201
+    agent_id = created.json()["id"]
+    payload = {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {
+        "name": tool, "arguments": {"title": "Тема", "content": "Учебный текст", "query": "Тема"},
+    }}
+    for headers, candidate in [(owner, "missing-agent"), (foreign, agent_id)]:
+        response = await client.post("/mcp/v1", headers={**headers, "X-Agent-Id": candidate}, json=payload)
+        assert response.status_code == 404
+        assert response.json()["code"] == "agents.not-found"
+    materials = await client.get(f"/lab/v1/agents/{agent_id}/materials", headers=owner)
+    assert materials.json()["items"] == []
+    assert (await client.delete(f"/lab/v1/agents/{agent_id}", headers=owner)).status_code == 204
+    deleted = await client.post("/mcp/v1", headers={**owner, "X-Agent-Id": agent_id}, json=payload)
+    assert deleted.status_code == 404

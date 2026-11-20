@@ -3,6 +3,7 @@ from collections.abc import AsyncGenerator
 from pathlib import Path
 
 from sqlalchemy import JSON, Boolean, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -10,7 +11,7 @@ from app.core.config import settings
 
 # Ensure local SQLite data directory exists when using sqlite
 if settings.database_url.startswith("sqlite"):
-    db_file = settings.database_url.split("///")[-1]
+    db_file = make_url(settings.database_url).database
     if db_file and db_file != ":memory:":
         Path(db_file).parent.mkdir(parents=True, exist_ok=True)
 
@@ -20,6 +21,7 @@ engine = create_async_engine(
     settings.database_url,
     echo=False,
     future=True,
+    pool_pre_ping=True,
 )
 
 SessionLocal = async_sessionmaker(

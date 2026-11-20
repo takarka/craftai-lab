@@ -1,5 +1,6 @@
 import 'package:builder/app/localization/app_localizations.dart';
 import 'package:builder/app/providers.dart';
+import 'package:builder/app/presentation/foundation_pages.dart';
 import 'package:builder/app/router/app_router.dart';
 import 'package:builder/features/assistant/assistant_providers.dart';
 import 'package:builder/features/assistant/domain/assistant_config.dart';
@@ -99,7 +100,7 @@ void main() {
   });
 
   for (final route in ['instructions', 'knowledge', 'memory', 'tools', 'mcp']) {
-    testWidgets('Direct /assistant/$route is locked during first level', (
+    testWidgets('Retired /assistant/$route does not open a legacy editor', (
       tester,
     ) async {
       final container = ProviderContainer(
@@ -127,7 +128,8 @@ void main() {
       await tester.pumpAndSettle();
       router.go('/assistant/$route');
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('assistant.featureLocked')), findsOneWidget);
+      expect(find.byType(FoundationPage), findsOneWidget);
+      expect(find.byType(AssistantFeatureGate), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     });

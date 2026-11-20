@@ -107,10 +107,7 @@ class LabRunController extends Notifier<LabRunState> {
   final LabAgentRunConfig config;
   bool _inFlight = false;
 
-  LabRunController({
-    required this.api,
-    required this.config,
-  });
+  LabRunController({required this.api, required this.config});
 
   @override
   LabRunState build() => const LabRunState();
@@ -141,7 +138,10 @@ class LabRunController extends Notifier<LabRunState> {
 
   String _generateIdempotencyKey() {
     final rand = Random.secure();
-    final suffix = List.generate(8, (_) => rand.nextInt(16).toRadixString(16)).join();
+    final suffix = List.generate(
+      8,
+      (_) => rand.nextInt(16).toRadixString(16),
+    ).join();
     return 'run-${DateTime.now().microsecondsSinceEpoch}-$suffix';
   }
 
@@ -150,14 +150,20 @@ class LabRunController extends Notifier<LabRunState> {
     final prompt = (overrideText ?? state.draftText).trim();
     if (prompt.isEmpty) return;
 
-    final blockReason = checkCompatibility(hasImages: state.pendingImages.isNotEmpty);
+    final blockReason = checkCompatibility(
+      hasImages: state.pendingImages.isNotEmpty,
+    );
     if (blockReason != null) {
       state = state.copyWith(compatibilityBlockReason: blockReason);
       return;
     }
 
     final key = _generateIdempotencyKey();
-    await _executeRun(prompt: prompt, idempotencyKey: key, clearDraftOnSuccess: true);
+    await _executeRun(
+      prompt: prompt,
+      idempotencyKey: key,
+      clearDraftOnSuccess: true,
+    );
   }
 
   Future<void> retryLast() async {
@@ -166,7 +172,11 @@ class LabRunController extends Notifier<LabRunState> {
     if (prompt.isEmpty) return;
     // Reuse the same Idempotency-Key across retries / double-taps
     final key = state.activeIdempotencyKey ?? _generateIdempotencyKey();
-    await _executeRun(prompt: prompt, idempotencyKey: key, clearDraftOnSuccess: true);
+    await _executeRun(
+      prompt: prompt,
+      idempotencyKey: key,
+      clearDraftOnSuccess: true,
+    );
   }
 
   Future<void> _executeRun({
@@ -255,7 +265,11 @@ class LabRunController extends Notifier<LabRunState> {
         showPreviousVersion: false,
       );
     } on LabApiException catch (e) {
-      state = state.copyWith(isSending: false, error: e, isOffline: e.isOffline);
+      state = state.copyWith(
+        isSending: false,
+        error: e,
+        isOffline: e.isOffline,
+      );
     } finally {
       _inFlight = false;
     }
