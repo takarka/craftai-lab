@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: craftai-lab-api
+    runtime: docker
+    # Paid compute is required for a persistent uploads disk. See docs/DEPLOYMENT.md.
+    plan: starter
+    branch: main
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: craftai-lab-storage
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PORT
+        value: "5001"
+      - key: CRAFTAI_APP_ENV
+        value: production
+      - key: CRAFTAI_STORAGE_DIR
+        value: /var/data/storage
+      - key: CRAFTAI_CORS_ORIGINS
+        value: '["https://takarka.github.io"]'
+      # Supply a persistent PostgreSQL URL before deploying this revision.
+      - key: CRAFTAI_DATABASE_URL
+        sync: false
+      - key: CRAFTAI_JWT_SECRET
+        generateValue: true
+      - key: CRAFTAI_OPENROUTER_API_KEY
+        sync: false
+      - key: CRAFTAI_LAB_MODEL_1_ID
+        sync: false
+      - key: CRAFTAI_LAB_MODEL_2_ID
+        sync: false
+      - key: CRAFTAI_LAB_MODEL_1_SUPPORTS_TOOLS
+        value: "false"
+      - key: CRAFTAI_LAB_MODEL_1_SUPPORTS_VISION
+        value: "false"
+      - key: CRAFTAI_LAB_MODEL_2_SUPPORTS_TOOLS
+        value: "false"
+      - key: CRAFTAI_LAB_MODEL_2_SUPPORTS_VISION
+        value: "false"

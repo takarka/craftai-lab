@@ -13,6 +13,8 @@ services:
         value: "5001"
       - key: CRAFTAI_APP_ENV
         value: production
+      - key: CRAFTAI_CORS_ORIGINS
+        value: '["https://takarka.github.io"]'
       # Supply a persistent PostgreSQL URL before deploying this revision.
       - key: CRAFTAI_DATABASE_URL
         sync: false

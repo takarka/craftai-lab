@@ -1,11 +1,11 @@
 {
-    "name": "builder",
-    "short_name": "builder",
+    "name": "Craftai Lab",
+    "short_name": "Craftai Lab",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#E3ECFB",
     "theme_color": "#0047BA",
-    "description": "Standalone Builder Flutter application.",
+    "description": "Учебные ИИ-агенты для преподавателей.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

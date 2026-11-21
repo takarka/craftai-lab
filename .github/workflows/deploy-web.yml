@@ -1,0 +1,75 @@
+name: Publish web to GitHub Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: "Public HTTPS API URL (no credentials)"
+        required: true
+        type: string
+        default: "https://craftai-lab-api.onrender.com"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      API_BASE_URL: ${{ inputs.api_base_url }}
+    defaults:
+      run:
+        working-directory: Builder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: Builder/.fvmrc
+          channel: stable
+          cache: true
+      - name: Validate deployment target and API health
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import os
+          from urllib.parse import urlsplit
+          url = urlsplit(os.environ['API_BASE_URL'])
+          if (url.scheme != 'https' or not url.hostname or url.username is not None
+              or url.password is not None or url.query or url.fragment):
+              raise SystemExit('API URL must be HTTPS without credentials, query or fragment.')
+          PY
+          curl --fail --silent --show-error --retry 3 --max-time 90 "${API_BASE_URL%/}/health"
+      - run: flutter pub get --enforce-lockfile
+      - run: flutter analyze
+      - name: Build production web app
+        shell: bash
+        env:
+          REPOSITORY_NAME: ${{ github.event.repository.name }}
+        run: |
+          base_href="/${REPOSITORY_NAME}/"
+          if [[ "$REPOSITORY_NAME" == *.github.io ]]; then base_href="/"; fi
+          flutter build web --release --base-href "$base_href" \
+            --dart-define=APP_ENV=prod \
+            --dart-define="CRAFTAI_API_BASE_URL=$API_BASE_URL"
+          touch build/web/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: Builder/build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment

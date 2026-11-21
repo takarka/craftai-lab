@@ -34,6 +34,33 @@ class Settings(BaseSettings):
     app_env: str = "dev"
     host: str = "0.0.0.0"
     port: int = 5001
+    # JSON array of browser origins; paths such as /craftai-lab/ are not origins.
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "https://takarka.github.io",
+    ]
+
+    @field_validator("cors_origins")
+    @classmethod
+    def explicit_browser_origins(cls, value: list[str]) -> list[str]:
+        from urllib.parse import urlsplit
+
+        for origin in value:
+            parsed = urlsplit(origin)
+            if (
+                parsed.scheme not in {"http", "https"}
+                or not parsed.netloc
+                or parsed.hostname is None
+                or "*" in origin
+                or parsed.username is not None
+                or parsed.password is not None
+                or parsed.path
+                or parsed.query
+                or parsed.fragment
+            ):
+                raise ValueError("CORS origins must be explicit HTTP(S) origins without a path or credentials.")
+        return value
 
     # Database: defaults to local async SQLite for instant zero-config startup,
     # or PostgreSQL (postgresql+asyncpg://...) in Docker/production.

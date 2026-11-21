@@ -24,6 +24,7 @@ services:
         condition: service_healthy
     environment:
       CRAFTAI_APP_ENV: ${CRAFTAI_APP_ENV:-dev}
+      CRAFTAI_CORS_ORIGINS: '${CRAFTAI_CORS_ORIGINS:-["http://localhost:8080","http://localhost:3000"]}'
       CRAFTAI_DATABASE_URL: ${CRAFTAI_DATABASE_URL:-postgresql+asyncpg://craftai:craftai_dev_password@postgres:5432/craftai}
       CRAFTAI_STORAGE_DIR: /data/storage
       CRAFTAI_JWT_SECRET: ${CRAFTAI_JWT_SECRET:-change-me-in-production-min-32-bytes-secret}
