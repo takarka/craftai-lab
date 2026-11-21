@@ -231,7 +231,13 @@ class _AuthPageState extends ConsumerState<AuthPage>
         ? strings.authRegister
         : strings.appTitle;
     return Scaffold(
-      appBar: AppBar(actions: const [LanguageSelector()]),
+      appBar: AppBar(
+        actions: const [
+          Flexible(
+            child: FittedBox(fit: BoxFit.scaleDown, child: LanguageSelector()),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) => SingleChildScrollView(

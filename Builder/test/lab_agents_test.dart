@@ -372,7 +372,7 @@ void main() {
   });
 
   testWidgets(
-    'wizard creates two agents with editable instructions and persists draft',
+    'creates agents with only name and instruction and persists draft',
     (tester) async {
       tester.view.physicalSize = const Size(900, 1600);
       tester.view.devicePixelRatio = 1;
@@ -389,29 +389,8 @@ void main() {
           find.byKey(const ValueKey('agent-name')),
           'Учитель $i',
         );
-        await tester.enterText(
-          find.byKey(const ValueKey('agent-subject')),
-          'Физика',
-        );
-        await tester.enterText(find.byKey(const ValueKey('agent-grade')), '8');
-        await tester.enterText(
-          find.byKey(const ValueKey('agent-requirements')),
-          'Три задания.',
-        );
-        await tester.tap(find.text('Составить инструкцию'));
-        await tester.pumpAndSettle();
-        expect(
-          find.textContaining('Проверьте и отредактируйте'),
-          findsOneWidget,
-        );
-        final generated = tester
-            .widget<TextFormField>(
-              find.byKey(const ValueKey('agent-instruction')),
-            )
-            .controller!
-            .text;
-        expect(generated, contains('Требования: Три задания. Выполняй'));
-        expect(generated, isNot(contains('Уточняй')));
+        expect(find.byType(TextFormField), findsNWidgets(2));
+        expect(find.byType(ChoiceChip), findsNothing);
         await tester.enterText(
           find.byKey(const ValueKey('agent-instruction')),
           'Редактируемая инструкция $i',
@@ -427,6 +406,14 @@ void main() {
         await tester.tap(find.widgetWithText(FilledButton, 'Создать агента'));
         await tester.pumpAndSettle();
         expect(find.text('$i из 5'), findsOneWidget);
+        final request = fixture.requests.lastWhere(
+          (request) => request.method == 'POST',
+        );
+        expect(jsonDecode(request.body), {
+          'name': 'Учитель $i',
+          'instruction': 'Редактируемая инструкция $i',
+        });
+        expect(await repo.cache.readDraft('__new__', 0), isNull);
       }
       expect(fixture.agents.values.map((agent) => agent['instruction']), [
         'Редактируемая инструкция 1',
@@ -434,4 +421,48 @@ void main() {
       ]);
     },
   );
+
+  testWidgets('name and instruction are required before creating an agent', (
+    tester,
+  ) async {
+    final fixture = LabFixture();
+    await fixture.init();
+    await mountAgents(tester, fixture.repository());
+    await tester.tap(find.text('Создать агента'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Создать агента'));
+    await tester.pumpAndSettle();
+    expect(find.text('Заполните поле'), findsNWidgets(2));
+    expect(fixture.requests.where((r) => r.method == 'POST'), isEmpty);
+  });
+
+  testWidgets('restores a legacy draft directly into the simplified form', (
+    tester,
+  ) async {
+    final fixture = LabFixture();
+    await fixture.init();
+    final cache = MemoryAgentsCache();
+    await cache.saveDraft('__new__', 0, {
+      'name': 'Помощник',
+      'instruction': 'Объясняй понятным языком',
+      'subject': 'Физика',
+      'grade': '8',
+      'requirements': 'Три задания',
+      'wizard': true,
+      'preview': false,
+      'version': 0,
+    });
+    await mountAgents(tester, fixture.repository(cache));
+    await tester.tap(find.text('Создать агента'));
+    await tester.pumpAndSettle();
+    expect(find.text('Помощник'), findsOneWidget);
+    expect(find.text('Объясняй понятным языком'), findsOneWidget);
+    expect(find.byType(TextFormField), findsNWidgets(2));
+    await tester.tap(find.widgetWithText(FilledButton, 'Создать агента'));
+    await tester.pumpAndSettle();
+    expect(
+      fixture.agents.values.single['instruction'],
+      'Объясняй понятным языком',
+    );
+  });
 }

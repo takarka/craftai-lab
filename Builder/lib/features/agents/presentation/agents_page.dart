@@ -235,6 +235,9 @@ class _AgentsPageState extends ConsumerState<AgentsPage> {
                           children: [
                             FilledButton.tonalIcon(
                               key: ValueKey('agent-chat-${agent.id}'),
+                              style: FilledButton.styleFrom(
+                                foregroundColor: Colors.white,
+                              ),
                               onPressed: _busy
                                   ? null
                                   : () async {
@@ -357,12 +360,7 @@ class AgentEditorPage extends ConsumerStatefulWidget {
 class _AgentEditorPageState extends ConsumerState<AgentEditorPage> {
   final _form = GlobalKey<FormState>();
   final _name = TextEditingController();
-  final _subject = TextEditingController();
-  final _grade = TextEditingController();
-  final _requirements = TextEditingController();
   final _instruction = TextEditingController();
-  bool _wizard = true;
-  bool _preview = false;
   bool _busy = false;
   bool _initialized = false;
   bool _draftReady = false;
@@ -375,13 +373,7 @@ class _AgentEditorPageState extends ConsumerState<AgentEditorPage> {
   @override
   void initState() {
     super.initState();
-    for (final controller in [
-      _name,
-      _subject,
-      _grade,
-      _requirements,
-      _instruction,
-    ]) {
+    for (final controller in [_name, _instruction]) {
       controller.addListener(_persistDraft);
     }
   }
@@ -392,12 +384,7 @@ class _AgentEditorPageState extends ConsumerState<AgentEditorPage> {
     if (cache == null) return;
     final draft = <String, dynamic>{
       'name': _name.text,
-      'subject': _subject.text,
-      'grade': _grade.text,
-      'requirements': _requirements.text,
       'instruction': _instruction.text,
-      'wizard': _wizard,
-      'preview': _preview,
       'version': _version,
     };
     _draftWrite = _draftWrite
@@ -420,12 +407,7 @@ class _AgentEditorPageState extends ConsumerState<AgentEditorPage> {
       if (!mounted) return;
       if (draft != null && draft['version'] == _version) {
         _name.text = draft['name'] as String;
-        _subject.text = draft['subject'] as String;
-        _grade.text = draft['grade'] as String;
-        _requirements.text = draft['requirements'] as String;
         _instruction.text = draft['instruction'] as String;
-        _wizard = draft['wizard'] as bool;
-        _preview = draft['preview'] as bool;
       }
     } catch (_) {
       if (mounted) _error = AppLocalizations.of(context).agentsError;
@@ -436,13 +418,7 @@ class _AgentEditorPageState extends ConsumerState<AgentEditorPage> {
 
   @override
   void dispose() {
-    for (final controller in [
-      _name,
-      _subject,
-      _grade,
-      _requirements,
-      _instruction,
-    ]) {
+    for (final controller in [_name, _instruction]) {
       controller.dispose();
     }
     super.dispose();
@@ -462,8 +438,6 @@ class _AgentEditorPageState extends ConsumerState<AgentEditorPage> {
     try {
       final data = <String, dynamic>{
         'name': _name.text.trim(),
-        'subject': _subject.text.trim(),
-        'grade': _grade.text.trim(),
         'instruction': _instruction.text,
       };
       final LabAgent agent = await ref
@@ -472,10 +446,7 @@ class _AgentEditorPageState extends ConsumerState<AgentEditorPage> {
             if (widget.agentId != null) {
               return repo.update(widget.agentId!, data);
             }
-            return repo.create({
-              ...data,
-              'task_type': _wizard ? 'prepare_tasks' : 'custom',
-            });
+            return repo.create(data);
           });
       if (!mounted) return;
       await _draftWrite;
@@ -517,11 +488,8 @@ class _AgentEditorPageState extends ConsumerState<AgentEditorPage> {
             _epoch = agent?.epoch ?? 0;
             _version = agent?.version ?? 0;
             _cache = ref.read(agentsRepositoryProvider(widget.ownerId)).cache;
-            _name.text = agent?.name ?? s.agentsDefaultName;
-            _subject.text = agent?.subject ?? '';
-            _grade.text = agent?.grade ?? '';
+            _name.text = agent?.name ?? '';
             _instruction.text = agent?.instruction ?? '';
-            _preview = agent != null;
             Future.microtask(_restoreDraft);
           }
           final enabled = !_busy && !snapshot.offline && _draftReady;
@@ -530,37 +498,14 @@ class _AgentEditorPageState extends ConsumerState<AgentEditorPage> {
             child: ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                if (snapshot.offline) Text(s.agentsOffline),
-                if (agent != null)
+                if (snapshot.offline) ...[
+                  Text(s.agentsOffline),
+                  const SizedBox(height: BuilderSpace.md),
+                ],
+                if (agent != null) ...[
                   Text(s.agentsVersion(agent.version), style: BuilderType.h2),
-                if (agent == null)
-                  Wrap(
-                    spacing: 12,
-                    children: [
-                      ChoiceChip(
-                        label: Text(s.agentsPrepareTasks),
-                        selected: _wizard,
-                        onSelected: enabled
-                            ? (_) => setState(() {
-                                _wizard = true;
-                                _preview = false;
-                                _persistDraft();
-                              })
-                            : null,
-                      ),
-                      ChoiceChip(
-                        label: Text(s.agentsCustom),
-                        selected: !_wizard,
-                        onSelected: enabled
-                            ? (_) => setState(() {
-                                _wizard = false;
-                                _preview = true;
-                                _persistDraft();
-                              })
-                            : null,
-                      ),
-                    ],
-                  ),
+                  const SizedBox(height: BuilderSpace.md),
+                ],
                 TextFormField(
                   key: const ValueKey('agent-name'),
                   controller: _name,
@@ -570,90 +515,33 @@ class _AgentEditorPageState extends ConsumerState<AgentEditorPage> {
                   validator: (value) =>
                       value!.trim().isEmpty ? s.agentsRequired : null,
                 ),
+                const SizedBox(height: BuilderSpace.xs),
                 TextFormField(
-                  key: const ValueKey('agent-subject'),
-                  controller: _subject,
+                  key: const ValueKey('agent-instruction'),
+                  controller: _instruction,
                   enabled: enabled,
-                  maxLength: 200,
-                  decoration: InputDecoration(labelText: s.agentsSubject),
-                  validator: (value) =>
-                      _wizard && agent == null && value!.trim().isEmpty
-                      ? s.agentsRequired
-                      : null,
-                ),
-                TextFormField(
-                  key: const ValueKey('agent-grade'),
-                  controller: _grade,
-                  enabled: enabled,
-                  maxLength: 100,
-                  decoration: InputDecoration(labelText: s.agentsGrade),
-                  validator: (value) =>
-                      _wizard && agent == null && value!.trim().isEmpty
-                      ? s.agentsRequired
-                      : null,
-                ),
-                if (_wizard && agent == null) ...[
-                  TextFormField(
-                    key: const ValueKey('agent-requirements'),
-                    controller: _requirements,
-                    enabled: enabled,
-                    maxLength: 4000,
-                    minLines: 2,
-                    maxLines: 5,
-                    decoration: InputDecoration(
-                      labelText: s.agentsRequirements,
-                    ),
-                    validator: (value) =>
-                        value!.trim().isEmpty ? s.agentsRequired : null,
+                  minLines: 6,
+                  maxLines: 16,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    labelText: s.agentsInstruction,
+                    counterText: '${_instruction.text.runes.length} / 5 000',
                   ),
-                  OutlinedButton(
-                    onPressed: enabled
-                        ? () {
-                            if (!_form.currentState!.validate()) return;
-                            setState(() {
-                              _instruction.text = s.agentsInstructionTemplate(
-                                _subject.text.trim(),
-                                _grade.text.trim(),
-                                // The template adds its own period.
-                                _requirements.text.trim().replaceFirst(
-                                  RegExp(r'[.\s]+$'),
-                                  '',
-                                ),
-                              );
-                              _preview = true;
-                              _persistDraft();
-                            });
-                          }
-                        : null,
-                    child: Text(s.agentsGenerate),
-                  ),
-                ],
-                if (_preview) ...[
-                  Text(s.agentsPreview),
-                  TextFormField(
-                    key: const ValueKey('agent-instruction'),
-                    controller: _instruction,
-                    enabled: enabled,
-                    minLines: 6,
-                    maxLines: 16,
-                    onChanged: (_) => setState(() {}),
-                    decoration: InputDecoration(
-                      labelText: s.agentsInstruction,
-                      counterText: '${_instruction.text.runes.length} / 5 000',
-                    ),
-                    validator: (value) => value!.runes.length > 5000
+                  validator: (value) {
+                    if (value!.trim().isEmpty) return s.agentsRequired;
+                    return value.runes.length > 5000
                         ? s.agentsInstructionLimit
-                        : null,
-                  ),
-                  const SizedBox(height: 20),
-                  FilledButton(
-                    onPressed:
-                        enabled && (agent != null || snapshot.agents.length < 5)
-                        ? _save
-                        : null,
-                    child: Text(agent == null ? s.agentsCreate : s.agentsSave),
-                  ),
-                ],
+                        : null;
+                  },
+                ),
+                const SizedBox(height: BuilderSpace.lg),
+                FilledButton(
+                  onPressed:
+                      enabled && (agent != null || snapshot.agents.length < 5)
+                      ? _save
+                      : null,
+                  child: Text(agent == null ? s.agentsCreate : s.agentsSave),
+                ),
                 if (_error != null)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 12),

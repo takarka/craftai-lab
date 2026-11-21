@@ -79,7 +79,7 @@
         "--web-browser-flag=--ignore-certificate-errors",
         "--web-browser-flag=--disable-web-security",
         "--dart-define=APP_ENV=dev",
-        "--dart-define=CRAFTAI_API_BASE_URL=https://localhost:5001"
+        "--dart-define=CRAFTAI_API_BASE_URL=http://127.0.0.1:5001"
       ]
     },
     {
@@ -93,7 +93,7 @@
         "--web-browser-flag=--ignore-certificate-errors",
         "--web-browser-flag=--disable-web-security",
         "--dart-define=APP_ENV=dev",
-        "--dart-define=CRAFTAI_API_BASE_URL=https://localhost:5001"
+        "--dart-define=CRAFTAI_API_BASE_URL=http://127.0.0.1:5001"
       ]
     }
   ]
