@@ -247,7 +247,7 @@ void main() {
   );
 
   testWidgets(
-    'wizard creates an agent, rename persists, instruction changes the template',
+    'editor creates an agent, rename persists, instruction changes the template',
     (tester) async {
       final environment = await mountDemo(tester);
       await tap(tester, find.text('Создать агента'));
@@ -255,15 +255,6 @@ void main() {
         find.byKey(const ValueKey('agent-name')),
         'Демо Chrome',
       );
-      await tester.enterText(
-        find.byKey(const ValueKey('agent-subject')),
-        'Математика',
-      );
-      await tester.enterText(find.byKey(const ValueKey('agent-grade')), '5');
-      final requirements = find.byKey(const ValueKey('agent-requirements'));
-      await reveal(tester, requirements);
-      await tester.enterText(requirements, 'Три задания');
-      await tap(tester, find.text('Составить инструкцию'));
       final instruction = find.byKey(const ValueKey('agent-instruction'));
       await reveal(tester, instruction);
       await tester.enterText(instruction, 'Отвечай кратко.');
@@ -271,6 +262,7 @@ void main() {
       expect(find.text('3 из 5'), findsOneWidget);
       final LabAgent created = (await environment.agents.load()).agents
           .singleWhere((agent) => agent.name == 'Демо Chrome');
+      expect(created.instruction, 'Отвечай кратко.');
       await menu(tester, created.id, 'Переименовать');
       await tester.enterText(
         find.descendant(
@@ -283,8 +275,8 @@ void main() {
       await openAgent(tester, 'Переименован в Chrome');
       await tap(tester, find.text('Открыть демодиалог'));
       await send(tester, 'Задания');
-      expect(output(tester), contains('1/7 + 2/7'));
-      expect(output(tester), isNot(contains('Найди разность')));
+      expect(output(tester), contains('Читающий ученик сидел у окна'));
+      expect(output(tester), isNot(contains('Задание: найди причастие')));
       expect(tester.takeException(), isNull);
     },
   );
