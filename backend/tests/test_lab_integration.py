@@ -8,7 +8,7 @@ from httpx import AsyncClient
 from app.core.database import SessionLocal
 from app.main import app
 from app.modules.lab.harness import LabHarness
-from app.modules.lab.model_provider import ModelCompletionResult, ToolCallRequest
+from app.modules.lab.model_provider import ModelCompletionResult, ModelDescriptor, ToolCallRequest
 from app.modules.lab.runs_router import _build_runtime_models_catalog, _lookup_agent_epoch, get_harness
 from app.modules.mcp import MaterialsToolExecutor
 
@@ -268,5 +268,92 @@ async def test_dialogue_reload_retry_and_agent_isolation(client: AsyncClient, mo
         assert previous["next_before"] is None
         wrong_cursor = await client.get(f"{b}/dialogue?before={one.json()['id']}", headers=headers)
         assert wrong_cursor.status_code == 404
+    finally:
+        app.dependency_overrides.pop(get_harness, None)
+
+
+@pytest.mark.parametrize("compaction_succeeds", [True, False])
+async def test_dialogue_compacts_old_turns_without_erasing_history(
+    client: AsyncClient, monkeypatch, compaction_succeeds: bool,
+) -> None:
+    model_id = "google/gemini-2.5-flash"
+    monkeypatch.setattr("app.modules.lab.catalog.settings.lab_model_1_id", model_id)
+    headers = await _login_dev(client)
+    response = await client.post("/lab/v1/agents", headers=headers, json={"name": "Учебный диалог"})
+    assert response.status_code == 201
+    route = f"/lab/v1/agents/{response.json()['id']}"
+    first_prompt = "Пятый класс. Ровно три пункта. " + "материал " * 110
+    recent_prompt = "ВТОРАЯ РЕПЛИКА " + "пример " * 140
+    latest_prompt = "ТРЕТЬЯ РЕПЛИКА " + "карточка " * 110
+    next_prompt = "НОВЫЙ ЗАПРОС " + "урок " * 185
+    latest_answer = "ПРОВЕРЕННЫЙ ОТВЕТ " + "деталь " * 140
+    summary = "Пятый класс. Ровно три пункта."
+    provider = FakeProvider([
+        ModelCompletionResult(content="Запомнил формат."),
+        ModelCompletionResult(content="Пример готов. " + "текст " * 175),
+        ModelCompletionResult(content=latest_answer),
+        ModelCompletionResult(content=summary if compaction_succeeds else "", finish_reason=(
+            "stop" if compaction_succeeds else "length"
+        )),
+        ModelCompletionResult(content="Три пункта для пятого класса."),
+    ])
+    harness = LabHarness(
+        model_provider=provider, epoch_lookup=_lookup_agent_epoch,
+        models_catalog={model_id: ModelDescriptor(model_id, "Test", True, False, context_window=3000)},
+    )
+    app.dependency_overrides[get_harness] = lambda: harness
+    try:
+        async def read_dialogue():
+            result = await client.get(f"{route}/dialogue", headers=headers)
+            assert result.status_code == 200, result.text
+            return result.json()
+
+        initial = await read_dialogue()
+        for index, prompt in enumerate((first_prompt, recent_prompt, latest_prompt)):
+            posted = await client.post(
+                f"{route}/runs", headers={**headers, "Idempotency-Key": f"compact-{index}"},
+                json={"prompt": prompt, "dialogue": True, "conversation_id": initial["conversation_id"]},
+            )
+            assert posted.status_code == 201, posted.text
+            assert posted.json()["status"] == "completed", posted.text
+        assert len(provider.calls) == 3
+        reopened = await read_dialogue()
+        followup = await client.post(
+            f"{route}/runs", headers={**headers, "Idempotency-Key": "compact-new"},
+            json={"prompt": next_prompt, "dialogue": True, "conversation_id": reopened["conversation_id"]},
+        )
+        assert followup.status_code == 201, followup.text
+        assert provider.calls[3]["tools"] is None
+        assert "earlier_turns" in provider.calls[3]["messages"][1]["content"]
+        assert first_prompt in provider.calls[3]["messages"][1]["content"]
+        if compaction_succeeds:
+            assert followup.json()["status"] == "completed", followup.text
+            contents = [message["content"] for message in provider.calls[4]["messages"]]
+            assert any(summary in content for content in contents)
+            assert first_prompt not in contents
+            assert latest_prompt in contents
+            assert latest_answer in contents
+            assert next_prompt == contents[-1]
+        else:
+            assert followup.json()["status"] == "failed"
+            assert followup.json()["error_code"] == "dialogue.compaction-failed"
+            assert len(provider.calls) == 4
+
+        after = await read_dialogue()
+        assert [turn["prompt"] for turn in after["turns"]] == [
+            first_prompt, recent_prompt, latest_prompt, next_prompt,
+        ]
+        assert after["turns"][0]["run"]["final_output"] == "Запомнил формат."
+        if compaction_succeeds:
+            followup_body = {"prompt": "Ещё один пример?", "dialogue": True, "conversation_id": after["conversation_id"]}
+            next_result = await client.post(
+                f"{route}/runs", headers={**headers, "Idempotency-Key": "compact-reuse"}, json=followup_body,
+            )
+            assert next_result.json()["status"] == "completed", next_result.text
+            assert len(provider.calls) == 6
+            reused = [message["content"] for message in provider.calls[-1]["messages"]]
+            assert any(summary in content for content in reused)
+            assert first_prompt not in reused
+            assert latest_prompt in reused
     finally:
         app.dependency_overrides.pop(get_harness, None)

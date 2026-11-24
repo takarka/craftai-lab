@@ -342,7 +342,10 @@ async def _create_dialogue_run(
     completed = await db.scalars(scoped.where(
         LabRunModel.status == "completed", LabRunModel.stop_reason == "completed",
     ).order_by(LabRunModel.created_at_utc, LabRunModel.id))
+    previous_summary = None
     for prior in completed:
+        if prior.version_snapshot_json.get("dialogue_summary"):
+            previous_summary = prior.version_snapshot_json["dialogue_summary"]
         history.append(HistoryMessage("user", prior.user_prompt))
         if prior.final_output:
             history.append(HistoryMessage("assistant", prior.final_output))
@@ -356,6 +359,7 @@ async def _create_dialogue_run(
         dialogue_run_id=run_id,
         dialogue_request_hash=request_hash,
         dialogue_created_at=created_at,
+        previous_dialogue_summary=previous_summary,
     )
     return JSONResponse(status_code=201, content=await _run_payload(db, run))
 
