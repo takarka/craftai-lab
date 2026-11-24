@@ -24,7 +24,20 @@ jobs:
           cache: true
       - run: flutter pub get --enforce-lockfile
       - name: Build actual Flutter Web UI with isolated fixtures
-        run: flutter build web --release --target tool/guide_main.dart --no-web-resources-cdn
+        shell: bash
+        run: |
+          flutter build web --release --target tool/guide_main.dart
+          python3 - <<'PYBOOT'
+          from pathlib import Path
+          p = Path('build/web/flutter_bootstrap.js')
+          s = p.read_text()
+          import re
+          s, n = re.subn(r'_flutter\.loader\.load\(\s*\{', '_flutter.loader.load({config:{canvasKitBaseUrl:"canvaskit/"},', s, count=1)
+          if not n:
+              s, n = re.subn(r'_flutter\.loader\.load\(\s*\)', '_flutter.loader.load({config:{canvasKitBaseUrl:"canvaskit/"}})', s, count=1)
+          if not n: raise SystemExit('Could not configure local CanvasKit in Flutter bootstrap')
+          p.write_text(s)
+          PYBOOT
       - name: Install screenshot runner
         run: python3 -m pip install playwright==1.56.0
       - name: Capture mobile viewport from localhost
