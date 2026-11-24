@@ -275,8 +275,9 @@ class LabRunController extends Notifier<LabRunState> {
         await loadDialogue();
         return;
       }
-      if (state.activeRun?.activePendingAction != null || state.isSending)
+      if (state.activeRun?.activePendingAction != null || state.isSending) {
         return;
+      }
       if (_retryPending && state.lastPromptForRetry == prompt) {
         await retryLast();
         return;
