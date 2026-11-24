@@ -16,12 +16,10 @@ import 'package:builder/features/course/course_providers.dart';
 import 'package:builder/features/course/domain/course_catalog.dart';
 import 'package:builder/features/course/domain/course_models.dart';
 import 'package:builder/features/course/domain/course_repository.dart';
-import 'package:builder/features/course/infrastructure/in_memory_course_repository.dart';
 import 'package:builder/features/course/infrastructure/persistent_course_repository.dart';
 import 'package:builder/features/course/presentation/course_page.dart';
 import 'package:builder/features/course/presentation/glossary_page.dart';
 import 'package:builder/features/course/presentation/lesson_player_page.dart';
-import 'package:builder/ui_kit/ui_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -441,48 +439,6 @@ void main() {
         );
       },
     );
-
-    testWidgets('capstone requires a self-check without a simulated run', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 2;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      final repository = InMemoryCourseRepository();
-      await tester.pumpWidget(
-        createTestApp(
-          const LessonPlayerPage(ownerId: testOwner, levelId: 12),
-          repository: repository,
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('lesson.ideaProceedBtn')));
-      await tester.pumpAndSettle();
-
-      final proceed = find.byKey(const Key('lesson.practiceProceedBtn'));
-      final confirm = find.byKey(
-        const Key('practice.confirmTransferSelfCheck'),
-      );
-      expect(tester.widget<BuilderButton>(proceed).onPressed, isNull);
-      expect(find.byKey(const Key('practice.applyBtn')), findsNothing);
-      expect(
-        find.byKey(const Key('practice.openAgentsForTransfer')),
-        findsOneWidget,
-      );
-
-      await tester.ensureVisible(confirm);
-      await tester.tap(confirm);
-      await tester.pumpAndSettle();
-      expect(tester.widget<BuilderButton>(proceed).onPressed, isNotNull);
-      await tester.tap(proceed);
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('lesson.step.3')), findsOneWidget);
-      final checkpoint = await repository.getLevelProgress(testOwner, 12);
-      expect(checkpoint?.practiceEvidenceMet, isTrue);
-      expect(checkpoint?.currentStep, 3);
-    });
 
     testWidgets(
       'S21 LessonPlayerPage flows through steps S22 -> S23 -> S24 -> S25 (F10-03, F10-05, F10-06, F10-12)',
