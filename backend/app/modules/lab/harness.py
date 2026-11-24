@@ -316,6 +316,7 @@ class LabHarness:
         image_data_uris: list[str] | None = None,
         dialogue_run_id: str | None = None,
         dialogue_request_hash: str | None = None,
+        dialogue_created_at: str | None = None,
     ) -> LabRunModel:
         has_photo = bool(image_data_uris)
         descriptor = self.validate_model_compatibility(snapshot, has_photo=has_photo)
@@ -341,7 +342,7 @@ class LabHarness:
             status="running",
             idempotency_key=idempotency_key,
             user_prompt=user_prompt,
-            created_at_utc=now_str,
+            created_at_utc=dialogue_created_at or now_str,
             updated_at_utc=now_str,
         )
         db.add(run)

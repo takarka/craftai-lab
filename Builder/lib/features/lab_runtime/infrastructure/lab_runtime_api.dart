@@ -212,8 +212,13 @@ class HttpLabRuntimeApi implements LabRuntimeApi, LabDialogueApi {
 
   @override
   Future<LabDialoguePage> getDialogue(String agentId, {String? before}) async {
-    final query = before == null ? '' : '?before=${Uri.encodeQueryComponent(before)}';
-    final data = await _sendJson('GET', '/lab/v1/agents/$agentId/dialogue$query');
+    final query = before == null
+        ? ''
+        : '?before=${Uri.encodeQueryComponent(before)}';
+    final data = await _sendJson(
+      'GET',
+      '/lab/v1/agents/$agentId/dialogue$query',
+    );
     return LabDialoguePage.fromJson(data);
   }
 

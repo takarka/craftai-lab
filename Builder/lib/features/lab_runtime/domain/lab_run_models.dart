@@ -180,7 +180,11 @@ class LabDialoguePage {
     return LabDialoguePage(
       conversationId: json['conversation_id'] as String,
       turns: (json['turns'] as List)
-          .map((item) => LabDialogueTurn.fromJson(Map<String, dynamic>.from(item as Map)))
+          .map(
+            (item) => LabDialogueTurn.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
           .toList(growable: false),
       nextBefore: json['next_before'] as String?,
     );

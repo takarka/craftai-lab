@@ -112,7 +112,9 @@ class LabRunState {
       isDialogueReady: isDialogueReady ?? this.isDialogueReady,
       turns: turns ?? this.turns,
       hasOlderTurns: hasOlderTurns ?? this.hasOlderTurns,
-      sendingPrompt: clearSendingPrompt ? null : (sendingPrompt ?? this.sendingPrompt),
+      sendingPrompt: clearSendingPrompt
+          ? null
+          : (sendingPrompt ?? this.sendingPrompt),
       activeRun: clearActiveRun ? null : (activeRun ?? this.activeRun),
       outputVersions: outputVersions ?? this.outputVersions,
       showPreviousVersion: showPreviousVersion ?? this.showPreviousVersion,
@@ -142,7 +144,9 @@ class LabRunController extends Notifier<LabRunState> {
   LabRunState build() => const LabRunState();
 
   LabDialogueApi? get _dialogueApi =>
-      config.useDialogue && api is LabDialogueApi ? api as LabDialogueApi : null;
+      config.useDialogue && api is LabDialogueApi
+      ? api as LabDialogueApi
+      : null;
 
   Future<void> loadDialogue({bool older = false}) async {
     final dialogue = _dialogueApi;
@@ -161,7 +165,10 @@ class LabRunController extends Notifier<LabRunState> {
         _olderCursor = page.nextBefore;
         final ids = state.turns.map((turn) => turn.run.id).toSet();
         state = state.copyWith(
-          turns: [...page.turns.where((turn) => !ids.contains(turn.run.id)), ...state.turns],
+          turns: [
+            ...page.turns.where((turn) => !ids.contains(turn.run.id)),
+            ...state.turns,
+          ],
           hasOlderTurns: _olderCursor != null,
           isLoadingDialogue: false,
         );
@@ -268,7 +275,8 @@ class LabRunController extends Notifier<LabRunState> {
         await loadDialogue();
         return;
       }
-      if (state.activeRun?.activePendingAction != null || state.isSending) return;
+      if (state.activeRun?.activePendingAction != null || state.isSending)
+        return;
       if (_retryPending && state.lastPromptForRetry == prompt) {
         await retryLast();
         return;
@@ -345,13 +353,20 @@ class LabRunController extends Notifier<LabRunState> {
         turns: config.useDialogue ? _upsertTurn(run, prompt: prompt) : null,
         outputVersions: versions,
         showPreviousVersion: false,
-        draftText: clearDraftOnSuccess && (!config.useDialogue || state.draftText.trim() == prompt)
+        draftText:
+            clearDraftOnSuccess &&
+                (!config.useDialogue || state.draftText.trim() == prompt)
             ? ''
             : state.draftText,
       );
     } on LabApiException catch (e) {
-      _retryPending = config.useDialogue &&
-          !const ['dialogue.changed', 'dialogue.busy', 'idempotency.key-reused'].contains(e.code);
+      _retryPending =
+          config.useDialogue &&
+          !const [
+            'dialogue.changed',
+            'dialogue.busy',
+            'idempotency.key-reused',
+          ].contains(e.code);
       state = state.copyWith(
         isSending: false,
         isOffline: e.isOffline,
@@ -425,7 +440,8 @@ class LabRunController extends Notifier<LabRunState> {
   Future<void> recoverOnResumed() async {
     if (_recovering || _inFlight) return;
     final run = state.activeRun;
-    if (run == null || (run.status != 'running' && run.status != 'awaiting_confirmation')) {
+    if (run == null ||
+        (run.status != 'running' && run.status != 'awaiting_confirmation')) {
       if (config.useDialogue) await loadDialogue();
       return;
     }

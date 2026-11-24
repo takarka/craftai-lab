@@ -148,17 +148,28 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
                     ),
                   if (state.isLoadingDialogue && state.turns.isEmpty)
                     const Center(child: CircularProgressIndicator()),
-                  if (state.isDialogueReady && state.turns.isEmpty && state.sendingPrompt == null)
+                  if (state.isDialogueReady &&
+                      state.turns.isEmpty &&
+                      state.sendingPrompt == null)
                     const Text('Напишите агенту, чтобы начать диалог.'),
                   for (final turn in state.turns) ...[
                     _buildPrompt(turn.prompt),
-                    if (turn.run.finalOutput case final String output when output.isNotEmpty)
-                      _buildOutputCard(context, output, state, notifier, turn.run),
+                    if (turn.run.finalOutput case final String output
+                        when output.isNotEmpty)
+                      _buildOutputCard(
+                        context,
+                        output,
+                        state,
+                        notifier,
+                        turn.run,
+                      ),
                     if (turn.run.status == 'failed')
                       _buildAlertCard(
                         context,
                         title: 'Ответ не получен',
-                        message: turn.run.errorMessage ?? 'История диалога сохранена.',
+                        message:
+                            turn.run.errorMessage ??
+                            'История диалога сохранена.',
                         isError: true,
                       ),
                     if (turn.run.status == 'cancelled')
@@ -166,8 +177,7 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
                   ],
                   if (state.sendingPrompt case final String prompt)
                     _buildPrompt(prompt),
-                  if (state.isSending)
-                    const LinearProgressIndicator(),
+                  if (state.isSending) const LinearProgressIndicator(),
                 ],
                 if (state.compatibilityBlockReason != null)
                   _buildAlertCard(
@@ -459,7 +469,9 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
             if (state.isSending)
               IconButton.filled(
                 tooltip: 'Остановить',
-                onPressed: notifier.config.useDialogue && state.activeRun?.status != 'running'
+                onPressed:
+                    notifier.config.useDialogue &&
+                        state.activeRun?.status != 'running'
                     ? null
                     : notifier.cancelActiveRun,
                 icon: const Icon(Icons.stop),
@@ -467,8 +479,10 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
             else
               IconButton.filled(
                 tooltip: 'Отправить',
-                onPressed: notifier.config.useDialogue &&
-                    (state.isLoadingDialogue || state.activeRun?.activePendingAction != null)
+                onPressed:
+                    notifier.config.useDialogue &&
+                        (state.isLoadingDialogue ||
+                            state.activeRun?.activePendingAction != null)
                     ? null
                     : () => notifier.sendMessage(_textController.text),
                 icon: const Icon(Icons.send),

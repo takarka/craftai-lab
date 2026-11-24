@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import uuid
 from dataclasses import replace
+from datetime import datetime, timedelta
 from typing import Any, AsyncGenerator, Callable
 
 from fastapi import APIRouter, Depends, Header, Query, Request
@@ -328,6 +329,15 @@ async def _create_dialogue_run(
     if active is not None:
         raise ApiError(status_code=409, code="dialogue.busy", message="Предыдущий ответ ещё не завершён.")
     snapshot = await resolve_snapshot(db=db, owner_id=owner_id, agent_id=agent_id)
+    # The common timestamp formatter is second-grained. Keep a strictly
+    # increasing microsecond timestamp for dialogue ordering under the lock.
+    latest_at = await db.scalar(scoped.with_only_columns(
+        LabRunModel.created_at_utc,
+    ).order_by(LabRunModel.created_at_utc.desc()).limit(1))
+    started = utc_now()
+    if latest_at:
+        started = max(started, datetime.fromisoformat(latest_at) + timedelta(microseconds=1))
+    created_at = started.isoformat(timespec="microseconds").replace("+00:00", "Z")
     history: list[HistoryMessage] = []
     completed = await db.scalars(scoped.where(
         LabRunModel.status == "completed", LabRunModel.stop_reason == "completed",
@@ -345,6 +355,7 @@ async def _create_dialogue_run(
         image_data_uris=body.image_data_uris or None,
         dialogue_run_id=run_id,
         dialogue_request_hash=request_hash,
+        dialogue_created_at=created_at,
     )
     return JSONResponse(status_code=201, content=await _run_payload(db, run))
 
