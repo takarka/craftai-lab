@@ -16,15 +16,15 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   test(
-    'Both locales expose six ordered MVP topics with stable legacy keys',
+    'Both locales expose seven ordered MVP topics with stable legacy keys',
     () {
       for (final locale in ['ru', 'kk']) {
         final levels = CourseCatalog.getLevels(locale: locale);
         expect(
           levels.map((l) => l.displayOrder),
-          List.generate(6, (i) => i + 1),
+          List.generate(7, (i) => i + 1),
         );
-        expect(levels.map((l) => l.contentId).toSet().length, 6);
+        expect(levels.map((l) => l.contentId).toSet().length, 7);
         final knowledge = CourseCatalog.getLevelByContentId(
           'course.topic.knowledge',
           locale: locale,
@@ -46,12 +46,13 @@ void main() {
     () async {
       final repository = InMemoryCourseRepository();
       Future<List<LevelStatus>> statuses() async => [
-        for (final id in [1, 2, 10, 3, 4, 5])
+        for (final id in [1, 2, 10, 3, 4, 5, 12])
           await repository.getLevelStatus('new', id),
       ];
 
       expect(await statuses(), [
         LevelStatus.available,
+        LevelStatus.locked,
         LevelStatus.locked,
         LevelStatus.locked,
         LevelStatus.locked,
@@ -68,7 +69,7 @@ void main() {
       await repository.completeLevel(ownerId: 'new', levelId: 10);
       expect(await repository.getLevelStatus('new', 3), LevelStatus.available);
       expect((await repository.getOverallProgress('new')).activeLevelId, 3);
-      expect((await repository.getOverallProgress('new')).totalActiveLevels, 6);
+      expect((await repository.getOverallProgress('new')).totalActiveLevels, 7);
     },
   );
 
@@ -162,7 +163,7 @@ void main() {
         );
         for (var read = 0; read < 2; read++) {
           final progress = await repository.getAllProgress('existing');
-          expect(progress.length, 6);
+          expect(progress.length, 7);
           final knowledge = progress.singleWhere(
             (p) => p.levelId == CourseTopic.knowledge.storageId,
           );
@@ -170,6 +171,10 @@ void main() {
           expect(knowledge.attemptsCount, 2);
           expect(knowledge.contentVersion, '1.0.0');
           expect(knowledge.completedCheckpoints, [1, 2, 3, 4, 5]);
+          expect(
+            progress.singleWhere((p) => p.levelId == 12).isCompleted,
+            isFalse,
+          );
           expect(
             progress.singleWhere((p) => p.levelId == 10).isCompleted,
             isFalse,
