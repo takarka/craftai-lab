@@ -142,6 +142,9 @@ Finder input(String name) => find.descendant(
   matchRoot: true,
 );
 
+String passwordText(WidgetTester tester, [String name = 'password']) =>
+    tester.widget<TextFormField>(input(name)).controller!.text;
+
 Future<void> enter(WidgetTester tester, String name, String value) async {
   await tester.ensureVisible(input(name));
   await tester.enterText(input(name), value);
@@ -207,11 +210,16 @@ void main() {
   );
 
   testWidgets(
-    'Login validates, toggles password, redacts error and clears secret',
+    'Login keeps a failed password editable and saves only after success',
     (tester) async {
       final gateway = TestAuthGateway()
         ..failure = const AppFailure(AppFailureCode.invalidCredentials);
-      await mount(tester, gateway: gateway);
+      final storage = InMemoryAuthCredentialsStorage();
+      await mount(
+        tester,
+        gateway: gateway,
+        credentialsStorage: storage,
+      );
       await submit(tester, 'Войти');
       await tester.pumpAndSettle();
       expect(gateway.calls, 0);
@@ -235,6 +243,17 @@ void main() {
       expect(gateway.email, 'teacher@school.kz');
       expect(gateway.password, ' secret ');
       expect(find.text('Неверная почта или пароль.'), findsOneWidget);
+      expect(passwordText(tester), ' secret ');
+      await tester.pump(const Duration(seconds: 1));
+      expect(await storage.readLastCredentials(), isNull);
+
+      gateway.failure = null;
+      await enter(tester, 'password', 'corrected');
+      await submit(tester, 'Войти');
+      await tester.pumpAndSettle();
+      expect(gateway.calls, 2);
+      expect(gateway.password, 'corrected');
+      expect((await storage.readLastCredentials())?.password, 'corrected');
       expect(
         tester.widget<TextFormField>(input('password')).controller!.text,
         isEmpty,
@@ -345,6 +364,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(gateway.calls, 0);
       expect(find.text('Пароли не совпадают.'), findsOneWidget);
+      expect(passwordText(tester), 'password-one');
+      expect(passwordText(tester, 'confirmPassword'), 'wrong');
       await enter(tester, 'confirmPassword', 'password-one');
       await submit(tester, 'Создать аккаунт');
       await tester.pumpAndSettle();
@@ -356,12 +377,43 @@ void main() {
         find.text('У вас уже есть аккаунт CraftAI — войдите.'),
         findsOneWidget,
       );
-      expect(
-        tester.widget<TextFormField>(input('confirmPassword')).controller!.text,
-        isEmpty,
-      );
+      expect(passwordText(tester), 'password-one');
+      expect(passwordText(tester, 'confirmPassword'), 'password-one');
+
+      gateway.failure = null;
+      await enter(tester, 'email', 'new-teacher@school.kz');
+      await submit(tester, 'Создать аккаунт');
+      await tester.pumpAndSettle();
+      expect(gateway.calls, 2);
+      expect(gateway.email, 'new-teacher@school.kz');
+      expect(passwordText(tester), isEmpty);
+      expect(passwordText(tester, 'confirmPassword'), isEmpty);
     },
   );
+
+  testWidgets('Registration keeps both fields while reading the terms', (
+    tester,
+  ) async {
+    final container = await mount(tester, gateway: TestAuthGateway());
+    final router = container.read(appRouterProvider);
+    router.go('/register');
+    await tester.pumpAndSettle();
+    await enter(tester, 'password', 'password-one');
+    await enter(tester, 'confirmPassword', 'wrong');
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    final terms = find.widgetWithText(TextButton, 'Условия использования');
+    await tester.ensureVisible(terms);
+    await tester.tap(terms);
+    await tester.pumpAndSettle();
+    expect(find.text('TEST TERMS ru'), findsOneWidget);
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(passwordText(tester), 'password-one');
+    expect(passwordText(tester, 'confirmPassword'), 'wrong');
+  });
 
   testWidgets('Changing document locale requires consent again', (
     tester,
