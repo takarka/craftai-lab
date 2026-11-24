@@ -215,11 +215,7 @@ void main() {
       final gateway = TestAuthGateway()
         ..failure = const AppFailure(AppFailureCode.invalidCredentials);
       final storage = InMemoryAuthCredentialsStorage();
-      await mount(
-        tester,
-        gateway: gateway,
-        credentialsStorage: storage,
-      );
+      await mount(tester, gateway: gateway, credentialsStorage: storage);
       await submit(tester, 'Войти');
       await tester.pumpAndSettle();
       expect(gateway.calls, 0);
