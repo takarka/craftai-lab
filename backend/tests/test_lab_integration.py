@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+import asyncio
+import json
 from typing import Any
 
 import pytest
 from httpx import AsyncClient
 
 from app.core.database import SessionLocal
+from app.core.errors import ApiError
 from app.main import app
 from app.modules.lab.harness import LabHarness
-from app.modules.lab.model_provider import ModelCompletionResult, ModelDescriptor, ToolCallRequest
+from app.modules.lab.model_provider import ModelCompletionResult, ModelDescriptor, ToolCallRequest, collect_stream
 from app.modules.lab.runs_router import _build_runtime_models_catalog, _lookup_agent_epoch, get_harness
 from app.modules.mcp import MaterialsToolExecutor
 
@@ -356,4 +359,91 @@ async def test_dialogue_compacts_old_turns_without_erasing_history(
             assert first_prompt not in reused
             assert latest_prompt in reused
     finally:
+        app.dependency_overrides.pop(get_harness, None)
+
+
+async def test_openrouter_stream_parses_text_and_split_tool_arguments() -> None:
+    deltas = []
+
+    async def on_delta(text):
+        deltas.append(text)
+
+    async def fragments():
+        yield ": upstream keepalive"
+        for chunk in [
+            {"choices": [{"delta": {"content": "Добрый "}}]},
+            {"choices": [{"delta": {"content": "день"}}]},
+            {"choices": [{"delta": {"tool_calls": [
+                {"index": 0, "id": "call_1", "function": {"name": "search_materials", "arguments": '{"que'}}
+            ]}}]},
+            {"choices": [{"finish_reason": "tool_calls", "delta": {"tool_calls": [
+                {"index": 0, "function": {"arguments": 'ry":"тема"}'}}
+            ]}}]},
+            {"choices": [], "usage": {"prompt_tokens": 9, "completion_tokens": 8}},
+        ]:
+            yield "data: " + json.dumps(chunk)
+        yield "data: [DONE]"
+
+    result = await collect_stream(fragments(), on_delta)
+    assert deltas == ["Добрый ", "день"]
+    assert result.input_tokens == 9 and result.output_tokens == 8
+    assert result.tool_calls == [ToolCallRequest("call_1", "search_materials", {"query": "тема"})]
+
+
+async def test_openrouter_stream_without_done_does_not_return_a_tool() -> None:
+    async def on_delta(_):
+        return None
+
+    async def incomplete():
+        yield 'data: {"choices":[{"finish_reason":"tool_calls","delta":{"tool_calls":[' \
+              '{"index":0,"id":"call_1","function":{"name":"search_materials","arguments":"{}"}}]}}]}'
+
+    with pytest.raises(ApiError) as error:
+        await collect_stream(incomplete(), on_delta)
+    assert error.value.code == "provider.stream-interrupted"
+
+
+async def test_running_dialogue_exposes_real_partial_text_before_completion(
+    client: AsyncClient, monkeypatch,
+) -> None:
+    monkeypatch.setattr("app.modules.lab.catalog.settings.lab_model_1_id", "google/gemini-2.5-flash")
+    headers = await _login_dev(client)
+    response = await client.post("/lab/v1/agents", headers=headers, json={"name": "Поток"})
+    route = f"/lab/v1/agents/{response.json()['id']}"
+    entered = asyncio.Event()
+    release = asyncio.Event()
+
+    class GatedProvider(FakeProvider):
+        async def complete_stream(self, *, model_id, messages, tools, on_delta):
+            await on_delta("Промежуточный ")
+            entered.set()
+            await release.wait()
+            await on_delta("ответ")
+            return ModelCompletionResult(content="Промежуточный ответ")
+
+    provider = GatedProvider([])
+    app.dependency_overrides[get_harness] = lambda: LabHarness(
+        model_provider=provider, epoch_lookup=_lookup_agent_epoch,
+    )
+    post = None
+    try:
+        empty = (await client.get(f"{route}/dialogue", headers=headers)).json()
+        post = asyncio.create_task(client.post(
+            f"{route}/runs", headers={**headers, "Idempotency-Key": "stream-test"},
+            json={"prompt": "Ответь по частям", "dialogue": True, "conversation_id": empty["conversation_id"]},
+        ))
+        await asyncio.wait_for(entered.wait(), timeout=6)
+        partial = (await client.get(f"{route}/dialogue", headers=headers)).json()["turns"]
+        assert len(partial) == 1 and not post.done()
+        assert partial[0]["run"]["status"] == "running"
+        assert partial[0]["run"]["request_key"] == "stream-test"
+        assert partial[0]["run"]["final_output"] == "Промежуточный "
+        release.set()
+        completed = await post
+        assert completed.json()["id"] == partial[0]["run"]["id"]
+        assert completed.json()["final_output"] == "Промежуточный ответ"
+    finally:
+        release.set()
+        if post is not None and not post.done():
+            await post
         app.dependency_overrides.pop(get_harness, None)

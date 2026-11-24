@@ -438,6 +438,42 @@ class LabRunController extends Notifier<LabRunState> {
     }
   }
 
+  Future<void> refreshDialogueStream() async {
+    final dialogue = _dialogueApi;
+    final prompt = state.sendingPrompt;
+    final key = state.activeIdempotencyKey;
+    if (!_inFlight || prompt == null || key == null || dialogue == null) {
+      await recoverOnResumed();
+      return;
+    }
+    if (_recovering) return;
+    _recovering = true;
+    try {
+      final page = await dialogue.getDialogue(config.agentId);
+      if (!_inFlight ||
+          state.activeIdempotencyKey != key ||
+          page.conversationId != _conversationId) {
+        return;
+      }
+      final turn = page.turns.where((item) => item.run.requestKey == key).firstOrNull;
+      if (turn == null ||
+          state.activeRun?.id == turn.run.id &&
+              state.activeRun?.status == 'cancelled' &&
+              turn.run.status == 'running') {
+        return;
+      }
+      state = state.copyWith(
+        turns: _upsertTurn(turn.run, prompt: prompt),
+        activeRun: turn.run,
+      );
+    } on LabApiException {
+      // A progress read is best-effort. The original request or an explicit
+      // retry still resolves the turn using its stable request key.
+    } finally {
+      _recovering = false;
+    }
+  }
+
   Future<void> recoverOnResumed() async {
     if (_recovering || _inFlight) return;
     final run = state.activeRun;

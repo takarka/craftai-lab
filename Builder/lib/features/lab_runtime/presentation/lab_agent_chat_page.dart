@@ -72,17 +72,20 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
       ref.listen(_provider, (previous, next) {
         final oldLast = previous?.turns.lastOrNull?.run;
         final newLast = next.turns.lastOrNull?.run;
-        if (newLast?.status == 'running') {
+        if (newLast?.status == 'running' || next.sendingPrompt != null) {
           _runningTimer ??= Timer.periodic(const Duration(seconds: 2), (_) {
-            if (mounted) ref.read(_provider.notifier).recoverOnResumed();
+            if (mounted) ref.read(_provider.notifier).refreshDialogueStream();
           });
         } else {
           _runningTimer?.cancel();
           _runningTimer = null;
         }
+        final wasNearEnd =
+            !_dialogueScroll.hasClients || _dialogueScroll.position.extentAfter < 80;
         if (oldLast?.id != newLast?.id ||
             oldLast?.status != newLast?.status ||
-            next.sendingPrompt != null && previous?.sendingPrompt == null) {
+            next.sendingPrompt != null && previous?.sendingPrompt == null ||
+            wasNearEnd && oldLast?.finalOutput != newLast?.finalOutput) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted && _dialogueScroll.hasClients) {
               _dialogueScroll.jumpTo(_dialogueScroll.position.maxScrollExtent);
@@ -175,7 +178,9 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
                     if (turn.run.status == 'cancelled')
                       const Text('Ответ остановлен.'),
                   ],
-                  if (state.sendingPrompt case final String prompt)
+                  if (state.sendingPrompt case final String prompt
+                      when state.turns.lastOrNull?.run.requestKey !=
+                          state.activeIdempotencyKey)
                     _buildPrompt(prompt),
                   if (state.isSending) const LinearProgressIndicator(),
                 ],

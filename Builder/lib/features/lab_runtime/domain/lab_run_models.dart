@@ -96,6 +96,7 @@ class LabRun {
   final String? stopReason;
   final String? finalOutput;
   final String? errorMessage;
+  final String? requestKey;
   final int toolCallsCount;
   final int activeElapsedMs;
   final List<LabRunEvent> events;
@@ -111,6 +112,7 @@ class LabRun {
     this.stopReason,
     this.finalOutput,
     this.errorMessage,
+    this.requestKey,
     this.toolCallsCount = 0,
     this.activeElapsedMs = 0,
     this.events = const [],
@@ -137,6 +139,7 @@ class LabRun {
       stopReason: json['stop_reason'] as String?,
       finalOutput: json['final_output'] as String?,
       errorMessage: json['error_message'] as String?,
+      requestKey: json['request_key'] as String?,
       toolCallsCount: (json['tool_calls_count'] as int?) ?? 0,
       activeElapsedMs: (json['active_elapsed_ms'] as int?) ?? 0,
       events: rawEvents

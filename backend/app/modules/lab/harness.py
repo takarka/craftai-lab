@@ -738,12 +738,49 @@ class LabHarness:
                 return run
 
             t0 = time.monotonic()
-            result = await self.model_provider.complete(
-                model_id=descriptor.model_id,
-                messages=messages,
-                tools=tools or None,
-            )
+            streaming = getattr(self.model_provider, "complete_stream", None)
+            if run.version_snapshot_json.get("dialogue_request_hash") and callable(streaming):
+                parts: list[str] = []
+                last_write: float | None = None
+
+                async def save_delta(delta: str) -> None:
+                    nonlocal last_write
+                    parts.append(delta)
+                    tick = time.monotonic()
+                    if last_write is not None and tick - last_write < 0.35:
+                        return
+                    await db.refresh(run)
+                    if run.status != "running" or not await self._is_epoch_current(db, run):
+                        raise ApiError(status_code=409, code="run.cancelled", message="Ответ остановлен.")
+                    run.final_output = "".join(parts)
+                    await db.commit()
+                    last_write = tick
+
+                try:
+                    result = await asyncio.wait_for(
+                        streaming(
+                            model_id=descriptor.model_id,
+                            messages=messages,
+                            tools=tools or None,
+                            on_delta=save_delta,
+                        ),
+                        timeout=max(0.05, snapshot.active_timeout_seconds - run.active_elapsed_ms / 1000),
+                    )
+                except TimeoutError as error:
+                    raise ApiError(
+                        status_code=504, code="provider.timeout",
+                        message="Превышен лимит ожидания ответа. История сохранена.",
+                    ) from error
+            else:
+                result = await self.model_provider.complete(
+                    model_id=descriptor.model_id,
+                    messages=messages,
+                    tools=tools or None,
+                )
             elapsed_ms = int((time.monotonic() - t0) * 1000)
+            await db.refresh(run)
+            if run.status == "cancelled":
+                return run
             run.active_elapsed_ms += elapsed_ms
             await db.commit()
 

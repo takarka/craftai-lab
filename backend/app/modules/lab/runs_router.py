@@ -166,6 +166,7 @@ def _serialize_run(
         "agent_id": run.agent_id,
         "agent_version_id": run.agent_version_id,
         "conversation_id": run.conversation_id,
+        "request_key": run.idempotency_key if run.version_snapshot_json.get("dialogue_request_hash") else None,
         "epoch": run.epoch,
         "model_id": run.model_id,
         "status": run.status,

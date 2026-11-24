@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:builder/features/lab_runtime/domain/lab_run_models.dart';
@@ -15,6 +16,8 @@ void main() {
     'dialogue restores and appends turns instead of toggling outputs',
     (tester) async {
       final requests = <http.Request>[];
+      final accepted = Completer<http.Response>();
+      String? activeRequest;
       Map<String, dynamic> run(String id, String answer) => {
         'id': id,
         'agent_id': 'science',
@@ -32,17 +35,23 @@ void main() {
                   'prompt': 'Учитывай пятый класс.',
                   'run': run('one', 'Пятый класс, понял.'),
                 },
+                if (activeRequest != null)
+                  {
+                    'prompt': 'Теперь про испарение.',
+                    'run': {
+                      ...run('two', 'Промежуточный фрагмент'),
+                      'request_key': activeRequest,
+                      'status': 'running',
+                    },
+                  },
               ],
             }),
             200,
             headers: {'content-type': 'application/json; charset=utf-8'},
           );
         }
-        return http.Response(
-          jsonEncode(run('two', 'Два вопроса для пятого класса.')),
-          201,
-          headers: {'content-type': 'application/json; charset=utf-8'},
-        );
+        activeRequest = request.headers['Idempotency-Key'];
+        return accepted.future;
       });
       addTearDown(client.close);
       final api = HttpLabRuntimeApi(
@@ -78,7 +87,20 @@ void main() {
       expect(bubble('Пятый класс, понял.'), findsOneWidget);
       await tester.enterText(find.byType(TextField), 'Теперь про испарение.');
       await tester.tap(find.byTooltip('Отправить'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump();
+      expect(bubble('Теперь про испарение.'), findsOneWidget);
+      expect(bubble('Промежуточный фрагмент'), findsOneWidget);
+      accepted.complete(
+        http.Response(
+          jsonEncode(run('two', 'Два вопроса для пятого класса.')),
+          201,
+          headers: {'content-type': 'application/json; charset=utf-8'},
+        ),
+      );
       await tester.pumpAndSettle();
+      expect(bubble('Промежуточный фрагмент'), findsNothing);
       expect(bubble('Учитывай пятый класс.'), findsOneWidget);
       expect(bubble('Теперь про испарение.'), findsOneWidget);
       expect(bubble('Два вопроса для пятого класса.'), findsOneWidget);

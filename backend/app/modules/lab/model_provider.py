@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from collections.abc import AsyncIterable, Awaitable, Callable
 from typing import Any, Protocol
 
 import httpx
@@ -181,3 +182,126 @@ class OpenRouterModelProvider:
             output_tokens=int(usage.get("completion_tokens") or 0),
             finish_reason=str(choice.get("finish_reason") or "stop"),
         )
+
+    async def complete_stream(
+        self,
+        *,
+        model_id: str,
+        messages: list[dict[str, Any]],
+        on_delta: Callable[[str], Awaitable[None]],
+        tools: list[dict[str, Any]] | None = None,
+    ) -> ModelCompletionResult:
+        if not self._api_key or not self._api_key.strip():
+            raise ApiError(
+                status_code=503,
+                code="provider.not-configured",
+                message="Провайдер моделей (OpenRouter) не настроен.",
+            )
+        payload: dict[str, Any] = {
+            "model": model_id, "messages": messages, "stream": True,
+            "stream_options": {"include_usage": True},
+        }
+        if tools:
+            payload["tools"] = tools
+        try:
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                async with client.stream(
+                    "POST", f"{self._base_url}/chat/completions",
+                    headers={"Authorization": f"Bearer {self._api_key}"},
+                    json=payload,
+                ) as response:
+                    if response.status_code >= 400:
+                        raise ApiError(
+                            status_code=502, code="provider.upstream-error",
+                            message=f"Провайдер моделей вернул ошибку ({response.status_code}).",
+                        )
+                    return await collect_stream(response.aiter_lines(), on_delta)
+        except httpx.TimeoutException as error:
+            raise ApiError(
+                status_code=504, code="provider.timeout",
+                message="Превышено время ожидания ответа от модели.",
+            ) from error
+        except httpx.HTTPError as error:
+            raise ApiError(
+                status_code=502, code="provider.network-error",
+                message="Поток ответа модели прервался.",
+            ) from error
+
+
+async def collect_stream(
+    lines: AsyncIterable[str],
+    on_delta: Callable[[str], Awaitable[None]],
+) -> ModelCompletionResult:
+    """Collect text and full tool arguments; never execute incomplete deltas."""
+    content: list[str] = []
+    fields: dict[int, dict[str, str]] = {}
+    usage: dict[str, Any] = {}
+    finish: str | None = None
+    ended = False
+
+    def interrupted() -> ApiError:
+        return ApiError(
+            status_code=502, code="provider.stream-interrupted",
+            message="Ответ модели прервался. История диалога сохранена.",
+        )
+
+    async for line in lines:
+        if not line.startswith("data:"):
+            continue
+        payload = line[5:].strip()
+        if payload == "[DONE]":
+            ended = True
+            break
+        try:
+            data = json.loads(payload)
+        except json.JSONDecodeError as error:
+            raise interrupted() from error
+        if not isinstance(data, dict) or data.get("error"):
+            raise interrupted()
+        if isinstance(data.get("usage"), dict):
+            usage = data["usage"]
+        choices = data.get("choices") or []
+        if not choices:
+            continue
+        if not isinstance(choices, list) or not isinstance(choices[0], dict):
+            raise interrupted()
+        choice = choices[0]
+        if choice.get("finish_reason"):
+            finish = choice["finish_reason"]
+        delta = choice.get("delta") or {}
+        if not isinstance(delta, dict):
+            raise interrupted()
+        if isinstance(delta.get("content"), str) and delta["content"]:
+            content.append(delta["content"])
+            await on_delta(delta["content"])
+        for part in delta.get("tool_calls") or []:
+            if not isinstance(part, dict) or not isinstance(part.get("index"), int):
+                raise interrupted()
+            item = fields.setdefault(part["index"], {"id": "", "name": "", "arguments": ""})
+            if isinstance(part.get("id"), str) and part["id"] != item["id"]:
+                item["id"] += part["id"]
+            function = part.get("function") or {}
+            if not isinstance(function, dict):
+                raise interrupted()
+            for attr in ("name", "arguments"):
+                if isinstance(function.get(attr), str):
+                    item[attr] += function[attr]
+    if not ended or not finish or finish == "error" or (fields and finish in ("length", "content_filter")):
+        raise interrupted()
+    calls: list[ToolCallRequest] = []
+    for index in sorted(fields):
+        item = fields[index]
+        try:
+            arguments = json.loads(item["arguments"] or "{}")
+        except json.JSONDecodeError as error:
+            raise interrupted() from error
+        if not isinstance(arguments, dict) or not item["id"] or not item["name"]:
+            raise interrupted()
+        calls.append(ToolCallRequest(item["id"], item["name"], arguments))
+    return ModelCompletionResult(
+        content="".join(content),
+        tool_calls=calls,
+        input_tokens=int(usage.get("prompt_tokens") or 0),
+        output_tokens=int(usage.get("completion_tokens") or 0),
+        finish_reason=finish,
+    )
