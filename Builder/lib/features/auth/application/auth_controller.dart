@@ -59,14 +59,14 @@ class AuthController extends Notifier<AuthSubmissionState> {
     return const AuthSubmissionState();
   }
 
-  Future<void> submit(Future<void> Function(AuthGateway) action) async {
-    if (state.busy || state.recoverySent || state.resetComplete) return;
+  Future<bool> submit(Future<void> Function(AuthGateway) action) async {
+    if (state.busy || state.recoverySent || state.resetComplete) return false;
     final gateway = ref.read(authGatewayProvider);
     if (!gateway.isAvailable) {
       state = const AuthSubmissionState(
         failure: AppFailure(AppFailureCode.serviceUnavailable),
       );
-      return;
+      return false;
     }
     state = const AuthSubmissionState(busy: true);
     try {
@@ -77,6 +77,7 @@ class AuthController extends Notifier<AuthSubmissionState> {
           resetComplete: kind == AuthFormKind.resetPassword,
         );
       }
+      return true;
     } on AppFailure catch (failure) {
       if (_active) state = AuthSubmissionState(failure: failure);
     } catch (_) {
@@ -86,5 +87,6 @@ class AuthController extends Notifier<AuthSubmissionState> {
         );
       }
     }
+    return false;
   }
 }
