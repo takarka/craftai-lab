@@ -1,12 +1,13 @@
 /// Topic identity is independent of the curriculum's visible numbering.
-/// Existing storage and route keys remain unchanged during the 9 → 11 upgrade.
+/// Never reuse retired storage IDs; progress and deep links depend on them.
 enum CourseTopic {
   introduction(1, 1),
   instructions(2, 2),
   skills(10, 3),
   knowledge(3, 4),
   memory(4, 5),
-  tools(5, 6);
+  tools(5, 6),
+  transfer(12, 7);
 
   const CourseTopic(this.storageId, this.displayOrder);
 
@@ -35,6 +36,7 @@ enum CourseTopic {
     knowledge,
     memory,
     tools,
+    transfer,
   ];
 
   bool get isEnabled => enabledSequence.contains(this);

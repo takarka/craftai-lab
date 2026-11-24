@@ -429,6 +429,51 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
         Text(level.practiceTask, style: BuilderType.body),
         const SizedBox(height: 16),
 
+        if (level.topic == CourseTopic.transfer)
+          _buildTransferPractice(level, cs)
+        else
+          _buildStandardPractice(level, cs),
+      ],
+    );
+  }
+
+  Widget _buildTransferPractice(CourseLevel level, CourseStrings cs) {
+    return BuilderCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(cs.t('Синтетический пример', 'Сынақ мысалы')),
+          const SizedBox(height: 8),
+          Text(level.practiceDefaultInput, style: BuilderType.body),
+          const SizedBox(height: 8),
+          Text(level.practiceExpectedAnswer, style: BuilderType.small),
+          if (!widget.readOnly) ...[
+            const SizedBox(height: 16),
+            BuilderButton(
+              key: const Key('practice.openAgentsForTransfer'),
+              label: cs.t('Открыть «Мои агенты»', '«Менің агенттерім» бөлімі'),
+              onPressed: () => context.push('/agents'),
+            ),
+            const SizedBox(height: 8),
+            BuilderButton(
+              key: const Key('practice.confirmTransferSelfCheck'),
+              label: _practiceEvidenceMet
+                  ? cs.t('Самопроверка отмечена', 'Өз тексеруіңіз белгіленді')
+                  : cs.t('Я проверил(а) второго агента', 'Екінші агентті тексердім'),
+              onPressed: _practiceEvidenceMet
+                  ? null
+                  : () => setState(() => _practiceEvidenceMet = true),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStandardPractice(CourseLevel level, CourseStrings cs) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         if (level.id == 2) ...[
           BuilderCard(
             child: Column(

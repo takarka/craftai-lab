@@ -28,10 +28,6 @@ class _CoursePageState extends ConsumerState<CoursePage> {
   ) {
     final cs = CourseStrings.of(context);
     if (status == LevelStatus.comingSoon) {
-      if (level.id == 11) {
-        context.push('/course/lesson/${level.id}');
-        return;
-      }
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -165,8 +161,7 @@ class _CoursePageState extends ConsumerState<CoursePage> {
               ),
               const SizedBox(height: 12),
 
-              // 2. Show the full curriculum; unavailable topics cannot start lessons. Future
-              // levels have a dedicated compact notice below the map.
+              // 2. Show the curriculum; locked topics allow a theory preview only.
               progressListAsync.when(
                 loading: () => const Center(
                   child: Padding(
@@ -301,7 +296,6 @@ class _CoursePageState extends ConsumerState<CoursePage> {
                 ],
               ),
               const SizedBox(height: 8),
-              _ComingSoonNotice(cs: cs),
             ],
           ),
         ),
@@ -410,8 +404,8 @@ class _CourseProgressHeader extends StatelessWidget {
             children: [
               Text(
                 cs.t(
-                  'Уровень ${CourseCatalog.getLevel(activeLevelId ?? 1)!.displayOrder} из 11',
-                  '11 деңгейдің ${CourseCatalog.getLevel(activeLevelId ?? 1)!.displayOrder}-деңгейі',
+                  'Уровень ${CourseCatalog.getLevel(activeLevelId ?? 1)!.displayOrder} из $totalCount',
+                  '$totalCount деңгейдің ${CourseCatalog.getLevel(activeLevelId ?? 1)!.displayOrder}-деңгейі',
                 ),
                 style: BuilderType.small.copyWith(color: Colors.white),
               ),
@@ -590,27 +584,6 @@ class _LevelCard extends StatelessWidget {
         return BuilderColors.ink;
     }
   }
-}
-
-class _ComingSoonNotice extends StatelessWidget {
-  const _ComingSoonNotice({required this.cs});
-  final CourseStrings cs;
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(
-      border: Border.all(color: BuilderColors.line, style: BorderStyle.solid),
-      borderRadius: BorderRadius.circular(14),
-    ),
-    child: Text(
-      cs.t(
-        'Уровень 7 готовится. Уровни 8–11 запланированы на следующие итерации.',
-        '7-деңгей әзірленуде. 8–11 деңгейлер келесі кезеңдерге жоспарланған.',
-      ),
-      style: BuilderType.small,
-    ),
-  );
 }
 
 class _StatusBadge extends StatelessWidget {
