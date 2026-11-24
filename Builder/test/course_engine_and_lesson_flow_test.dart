@@ -15,10 +15,13 @@ import 'package:builder/features/chat/infrastructure/persistent_chat_repository.
 import 'package:builder/features/course/course_providers.dart';
 import 'package:builder/features/course/domain/course_catalog.dart';
 import 'package:builder/features/course/domain/course_models.dart';
+import 'package:builder/features/course/domain/course_repository.dart';
+import 'package:builder/features/course/infrastructure/in_memory_course_repository.dart';
 import 'package:builder/features/course/infrastructure/persistent_course_repository.dart';
 import 'package:builder/features/course/presentation/course_page.dart';
 import 'package:builder/features/course/presentation/glossary_page.dart';
 import 'package:builder/features/course/presentation/lesson_player_page.dart';
+import 'package:builder/ui_kit/ui_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -52,11 +55,11 @@ void main() {
   });
 
   group('F10: Course Catalog & Schemas (F10-01, F10-V01)', () {
-    test('Catalog contains 6 active MVP levels', () {
+    test('Catalog contains 7 active MVP levels', () {
       final levels = CourseCatalog.allLevels;
-      expect(levels.length, 6);
+      expect(levels.length, 7);
 
-      for (final i in [1, 2, 10, 3, 4, 5]) {
+      for (final i in [1, 2, 10, 3, 4, 5, 12]) {
         final level = CourseCatalog.getLevel(i);
         expect(level, isNotNull);
         expect(level!.comingSoon, isFalse);
@@ -148,7 +151,7 @@ void main() {
       });
 
       test(
-        'Initial statuses: L1 is available, the rest of the sequence is locked, voice onwards are comingSoon',
+        'Initial statuses: L1 is available, the rest of the sequence is locked, retired IDs are comingSoon',
         () async {
           final s1 = await courseRepo.getLevelStatus(testOwner, 1);
           expect(s1, LevelStatus.available);
@@ -158,10 +161,14 @@ void main() {
 
           final s6 = await courseRepo.getLevelStatus(testOwner, 6);
           expect(s6, LevelStatus.comingSoon);
+          expect(
+            await courseRepo.getLevelStatus(testOwner, 12),
+            LevelStatus.locked,
+          );
 
           final overall = await courseRepo.getOverallProgress(testOwner);
           expect(overall.completedLevelsCount, 0);
-          expect(overall.totalActiveLevels, 6);
+          expect(overall.totalActiveLevels, 7);
           expect(overall.activeLevelId, 1);
           expect(overall.isAllCompleted, isFalse);
         },
@@ -276,14 +283,14 @@ void main() {
       );
 
       test(
-        'Completing all 6 enabled topics updates overall progress to isAllCompleted (F10-02, F10-10)',
+        'Completing all 7 enabled topics updates overall progress to isAllCompleted (F10-02, F10-10)',
         () async {
-          for (final i in [1, 2, 10, 3, 4, 5]) {
+          for (final i in [1, 2, 10, 3, 4, 5, 12]) {
             await courseRepo.completeLevel(ownerId: testOwner, levelId: i);
           }
 
           final overall = await courseRepo.getOverallProgress(testOwner);
-          expect(overall.completedLevelsCount, 6);
+          expect(overall.completedLevelsCount, 7);
           expect(overall.isAllCompleted, isTrue);
           expect(overall.activeLevelId, isNull);
         },
@@ -358,12 +365,12 @@ void main() {
       }
     });
 
-    Widget createTestApp(Widget child) {
+    Widget createTestApp(Widget child, {CourseRepository? repository}) {
       return ProviderScope(
         overrides: [
           storageDatabaseProvider.overrideWithValue(db),
           assistantRepositoryProvider.overrideWithValue(assistantRepo),
-          courseRepositoryProvider.overrideWithValue(courseRepo),
+          courseRepositoryProvider.overrideWithValue(repository ?? courseRepo),
           chatRepositoryProvider.overrideWithValue(inMemoryChatRepo),
           chatSessionProvider(
             testOwner,
@@ -383,7 +390,7 @@ void main() {
     }
 
     testWidgets(
-      'S20 CoursePage displays 11 levels and locked level shows theory preview (F10-02, F10-13)',
+      'S20 CoursePage displays seven levels and locked level shows theory preview (F10-02, F10-13)',
       (tester) async {
         tester.view.physicalSize = const Size(1080, 2400);
         tester.view.devicePixelRatio = 2.0;
@@ -434,6 +441,48 @@ void main() {
         );
       },
     );
+
+    testWidgets('capstone requires a self-check without a simulated run', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final repository = InMemoryCourseRepository();
+      await tester.pumpWidget(
+        createTestApp(
+          const LessonPlayerPage(ownerId: testOwner, levelId: 12),
+          repository: repository,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('lesson.ideaProceedBtn')));
+      await tester.pumpAndSettle();
+
+      final proceed = find.byKey(const Key('lesson.practiceProceedBtn'));
+      final confirm = find.byKey(
+        const Key('practice.confirmTransferSelfCheck'),
+      );
+      expect(tester.widget<BuilderButton>(proceed).onPressed, isNull);
+      expect(find.byKey(const Key('practice.applyBtn')), findsNothing);
+      expect(
+        find.byKey(const Key('practice.openAgentsForTransfer')),
+        findsOneWidget,
+      );
+
+      await tester.ensureVisible(confirm);
+      await tester.tap(confirm);
+      await tester.pumpAndSettle();
+      expect(tester.widget<BuilderButton>(proceed).onPressed, isNotNull);
+      await tester.tap(proceed);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('lesson.step.3')), findsOneWidget);
+      final checkpoint = await repository.getLevelProgress(testOwner, 12);
+      expect(checkpoint?.practiceEvidenceMet, isTrue);
+      expect(checkpoint?.currentStep, 3);
+    });
 
     testWidgets(
       'S21 LessonPlayerPage flows through steps S22 -> S23 -> S24 -> S25 (F10-03, F10-05, F10-06, F10-12)',

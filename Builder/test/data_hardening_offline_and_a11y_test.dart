@@ -220,8 +220,8 @@ void main() {
         // 1. All levels load synchronously without internet
         final levelsRu = CourseCatalog.getLevels(locale: 'ru');
         final levelsKk = CourseCatalog.getLevels(locale: 'kk');
-        expect(levelsRu.length, 6);
-        expect(levelsKk.length, 6);
+        expect(levelsRu.length, 7);
+        expect(levelsKk.length, 7);
 
         for (int i = 1; i <= 5; i++) {
           expect(CourseCatalog.getLevel(i, locale: 'ru'), isNotNull);

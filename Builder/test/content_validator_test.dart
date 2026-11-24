@@ -28,18 +28,18 @@ void main() {
     });
 
     test(
-      'CourseCatalog levels bilingual parity: identical IDs and counts (6 active)',
+      'CourseCatalog levels bilingual parity: identical IDs and counts (7 active)',
       () {
         final ruLevels = CourseCatalog.levelsRu;
         final kkLevels = CourseCatalog.levelsKk;
 
-        expect(ruLevels.length, 6);
-        expect(kkLevels.length, 6);
+        expect(ruLevels.length, 7);
+        expect(kkLevels.length, 7);
 
         final ruIds = ruLevels.map((l) => l.id).toList();
         final kkIds = kkLevels.map((l) => l.id).toList();
-        expect(ruIds, [1, 2, 10, 3, 4, 5]);
-        expect(kkIds, [1, 2, 10, 3, 4, 5]);
+        expect(ruIds, [1, 2, 10, 3, 4, 5, 12]);
+        expect(kkIds, [1, 2, 10, 3, 4, 5, 12]);
         expect(ruIds, equals(kkIds));
 
         final activeRu = ruLevels
@@ -50,8 +50,8 @@ void main() {
             .where((l) => !l.comingSoon)
             .map((l) => l.id)
             .toList();
-        expect(activeRu, [1, 2, 10, 3, 4, 5]);
-        expect(activeKk, [1, 2, 10, 3, 4, 5]);
+        expect(activeRu, [1, 2, 10, 3, 4, 5, 12]);
+        expect(activeKk, [1, 2, 10, 3, 4, 5, 12]);
       },
     );
 
@@ -65,7 +65,7 @@ void main() {
 
         locales.forEach((localeCode, levels) {
           for (final level in levels) {
-            expect(level.id, inInclusiveRange(1, 11));
+            expect(level.id, isIn([1, 2, 10, 3, 4, 5, 12]));
             expect(
               level.title.trim(),
               isNotEmpty,
@@ -177,8 +177,8 @@ void main() {
         expect(level1Ru?.title, 'Пустой ассистент');
 
         // Backward compatibility getters
-        expect(CourseCatalog.allLevels.length, 6);
-        expect(CourseCatalog.levels.length, 6);
+        expect(CourseCatalog.allLevels.length, 7);
+        expect(CourseCatalog.levels.length, 7);
         expect(CourseCatalog.allLevels.first.title, 'Пустой ассистент');
       },
     );
