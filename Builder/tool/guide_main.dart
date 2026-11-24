@@ -186,7 +186,9 @@ const routes = <String, String>{
   '13-materials': '/agents/$agentId/settings',
   '24-memory-skills': '/agents/$agentId/settings',
   '25-approval': '/agents/$agentId/chat',
-  '14-course': '/course', '15-lesson': '/course/lesson/1',
+  '14-course': '/course', '27-course-bottom': '/course', '15-lesson': '/course/lesson/1',
+  '28-preferences-language': '/onboarding/preferences', '30-agent-wizard': '/agents',
+  '31-course-explanation': '/course/lesson/1', '32-course-summary': '/course/lesson/1',
   '23-lesson-practice': '/course/lesson/1',
   '26-course-quiz': '/course/lesson/1',
   '16-profile': '/profile', '17-app-settings': '/profile/settings',
@@ -200,14 +202,17 @@ Future<void> main() async {
   final scene = Uri.base.queryParameters['scene'] ?? '01-sign-in';
   final target = routes[scene] ?? '/sign-in';
   final course = InMemoryCourseRepository();
-  if (scene == '14-course' || scene.contains('capstone')) {
+  if (scene == '14-course' || scene == '27-course-bottom' || scene.contains('capstone')) {
     for (final level in [1, 2, 10, 3, 4, 5]) {
       await course.completeLevel(ownerId: owner, levelId: level);
     }
   }
-  if (scene == '23-lesson-practice' || scene == '26-course-quiz') {
-    await course.saveCheckpoint(ownerId: owner, levelId: 1,
-       step: scene == '26-course-quiz' ? 4 : 2, practiceEvidenceMet: scene == '26-course-quiz');
+  final demoStep = {
+    '23-lesson-practice': 2, '31-course-explanation': 3,
+    '26-course-quiz': 4, '32-course-summary': 5,
+  }[scene];
+  if (demoStep != null) {
+    await course.saveCheckpoint(ownerId: owner, levelId: 1, step: demoStep, practiceEvidenceMet: demoStep > 2);
   }
   if (scene.contains('capstone')) {
     final first = scene != '20-capstone-prompt';
@@ -244,9 +249,9 @@ Future<void> main() async {
         ])},
       ],
     });
-    if (path.endsWith('/materials')) return response({'materials': [{'id':'sample-frac','title':'Сравнение дробей','content':'При равных знаменателях сравни числители.'}]});
-    if (path.endsWith('/memory')) return response({'entries': [{'id':'memory-1','content':'Предлагать не больше двух подсказок.'}]});
-    if (path.endsWith('/skills')) return response({'skills': []});
+    if (path.endsWith('/materials')) return response({'items': [{'id':'sample-frac','title':'Сравнение дробей','content':'При равных знаменателях сравни числители.'}]});
+    if (path.endsWith('/memory')) return response({'items': [{'id':'memory-1','content':'Предлагать не больше двух подсказок.'}]});
+    if (path.endsWith('/skills')) return response({'items': [{'slug':'lesson-hints','title':'Учебные подсказки','enabled':true,'base_content':'Две подсказки по шагам без готового ответа.','revision':1}]});
     if (path.contains('/runs/')) return response(finished);
     if (path.endsWith('/runs')) return response(run('fixture-new', 'Сравни числители при одинаковых знаменателях.'));
     return response({});

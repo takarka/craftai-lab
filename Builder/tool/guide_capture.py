@@ -5,28 +5,25 @@ from playwright.sync_api import sync_playwright
 ROOT = Path('guide-screens')
 ROOT.mkdir(exist_ok=True)
 SCENES = [
- '01-sign-in','02-register','03-password-mismatch','04-recover',
- '05-welcome','06-preferences','07-name-assistant','08-agents','09-agent-editor',
- '10-dialogue','11-trace','12-agent-settings','13-materials','24-memory-skills',
- '25-approval','14-course','15-lesson','23-lesson-practice','26-course-quiz',
- '16-profile','17-app-settings','18-privacy','19-help',
- '20-capstone-prompt','21-capstone-rubric','22-capstone-result',
+ '03-password-mismatch','13-materials','24-memory-skills',
+ '21-capstone-rubric','22-capstone-result','27-course-bottom',
+ '28-preferences-language','30-agent-wizard','31-course-explanation','32-course-summary',
 ]
-SCROLL={'13-materials':470,'24-memory-skills':1150,'21-capstone-rubric':650,'22-capstone-result':1450}
+SCROLL={'13-materials':3,'24-memory-skills':12,'21-capstone-rubric':6,'22-capstone-result':26,'27-course-bottom':17,'28-preferences-language':12}
 def semantics(page):
-    el=page.locator('flt-semantics-placeholder')
-    if el.count():
-        try: el.first.click(force=True,timeout=900)
-        except Exception: pass
+    pass
 
 def mismatch(page):
-    for text,value in [('Имя','Айдана'),('Почта','teacher@example.test'),('Пароль','demo-fractions-2026'),('Повторите пароль','wrong')]:
-        # CanvasKit exposes form affordances via its accessibility tree.
-        loc=page.get_by_role('textbox',name=re.compile('^'+re.escape(text)+r'(?:$|\n)'))
-        loc.first.click(timeout=1800)
+    for y,value in [(335,'Айдана'),(405,'teacher@example.test'),(475,'demo-fractions-2026'),(588,'wrong')]:
+        page.mouse.click(125,y)
+        page.wait_for_timeout(160)
         page.keyboard.insert_text(value)
-    page.keyboard.press('Tab')
-    page.mouse.click(355,216)
+    page.mouse.click(42,670)
+    page.mouse.move(248,660)
+    for _ in range(4):
+        page.mouse.wheel(0,400)
+        page.wait_for_timeout(250)
+    page.wait_for_timeout(250)
 
 def capture(context, scene):
     p=context.new_page()
@@ -41,10 +38,13 @@ def capture(context, scene):
         except Exception as e:
             print(f'OPTIONAL_SCREEN_NOT_CAPTURED {scene}: {e}',flush=True)
             p.close(); return
+    if scene=='30-agent-wizard':
+        p.mouse.click(190,522)
+        p.wait_for_timeout(600)
     if scene in SCROLL:
         p.mouse.move(290,610)
-        for _ in range((SCROLL[scene]+349)//350):
-            p.mouse.wheel(0, min(350, SCROLL[scene])); p.wait_for_timeout(190)
+        for _ in range(SCROLL[scene]):
+            p.mouse.wheel(0, 350); p.wait_for_timeout(210)
     p.wait_for_timeout(250)
     p.screenshot(path=ROOT/f'{scene}.png',animations='disabled',full_page=False)
     print(f'CAPTURED {scene}',flush=True)
