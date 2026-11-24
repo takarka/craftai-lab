@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../course_providers.dart';
 import '../domain/course_catalog.dart';
 import '../domain/course_models.dart';
+import '../domain/course_topic.dart';
 
 /// Apply the same curriculum policy to direct links as to the course cards.
 class LessonAccessGate extends ConsumerWidget {
@@ -24,6 +25,7 @@ class LessonAccessGate extends ConsumerWidget {
     return ref
         .watch(levelStatusProvider(key))
         .when(
+          skipLoadingOnReload: levelId == CourseTopic.transfer.storageId,
           loading: () =>
               const Scaffold(body: Center(child: CircularProgressIndicator())),
           error: (_, _) => Scaffold(
