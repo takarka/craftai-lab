@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import json
+import uuid
+from dataclasses import replace
+from datetime import datetime, timedelta
 from typing import Any, AsyncGenerator, Callable
 
-from fastapi import APIRouter, Depends, Header, Request
+from fastapi import APIRouter, Depends, Header, Query, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -14,7 +17,7 @@ from app.core.errors import ApiError
 from app.core.idempotency import check_idempotency, compute_request_hash, save_idempotency
 from app.core.security import CurrentUser, format_utc, get_current_user, utc_now
 from app.modules.lab.catalog import model_catalog
-from app.modules.lab.context_assembler import SkillContextItem
+from app.modules.lab.context_assembler import HistoryMessage, SkillContextItem
 from app.modules.lab.harness import AgentSnapshot, LabHarness
 from app.modules.lab.model_provider import DEFAULT_LAB_MODELS, ModelDescriptor, OpenRouterModelProvider
 from app.modules.lab.models import AgentModel
@@ -33,6 +36,7 @@ router = APIRouter(prefix="/lab/v1", tags=["lab-runs"])
 class CreateRunRequest(BaseModel):
     prompt: str = Field(min_length=1, max_length=10000)
     conversation_id: str | None = None
+    dialogue: bool = False
     image_data_uris: list[str] = Field(default_factory=list, max_length=3)
 
 
@@ -162,11 +166,14 @@ def _serialize_run(
         "agent_id": run.agent_id,
         "agent_version_id": run.agent_version_id,
         "conversation_id": run.conversation_id,
+        "request_key": run.idempotency_key if run.version_snapshot_json.get("dialogue_request_hash") else None,
         "epoch": run.epoch,
         "model_id": run.model_id,
         "status": run.status,
         "stop_reason": run.stop_reason,
         "final_output": run.final_output,
+        "error_code": run.error_code,
+        "error_message": run.error_message,
         "tool_calls_count": run.tool_calls_count,
         "active_elapsed_ms": run.active_elapsed_ms,
         "created_at_utc": run.created_at_utc,
@@ -215,6 +222,149 @@ async def _load_owned_run(
     return run
 
 
+def _dialogue_id(owner_id: str, agent_id: str, epoch: int) -> str:
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"craftai/lab/dialogue/{owner_id}/{agent_id}/{epoch}"))
+
+
+def _dialogue_rows(owner_id: str, agent_id: str, epoch: int):
+    return select(LabRunModel).where(
+        LabRunModel.owner_id == owner_id,
+        LabRunModel.agent_id == agent_id,
+        LabRunModel.epoch == epoch,
+        LabRunModel.conversation_id == _dialogue_id(owner_id, agent_id, epoch),
+        LabRunModel.version_snapshot_json["dialogue_request_hash"].as_string().is_not(None),
+    )
+
+
+async def _run_payload(db: AsyncSession, run: LabRunModel) -> dict[str, Any]:
+    events = (await db.scalars(
+        select(LabRunEventModel)
+        .where(LabRunEventModel.run_id == run.id)
+        .order_by(LabRunEventModel.sequence)
+    )).all()
+    actions = (await db.scalars(
+        select(LabPendingActionModel).where(LabPendingActionModel.run_id == run.id)
+    )).all()
+    return _serialize_run(run, events=list(events), pending_actions=list(actions))
+
+
+@router.get("/agents/{agent_id}/dialogue")
+async def get_agent_dialogue(
+    agent_id: str,
+    before: str | None = Query(default=None, max_length=36),
+    limit: int = Query(default=30, ge=1, le=100),
+    current_user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    owner = current_user.user_id
+    agent = await owned_agent(db, owner, agent_id)
+    stmt = _dialogue_rows(owner, agent_id, agent.epoch)
+    if before:
+        cursor = (await db.scalars(stmt.where(LabRunModel.id == before))).one_or_none()
+        if cursor is None:
+            raise ApiError(status_code=404, code="dialogue.cursor-not-found", message="Позиция диалога не найдена.")
+        stmt = stmt.where(or_(
+            LabRunModel.created_at_utc < cursor.created_at_utc,
+            and_(LabRunModel.created_at_utc == cursor.created_at_utc, LabRunModel.id < cursor.id),
+        ))
+    rows = list((await db.scalars(stmt.order_by(
+        LabRunModel.created_at_utc.desc(), LabRunModel.id.desc(),
+    ).limit(limit + 1))).all())
+    page = rows[:limit]
+    turns = []
+    for item in reversed(page):
+        value = (
+            await _run_payload(db, item)
+            if item.status in ("running", "awaiting_confirmation") else _serialize_run(item)
+        )
+        turns.append({"prompt": item.user_prompt, "run": value})
+    return {
+        "conversation_id": _dialogue_id(owner, agent_id, agent.epoch),
+        "turns": turns,
+        "next_before": page[-1].id if len(rows) > limit else None,
+    }
+
+
+async def _create_dialogue_run(
+    db: AsyncSession,
+    *,
+    agent_id: str,
+    owner_id: str,
+    body: CreateRunRequest,
+    key: str | None,
+    harness: LabHarness,
+    resolve_snapshot: Callable[..., Any],
+) -> JSONResponse:
+    if not key or not key.strip() or len(key.strip()) > 100:
+        raise ApiError(status_code=422, code="dialogue.idempotency-required", message="Нужен ключ отправки сообщения.")
+    # A short write lock serializes admission on SQLite and PostgreSQL. start_run
+    # commits the accepted run before it awaits the provider, releasing the lock.
+    await db.execute(
+        update(AgentModel)
+        .where(
+            AgentModel.id == agent_id, AgentModel.owner_id == owner_id,
+            AgentModel.deleted_at.is_(None),
+        )
+        .values(epoch=AgentModel.epoch)
+    )
+    agent = await owned_agent(db, owner_id, agent_id)
+    conversation_id = _dialogue_id(owner_id, agent_id, agent.epoch)
+    if body.conversation_id != conversation_id:
+        raise ApiError(status_code=409, code="dialogue.changed", message="Диалог изменился. Откройте его заново.")
+    request_hash = compute_request_hash({"prompt": body.prompt, "images": body.image_data_uris})
+    run_id = str(uuid.uuid5(uuid.UUID(conversation_id), key.strip()))
+    scoped = _dialogue_rows(owner_id, agent_id, agent.epoch)
+    existing = (await db.scalars(scoped.where(LabRunModel.id == run_id))).one_or_none()
+    if existing is not None:
+        if existing.version_snapshot_json.get("dialogue_request_hash") != request_hash:
+            raise ApiError(
+                status_code=409, code="idempotency.key-reused",
+                message="Ключ отправки уже использован для другого сообщения.",
+            )
+        payload = await _run_payload(db, existing)
+        await db.rollback()
+        return JSONResponse(status_code=201, content=payload)
+    active = await db.scalar(
+        scoped.where(LabRunModel.status.in_(("running", "awaiting_confirmation"))).limit(1)
+    )
+    if active is not None:
+        raise ApiError(status_code=409, code="dialogue.busy", message="Предыдущий ответ ещё не завершён.")
+    snapshot = await resolve_snapshot(db=db, owner_id=owner_id, agent_id=agent_id)
+    # The common timestamp formatter is second-grained. Keep a strictly
+    # increasing microsecond timestamp for dialogue ordering under the lock.
+    latest_at = await db.scalar(scoped.with_only_columns(
+        LabRunModel.created_at_utc,
+    ).order_by(LabRunModel.created_at_utc.desc()).limit(1))
+    started = utc_now()
+    if latest_at:
+        started = max(started, datetime.fromisoformat(latest_at) + timedelta(microseconds=1))
+    created_at = started.isoformat(timespec="microseconds").replace("+00:00", "Z")
+    history: list[HistoryMessage] = []
+    completed = await db.scalars(scoped.where(
+        LabRunModel.status == "completed", LabRunModel.stop_reason == "completed",
+    ).order_by(LabRunModel.created_at_utc, LabRunModel.id))
+    previous_summary = None
+    for prior in completed:
+        if prior.version_snapshot_json.get("dialogue_summary"):
+            previous_summary = prior.version_snapshot_json["dialogue_summary"]
+        history.append(HistoryMessage("user", prior.user_prompt))
+        if prior.final_output:
+            history.append(HistoryMessage("assistant", prior.final_output))
+    run = await harness.start_run(
+        db,
+        snapshot=replace(snapshot, conversation_history=history),
+        user_prompt=body.prompt,
+        conversation_id=conversation_id,
+        idempotency_key=key.strip(),
+        image_data_uris=body.image_data_uris or None,
+        dialogue_run_id=run_id,
+        dialogue_request_hash=request_hash,
+        dialogue_created_at=created_at,
+        previous_dialogue_summary=previous_summary,
+    )
+    return JSONResponse(status_code=201, content=await _run_payload(db, run))
+
+
 @router.post("/agents/{agent_id}/runs")
 async def create_agent_run(
     agent_id: str,
@@ -225,6 +375,11 @@ async def create_agent_run(
     harness: LabHarness = Depends(get_harness),
     resolve_snapshot: Callable[..., Any] = Depends(get_snapshot_resolver),
 ) -> JSONResponse:
+    if body.dialogue:
+        return await _create_dialogue_run(
+            db, agent_id=agent_id, owner_id=current_user.user_id, body=body,
+            key=idempotency_key, harness=harness, resolve_snapshot=resolve_snapshot,
+        )
     route = f"POST /lab/v1/agents/{agent_id}/runs"
     req_hash = compute_request_hash(
         {
@@ -413,13 +568,18 @@ async def resolve_run_action(
     if action is None:
         raise ApiError(status_code=404, code="action.not-found", message="Запрос подтверждения не найден.")
 
-    updated_run = await harness.resolve_action(
-        db,
-        run=run,
-        action=action,
-        decision=body.decision,
-        params=body.params,
-    )
+    try:
+        updated_run = await harness.resolve_action(
+            db,
+            run=run,
+            action=action,
+            decision=body.decision,
+            params=body.params,
+        )
+    except ApiError as error:
+        if not run.version_snapshot_json.get("dialogue_request_hash") or run.status != "running":
+            raise
+        updated_run = await harness.fail_dialogue_run(db, run, error.code, error.message)
     events = (
         await db.execute(
             select(LabRunEventModel)

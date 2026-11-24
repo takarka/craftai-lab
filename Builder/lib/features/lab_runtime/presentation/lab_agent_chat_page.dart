@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,6 +28,8 @@ class LabAgentChatPage extends ConsumerStatefulWidget {
 class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
     with WidgetsBindingObserver {
   late final TextEditingController _textController;
+  final ScrollController _dialogueScroll = ScrollController();
+  Timer? _runningTimer;
   late final NotifierProvider<LabRunController, LabRunState> _provider;
 
   @override
@@ -36,12 +40,19 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
     _provider = NotifierProvider<LabRunController, LabRunState>(
       () => widget.controller,
     );
+    if (widget.controller.config.useDialogue) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) ref.read(_provider.notifier).loadDialogue();
+      });
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _textController.dispose();
+    _dialogueScroll.dispose();
+    _runningTimer?.cancel();
     super.dispose();
   }
 
@@ -56,6 +67,34 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
   Widget build(BuildContext context) {
     final state = ref.watch(_provider);
     final notifier = ref.read(_provider.notifier);
+    final useDialogue = notifier.config.useDialogue;
+    if (useDialogue) {
+      ref.listen(_provider, (previous, next) {
+        final oldLast = previous?.turns.lastOrNull?.run;
+        final newLast = next.turns.lastOrNull?.run;
+        if (newLast?.status == 'running' || next.sendingPrompt != null) {
+          _runningTimer ??= Timer.periodic(const Duration(seconds: 2), (_) {
+            if (mounted) ref.read(_provider.notifier).refreshDialogueStream();
+          });
+        } else {
+          _runningTimer?.cancel();
+          _runningTimer = null;
+        }
+        final wasNearEnd =
+            !_dialogueScroll.hasClients ||
+            _dialogueScroll.position.extentAfter < 80;
+        if (oldLast?.id != newLast?.id ||
+            oldLast?.status != newLast?.status ||
+            next.sendingPrompt != null && previous?.sendingPrompt == null ||
+            wasNearEnd && oldLast?.finalOutput != newLast?.finalOutput) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && _dialogueScroll.hasClients) {
+              _dialogueScroll.jumpTo(_dialogueScroll.position.maxScrollExtent);
+            }
+          });
+        }
+      });
+    }
 
     if (_textController.text != state.draftText && !state.isSending) {
       _textController.value = TextEditingValue(
@@ -100,8 +139,52 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
           _buildLimitsBanner(context, run),
           Expanded(
             child: ListView(
+              controller: useDialogue ? _dialogueScroll : null,
               padding: const EdgeInsets.all(16),
               children: [
+                if (useDialogue) ...[
+                  if (state.hasOlderTurns)
+                    TextButton(
+                      onPressed: state.isLoadingDialogue
+                          ? null
+                          : () => notifier.loadDialogue(older: true),
+                      child: const Text('Показать ранние сообщения'),
+                    ),
+                  if (state.isLoadingDialogue && state.turns.isEmpty)
+                    const Center(child: CircularProgressIndicator()),
+                  if (state.isDialogueReady &&
+                      state.turns.isEmpty &&
+                      state.sendingPrompt == null)
+                    const Text('Напишите агенту, чтобы начать диалог.'),
+                  for (final turn in state.turns) ...[
+                    _buildPrompt(turn.prompt),
+                    if (turn.run.finalOutput case final String output
+                        when output.isNotEmpty)
+                      _buildOutputCard(
+                        context,
+                        output,
+                        state,
+                        notifier,
+                        turn.run,
+                      ),
+                    if (turn.run.status == 'failed')
+                      _buildAlertCard(
+                        context,
+                        title: 'Ответ не получен',
+                        message:
+                            turn.run.errorMessage ??
+                            'История диалога сохранена.',
+                        isError: true,
+                      ),
+                    if (turn.run.status == 'cancelled')
+                      const Text('Ответ остановлен.'),
+                  ],
+                  if (state.sendingPrompt case final String prompt
+                      when state.turns.lastOrNull?.run.requestKey !=
+                          state.activeIdempotencyKey)
+                    _buildPrompt(prompt),
+                  if (state.isSending) const LinearProgressIndicator(),
+                ],
                 if (state.compatibilityBlockReason != null)
                   _buildAlertCard(
                     context,
@@ -126,13 +209,26 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
                         'Не все вызовы инструментов прошли успешно. Проверьте детали в разделе «Как выполнено».',
                     isError: true,
                   ),
-                if (output != null && output.isNotEmpty)
+                if (!useDialogue && output != null && output.isNotEmpty)
                   _buildOutputCard(context, output, state, notifier, run),
               ],
             ),
           ),
           _buildInputBar(context, state, notifier),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPrompt(String prompt) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12, left: 36),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: SelectableText(prompt),
+        ),
       ),
     );
   }
@@ -286,13 +382,13 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
               children: [
                 Expanded(
                   child: Text(
-                    state.showPreviousVersion
+                    !notifier.config.useDialogue && state.showPreviousVersion
                         ? 'Предыдущая версия ответа (до)'
                         : 'Ответ агента',
                     style: const TextStyle(fontWeight: FontWeight.w700),
                   ),
                 ),
-                if (state.canToggleBeforeAfter)
+                if (!notifier.config.useDialogue && state.canToggleBeforeAfter)
                   TextButton(
                     onPressed: notifier.toggleBeforeAfter,
                     child: Text(
@@ -379,13 +475,22 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
             if (state.isSending)
               IconButton.filled(
                 tooltip: 'Остановить',
-                onPressed: notifier.cancelActiveRun,
+                onPressed:
+                    notifier.config.useDialogue &&
+                        state.activeRun?.status != 'running'
+                    ? null
+                    : notifier.cancelActiveRun,
                 icon: const Icon(Icons.stop),
               )
             else
               IconButton.filled(
                 tooltip: 'Отправить',
-                onPressed: () => notifier.sendMessage(_textController.text),
+                onPressed:
+                    notifier.config.useDialogue &&
+                        (state.isLoadingDialogue ||
+                            state.activeRun?.activePendingAction != null)
+                    ? null
+                    : () => notifier.sendMessage(_textController.text),
                 icon: const Icon(Icons.send),
               ),
           ],

@@ -67,7 +67,19 @@ abstract class LabRuntimeApi {
   });
 }
 
-class HttpLabRuntimeApi implements LabRuntimeApi {
+abstract interface class LabDialogueApi {
+  Future<LabDialoguePage> getDialogue(String agentId, {String? before});
+
+  Future<LabRun> createDialogueTurn({
+    required String agentId,
+    required String conversationId,
+    required String prompt,
+    required String idempotencyKey,
+    List<String> imageDataUris = const [],
+  });
+}
+
+class HttpLabRuntimeApi implements LabRuntimeApi, LabDialogueApi {
   final http.Client client;
   final Uri baseUri;
   final Future<String?> Function() getAccessToken;
@@ -194,6 +206,40 @@ class HttpLabRuntimeApi implements LabRuntimeApi {
       '/lab/v1/agents/$agentId/runs',
       idempotencyKey: idempotencyKey,
       body: {'prompt': prompt, 'image_data_uris': imageDataUris},
+    );
+    return LabRun.fromJson(data);
+  }
+
+  @override
+  Future<LabDialoguePage> getDialogue(String agentId, {String? before}) async {
+    final query = before == null
+        ? ''
+        : '?before=${Uri.encodeQueryComponent(before)}';
+    final data = await _sendJson(
+      'GET',
+      '/lab/v1/agents/$agentId/dialogue$query',
+    );
+    return LabDialoguePage.fromJson(data);
+  }
+
+  @override
+  Future<LabRun> createDialogueTurn({
+    required String agentId,
+    required String conversationId,
+    required String prompt,
+    required String idempotencyKey,
+    List<String> imageDataUris = const [],
+  }) async {
+    final data = await _sendJson(
+      'POST',
+      '/lab/v1/agents/$agentId/runs',
+      idempotencyKey: idempotencyKey,
+      body: {
+        'dialogue': true,
+        'conversation_id': conversationId,
+        'prompt': prompt,
+        'image_data_uris': imageDataUris,
+      },
     );
     return LabRun.fromJson(data);
   }
