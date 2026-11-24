@@ -22,6 +22,7 @@ import '../domain/course_models.dart';
 import '../domain/course_topic.dart';
 import 'course_strings.dart';
 import 'course_character.dart';
+import 'transfer_review_panel.dart';
 
 class LessonPlayerPage extends ConsumerStatefulWidget {
   const LessonPlayerPage({
@@ -442,31 +443,22 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(cs.t('Синтетический пример', 'Сынақ мысалы')),
-          const SizedBox(height: 8),
-          Text(level.practiceDefaultInput, style: BuilderType.body),
-          const SizedBox(height: 8),
           Text(level.practiceExpectedAnswer, style: BuilderType.small),
           if (!widget.readOnly) ...[
             const SizedBox(height: 16),
-            BuilderButton(
-              key: const Key('practice.openAgentsForTransfer'),
-              label: cs.t('Открыть «Мои агенты»', '«Менің агенттерім» бөлімі'),
-              onPressed: () => context.push('/agents'),
+            TransferReviewPanel(
+              ownerId: widget.ownerId,
+              defaultPrompt: level.practiceDefaultInput,
+              openAgents: () => context.push('/agents'),
+              onPracticeReviewed: () {
+                if (!_practiceEvidenceMet) {
+                  setState(() => _practiceEvidenceMet = true);
+                }
+              },
             ),
+          ] else ...[
             const SizedBox(height: 8),
-            BuilderButton(
-              key: const Key('practice.confirmTransferSelfCheck'),
-              label: _practiceEvidenceMet
-                  ? cs.t('Самопроверка отмечена', 'Өз тексеруіңіз белгіленді')
-                  : cs.t(
-                      'Я проверил(а) второго агента',
-                      'Екінші агентті тексердім',
-                    ),
-              onPressed: _practiceEvidenceMet
-                  ? null
-                  : () => setState(() => _practiceEvidenceMet = true),
-            ),
+            Text(level.practiceDefaultInput, style: BuilderType.body),
           ],
         ],
       ),
