@@ -59,9 +59,9 @@ async def default_get_agent_snapshot(
             model_id = available[0]
         else:
             raise ApiError(
-                status_code=422,
-                code="model.not-selected",
-                message="Для агента не выбрана модель.",
+                status_code=503,
+                code="model.not-configured",
+                message="На сервере не настроены модели. Обратитесь к администратору.",
             )
 
     perms = cfg.get("permissions") or {}

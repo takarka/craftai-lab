@@ -22,3 +22,15 @@ services:
         generateValue: true
       - key: CRAFTAI_OPENROUTER_API_KEY
         sync: false
+      - key: CRAFTAI_LAB_MODEL_1_ID
+        sync: false
+      - key: CRAFTAI_LAB_MODEL_2_ID
+        sync: false
+      - key: CRAFTAI_LAB_MODEL_1_SUPPORTS_TOOLS
+        value: "false"
+      - key: CRAFTAI_LAB_MODEL_1_SUPPORTS_VISION
+        value: "false"
+      - key: CRAFTAI_LAB_MODEL_2_SUPPORTS_TOOLS
+        value: "false"
+      - key: CRAFTAI_LAB_MODEL_2_SUPPORTS_VISION
+        value: "false"

@@ -1,6 +1,7 @@
 # Прогресс: Приведение Builder и сервера Lab к PRD 0.2
 
-**Ветка:** `feat/prd-0.2-mobile-mvp`  
+**Текущая ветка:** `main`
+
 **Основной план:** [01-prd-0-2-mobile-mvp-plan.md](01-prd-0-2-mobile-mvp-plan.md)  
 **Дата создания:** 15.11.2026  
 

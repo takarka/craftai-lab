@@ -45,11 +45,22 @@ Blueprint. Его применение может создать расходы:
    ветка, изменить `branch` до применения. Существующий сервис сначала сверить
    с Blueprint, чтобы не создать второй API случайно.
 3. Указать `CRAFTAI_DATABASE_URL` (URL PostgreSQL от провайдера),
-   `CRAFTAI_OPENROUTER_API_KEY` и два разных реальных ID моделей:
-   `CRAFTAI_LAB_MODEL_1_ID`, `CRAFTAI_LAB_MODEL_2_ID`.
+   `CRAFTAI_OPENROUTER_API_KEY` и хотя бы один реальный ID модели:
+   `CRAFTAI_LAB_MODEL_1_ID` или `CRAFTAI_LAB_MODEL_2_ID`.
+   Для полного сценария PRD с двумя моделями заполнить оба слота разными ID.
    Включать `CRAFTAI_LAB_MODEL_*_SUPPORTS_TOOLS`/`SUPPORTS_VISION`
    только после проверки возможностей выбранных моделей.
    Без настроенного каталога запуски моделей недоступны.
+   Эти переменные нужны и для бесплатного сервиса из `render.yaml`.
+   В существующем сервисе открыть **Environment**, заполнить хотя бы один
+   `CRAFTAI_LAB_MODEL_1_ID` или `CRAFTAI_LAB_MODEL_2_ID` реальным ID OpenRouter,
+   сохранить настройки и выполнить redeploy. Один API-ключ каталог не заполняет.
+   После входа проверить `GET /lab/v1/models`: хотя бы одна запись должна иметь
+   `available: true` и непустой `model_id`. Агент без выбранной модели использует
+   первый доступный слот автоматически; пересоздавать агента не требуется.
+   На старых версиях API отсутствие и выбранной модели, и настроенных слотов
+   возвращает `422 model.not-selected`; исправленная версия возвращает
+   `503 model.not-configured` с сообщением о настройке сервера.
 4. Для нового сервиса Blueprint генерирует JWT-секрет. Для существующего
    сохранить текущий секрет, иначе пользователям придётся войти заново.
 5. Проверить диск `/var/data` и `CRAFTAI_STORAGE_DIR=/var/data/storage`.
@@ -68,6 +79,42 @@ Blueprint. Его применение может создать расходы:
 в общедоступную сборку и подходит только для публичного URL API.
 Диск Render предполагает один экземпляр API; горизонтальное масштабирование
 потребует общего файлового хранилища и отдельного решения для фоновой работы.
+
+### Создать PostgreSQL и задать переменные в Render
+
+1. Открыть [New Postgres](https://dashboard.render.com/new/database).
+   Указать Name `craftai-lab-db`, Database `craftai_lab`, PostgreSQL Version `16`.
+   User можно оставить автоматически созданным. Region должен совпадать с
+   регионом сервиса `craftai-lab-api` в том же аккаунте.
+2. Выбрать тариф и нажать **Create database**. Free подходит для временного
+   демо, но база истекает через 30 дней; для постоянной работы выбрать платный
+   тариф. Дождаться статуса **Available**.
+3. Открыть **Connect** у созданной базы и скопировать **Internal Database URL**.
+   Если нужно сохранить прежние данные SQLite, сначала выполнить перенос по
+   [backend/PERSISTENCE.md](../backend/PERSISTENCE.md): новая база будет пустой.
+4. Открыть **craftai-lab-api → Environment → Add Environment Variable**.
+   Задать значения без кавычек:
+
+   | Key | Value |
+   | --- | --- |
+   | `CRAFTAI_DATABASE_URL` | Полный Internal Database URL из шага 3 |
+   | `CRAFTAI_OPENROUTER_API_KEY` | Собственный ключ OpenRouter |
+   | `CRAFTAI_LAB_MODEL_1_ID` | Реальный ID модели OpenRouter |
+   | `CRAFTAI_LAB_MODEL_1_SUPPORTS_TOOLS` | `true`, если модель поддерживает инструменты; иначе `false` |
+   | `CRAFTAI_LAB_MODEL_1_SUPPORTS_VISION` | `true`, если модель поддерживает изображения; иначе `false` |
+
+5. Нажать **Save and deploy**, дождаться запуска API и проверить каталог моделей
+   по инструкции выше. URL вида `postgres://` или `postgresql://` приложение
+   преобразует в нужный формат автоматически. Переменная `DATABASE_URL` без
+   префикса `CRAFTAI_` не заменяет `CRAFTAI_DATABASE_URL`.
+
+Ошибка `Set CRAFTAI_DATABASE_URL to PostgreSQL outside dev/test` означает,
+что API не получил URL PostgreSQL и пытается использовать SQLite. В production
+такая конфигурация блокирует запуск.
+
+Справка Render: [создание и подключение PostgreSQL](https://render.com/docs/postgresql-creating-connecting),
+[переменные окружения](https://render.com/docs/configure-environment-variables),
+[ограничения Free](https://render.com/docs/free).
 
 ## 2. Опубликовать Web на GitHub Pages
 

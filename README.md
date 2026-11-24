@@ -36,11 +36,11 @@
 
 ## 2. Версия MVP и размещение
 
-- **Сдаваемая версия:** `0.1.0+1` (ветка `feat/prd-0.2-mobile-mvp`, [Builder/pubspec.yaml](Builder/pubspec.yaml), [backend/pyproject.toml](backend/pyproject.toml)).
+- **Сдаваемая версия:** `0.1.0+1` ([Builder/pubspec.yaml](Builder/pubspec.yaml), [backend/pyproject.toml](backend/pyproject.toml)).
 - **Дата публикации:** **16.11.2026**.
 - **Workspace ChatGPT Edu организации:** **Startup_ecosystem**.
 - **Название опубликованного объекта в workspace:** **Craftai Lab**.
-- **Ссылка на репозиторий:** `https://github.com/takarka/craftai-lab` (ветка `feat/prd-0.2-mobile-mvp`).
+- **Ссылка на репозиторий:** `https://github.com/takarka/craftai-lab` (основная ветка `main`).
 - **Ссылка на готовую сборку или способ запуска:** Android APK `0.1.0+1` опубликован в GitHub Release [v0.1.0](https://github.com/takarka/craftai-lab/releases/tag/v0.1.0) — [craftai-lab-0.1.0-arm64.apk](https://github.com/takarka/craftai-lab/releases/download/v0.1.0/craftai-lab-0.1.0-arm64.apk) (arm64, ~25 МБ), подключён к серверу `https://craftai-lab-api.onrender.com` (Render, бесплатный тариф). Веб-версия для проверки без установки: **https://takarka.github.io/craftai-lab/** (тот же сервер). Сборки iOS нет.
 
 ---

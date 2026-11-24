@@ -40,6 +40,46 @@ async def _login_dev(client: AsyncClient) -> dict[str, str]:
     return {"Authorization": f"Bearer {resp.json()['accessToken']}"}
 
 
+@pytest.mark.parametrize("configured_slot", [None, 1, 2])
+async def test_draft_agent_run_uses_configured_slot_or_reports_server_configuration(
+    client: AsyncClient, monkeypatch, configured_slot: int | None,
+) -> None:
+    for slot in (1, 2):
+        monkeypatch.setattr(
+            f"app.modules.lab.catalog.settings.lab_model_{slot}_id",
+            "test/configured-model" if slot == configured_slot else "",
+        )
+    headers = await _login_dev(client)
+    created = await client.post("/lab/v1/agents", headers=headers, json={"name": "Черновик"})
+    assert created.status_code == 201
+    agent = created.json()
+    provider = FakeProvider([ModelCompletionResult(content="Готово.")])
+    harness = LabHarness(
+        model_provider=provider,
+        tool_executor=MaterialsToolExecutor(session_factory=SessionLocal),
+        models_catalog=_build_runtime_models_catalog(),
+        epoch_lookup=_lookup_agent_epoch,
+    )
+    app.dependency_overrides[get_harness] = lambda: harness
+    try:
+        response = await client.post(
+            f"/lab/v1/agents/{agent['id']}/runs",
+            headers={**headers, "Idempotency-Key": "draft-model-configuration"},
+            json={"prompt": "Объясни закон Ома"},
+        )
+        if configured_slot is None:
+            assert response.status_code == 503
+            assert response.json()["code"] == "model.not-configured"
+            assert response.json()["type"] == "Failure"
+            assert provider.calls == []
+        else:
+            assert response.status_code == 201, response.text
+            assert response.json()["status"] == "completed"
+            assert provider.calls[0]["model_id"] == "test/configured-model"
+    finally:
+        app.dependency_overrides.pop(get_harness, None)
+
+
 @pytest.mark.asyncio
 async def test_phase1_phase2_phase3_end_to_end_on_real_app(client: AsyncClient, monkeypatch) -> None:
     monkeypatch.setattr("app.modules.lab.catalog.settings.lab_model_1_id", "google/gemini-2.5-flash")
