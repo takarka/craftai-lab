@@ -459,10 +459,15 @@ void main() {
       await tester.pumpAndSettle();
 
       final proceed = find.byKey(const Key('lesson.practiceProceedBtn'));
-      final confirm = find.byKey(const Key('practice.confirmTransferSelfCheck'));
+      final confirm = find.byKey(
+        const Key('practice.confirmTransferSelfCheck'),
+      );
       expect(tester.widget<BuilderButton>(proceed).onPressed, isNull);
       expect(find.byKey(const Key('practice.applyBtn')), findsNothing);
-      expect(find.byKey(const Key('practice.openAgentsForTransfer')), findsOneWidget);
+      expect(
+        find.byKey(const Key('practice.openAgentsForTransfer')),
+        findsOneWidget,
+      );
 
       await tester.ensureVisible(confirm);
       await tester.tap(confirm);
