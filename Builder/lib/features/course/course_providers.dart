@@ -27,7 +27,9 @@ final courseRepositoryProvider = Provider<CourseRepository>((ref) {
 final courseProgressListProvider =
     FutureProvider.family<List<LevelProgress>, String>((ref, ownerId) async {
       final repo = ref.watch(courseRepositoryProvider);
-      final review = ref.watch(transferReviewProvider(ownerId)).asData?.value;
+      final review = ref.watch(
+        transferReviewProvider(ownerId).select((state) => state.asData?.value),
+      );
       final progress = await repo.getAllProgress(ownerId);
       if (review == null) return progress;
       return [
@@ -80,7 +82,9 @@ final levelStatusProvider =
 final overallCourseProgressProvider =
     FutureProvider.family<OverallCourseProgress, String>((ref, ownerId) async {
       final repo = ref.watch(courseRepositoryProvider);
-      final review = ref.watch(transferReviewProvider(ownerId)).asData?.value;
+      final review = ref.watch(
+        transferReviewProvider(ownerId).select((state) => state.asData?.value),
+      );
       final base = await repo.getOverallProgress(ownerId);
       if (review == null) return base;
       final id = CourseTopic.transfer.storageId;
