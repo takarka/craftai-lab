@@ -30,16 +30,14 @@ class _AuthPageState extends ConsumerState<AuthPage>
   final _password = TextEditingController();
   final _confirmation = TextEditingController();
   _DocumentRevision? _acceptedRevision;
-  Timer? _saveDebounce;
+  bool _allowSavedCredentials = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     if (widget.kind == AuthFormKind.signIn) {
-      _email.addListener(_onCredentialsChanged);
-      _password.addListener(_onCredentialsChanged);
-      _loadSavedCredentials();
+      unawaited(_loadSavedCredentials());
     }
   }
 
@@ -47,50 +45,30 @@ class _AuthPageState extends ConsumerState<AuthPage>
     final credentials = await ref
         .read(authCredentialsStorageProvider)
         .readLastCredentials();
-    if (!mounted) return;
-    if (credentials != null) {
-      if (_email.text.isEmpty && credentials.email.isNotEmpty) {
-        _email.value = TextEditingValue(
-          text: credentials.email,
-          selection: TextSelection.collapsed(offset: credentials.email.length),
-        );
-      }
-      if (_password.text.isEmpty && credentials.password.isNotEmpty) {
-        _password.value = TextEditingValue(
-          text: credentials.password,
-          selection: TextSelection.collapsed(
-            offset: credentials.password.length,
-          ),
-        );
-      }
+    if (!mounted ||
+        !_allowSavedCredentials ||
+        credentials == null ||
+        _email.text.isNotEmpty ||
+        _password.text.isNotEmpty) {
+      return;
     }
-  }
-
-  void _onCredentialsChanged() {
-    if (widget.kind != AuthFormKind.signIn) return;
-    final email = _email.text.trim();
-    final password = _password.text;
-    if (email.isNotEmpty && password.isNotEmpty) {
-      _saveDebounce?.cancel();
-      _saveDebounce = Timer(const Duration(milliseconds: 500), () {
-        ref
-            .read(authCredentialsStorageProvider)
-            .saveLastCredentials(email: email, password: password);
-      });
-    } else if (email.isNotEmpty && password.isEmpty) {
-      _saveDebounce?.cancel();
-      _saveDebounce = Timer(const Duration(milliseconds: 500), () {
-        ref.read(authCredentialsStorageProvider).saveLastEmail(email);
-      });
-    }
+    _email.text = credentials.email;
+    _password.text = credentials.password;
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) _clearSecrets();
+    // Losing focus briefly (for example to a system dialog) isn't leaving
+    // the app. Clear secrets only when the form is no longer visible.
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _clearSecrets();
+    }
   }
 
   void _clearSecrets() {
+    _allowSavedCredentials = false;
     _password.clear();
     _confirmation.clear();
   }
@@ -98,11 +76,6 @@ class _AuthPageState extends ConsumerState<AuthPage>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _saveDebounce?.cancel();
-    if (widget.kind == AuthFormKind.signIn) {
-      _email.removeListener(_onCredentialsChanged);
-      _password.removeListener(_onCredentialsChanged);
-    }
     _name.dispose();
     _email.dispose();
     _password.dispose();
@@ -135,64 +108,50 @@ class _AuthPageState extends ConsumerState<AuthPage>
       return;
     }
     FocusScope.of(context).unfocus();
-    _saveDebounce?.cancel();
+    _allowSavedCredentials = false;
+    final kind = widget.kind;
     final email = _email.text.trim();
     final password = _password.text;
     final name = _name.text.trim();
-    if (widget.kind == AuthFormKind.signIn ||
-        widget.kind == AuthFormKind.register) {
-      if (email.isNotEmpty && password.isNotEmpty) {
-        unawaited(
-          ref
-              .read(authCredentialsStorageProvider)
-              .saveLastCredentials(email: email, password: password),
+    final credentialsStorage = ref.read(authCredentialsStorageProvider);
+    final succeeded = await ref
+        .read(authControllerProvider(kind).notifier)
+        .submit(
+          (gateway) => switch (kind) {
+            AuthFormKind.signIn => gateway.signIn(
+              email: email,
+              password: password,
+            ),
+            AuthFormKind.register => gateway.register(
+              name: name,
+              email: email,
+              password: password,
+              termsRevision: documents!.terms.revision,
+              privacyRevision: documents.privacy.revision,
+            ),
+            AuthFormKind.recovery => gateway.requestPasswordReset(
+              email: email,
+            ),
+            AuthFormKind.resetPassword => gateway.resetPassword(
+              token: widget.resetToken ?? '',
+              newPassword: password,
+            ),
+            AuthFormKind.changePassword => gateway.changePassword(
+              newPassword: password,
+            ),
+          },
         );
-      }
-    } else if (widget.kind == AuthFormKind.resetPassword ||
-        widget.kind == AuthFormKind.changePassword) {
-      if (password.isNotEmpty) {
-        unawaited(() async {
-          final last = await ref
-              .read(authCredentialsStorageProvider)
-              .readLastCredentials();
-          if (last != null) {
-            await ref
-                .read(authCredentialsStorageProvider)
-                .saveLastCredentials(email: last.email, password: password);
-          }
-        }());
-      }
-    }
-    try {
-      await ref
-          .read(authControllerProvider(widget.kind).notifier)
-          .submit(
-            (gateway) => switch (widget.kind) {
-              AuthFormKind.signIn => gateway.signIn(
-                email: email,
-                password: password,
-              ),
-              AuthFormKind.register => gateway.register(
-                name: name,
-                email: email,
-                password: password,
-                termsRevision: documents!.terms.revision,
-                privacyRevision: documents.privacy.revision,
-              ),
-              AuthFormKind.recovery => gateway.requestPasswordReset(
-                email: email,
-              ),
-              AuthFormKind.resetPassword => gateway.resetPassword(
-                token: widget.resetToken ?? '',
-                newPassword: password,
-              ),
-              AuthFormKind.changePassword => gateway.changePassword(
-                newPassword: password,
-              ),
-            },
-          );
-    } finally {
-      if (mounted) _clearSecrets();
+    if (!succeeded) return;
+    if (mounted) _clearSecrets();
+    if (kind == AuthFormKind.signIn || kind == AuthFormKind.register) {
+      await credentialsStorage.saveLastCredentials(
+        email: email,
+        password: password,
+      );
+    } else if (kind == AuthFormKind.resetPassword ||
+        kind == AuthFormKind.changePassword) {
+      // The last saved email could belong to a different account.
+      await credentialsStorage.clearLastCredentials();
     }
   }
 
@@ -403,13 +362,13 @@ class _AuthPageState extends ConsumerState<AuthPage>
                                 TextButton(
                                   onPressed: submission.busy
                                       ? null
-                                      : () => _navigate('/legal/terms'),
+                                      : () => context.push('/legal/terms'),
                                   child: Text(strings.authTerms),
                                 ),
                                 TextButton(
                                   onPressed: submission.busy
                                       ? null
-                                      : () => _navigate('/legal/privacy'),
+                                      : () => context.push('/legal/privacy'),
                                   child: Text(strings.authPrivacy),
                                 ),
                               ],
