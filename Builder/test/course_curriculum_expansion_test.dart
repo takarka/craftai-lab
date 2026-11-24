@@ -11,7 +11,15 @@ void main() {
     for (final locale in ['ru', 'kk']) {
       final lessons = CourseCatalog.getLevels(locale: locale);
       expect(lessons.map((lesson) => lesson.id), ids);
-      expect(lessons.map((lesson) => lesson.displayOrder), [1, 2, 3, 4, 5, 6, 7]);
+      expect(lessons.map((lesson) => lesson.displayOrder), [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+      ]);
       for (final lesson in lessons) {
         expect(lesson.ideaText.length, greaterThan(300));
         expect(lesson.ideaExampleTemplate, isNotEmpty);

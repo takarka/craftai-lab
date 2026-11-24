@@ -459,7 +459,10 @@ class _LessonPlayerPageState extends ConsumerState<LessonPlayerPage> {
               key: const Key('practice.confirmTransferSelfCheck'),
               label: _practiceEvidenceMet
                   ? cs.t('Самопроверка отмечена', 'Өз тексеруіңіз белгіленді')
-                  : cs.t('Я проверил(а) второго агента', 'Екінші агентті тексердім'),
+                  : cs.t(
+                      'Я проверил(а) второго агента',
+                      'Екінші агентті тексердім',
+                    ),
               onPressed: _practiceEvidenceMet
                   ? null
                   : () => setState(() => _practiceEvidenceMet = true),
