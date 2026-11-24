@@ -15,6 +15,8 @@ import 'package:builder/features/chat/infrastructure/persistent_chat_repository.
 import 'package:builder/features/course/course_providers.dart';
 import 'package:builder/features/course/domain/course_catalog.dart';
 import 'package:builder/features/course/domain/course_models.dart';
+import 'package:builder/features/course/domain/course_repository.dart';
+import 'package:builder/features/course/infrastructure/in_memory_course_repository.dart';
 import 'package:builder/features/course/infrastructure/persistent_course_repository.dart';
 import 'package:builder/features/course/presentation/course_page.dart';
 import 'package:builder/features/course/presentation/glossary_page.dart';
@@ -363,12 +365,12 @@ void main() {
       }
     });
 
-    Widget createTestApp(Widget child) {
+    Widget createTestApp(Widget child, {CourseRepository? repository}) {
       return ProviderScope(
         overrides: [
           storageDatabaseProvider.overrideWithValue(db),
           assistantRepositoryProvider.overrideWithValue(assistantRepo),
-          courseRepositoryProvider.overrideWithValue(courseRepo),
+          courseRepositoryProvider.overrideWithValue(repository ?? courseRepo),
           chatRepositoryProvider.overrideWithValue(inMemoryChatRepo),
           chatSessionProvider(
             testOwner,
@@ -448,11 +450,12 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
+      final repository = InMemoryCourseRepository();
       await tester.pumpWidget(
-        createTestApp(const LessonPlayerPage(ownerId: testOwner, levelId: 12)),
-      );
-      await tester.runAsync(
-        () => Future.delayed(const Duration(milliseconds: 300)),
+        createTestApp(
+          const LessonPlayerPage(ownerId: testOwner, levelId: 12),
+          repository: repository,
+        ),
       );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('lesson.ideaProceedBtn')));
@@ -476,6 +479,9 @@ void main() {
       await tester.tap(proceed);
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('lesson.step.3')), findsOneWidget);
+      final checkpoint = await repository.getLevelProgress(testOwner, 12);
+      expect(checkpoint?.practiceEvidenceMet, isTrue);
+      expect(checkpoint?.currentStep, 3);
     });
 
     testWidgets(
