@@ -10,12 +10,14 @@ class LabAgentRunConfig {
   final LabModelInfo? model;
   final bool allowSave;
   final bool allowSearch;
+  final bool useDialogue;
 
   const LabAgentRunConfig({
     required this.agentId,
     this.model,
     this.allowSave = false,
     this.allowSearch = false,
+    this.useDialogue = false,
   });
 }
 
@@ -24,6 +26,11 @@ class LabRunState {
   final List<String> pendingImages;
   final bool isSending;
   final bool isOffline;
+  final bool isLoadingDialogue;
+  final bool isDialogueReady;
+  final List<LabDialogueTurn> turns;
+  final bool hasOlderTurns;
+  final String? sendingPrompt;
   final LabRun? activeRun;
   final List<String> outputVersions;
   final bool showPreviousVersion;
@@ -37,6 +44,11 @@ class LabRunState {
     this.pendingImages = const [],
     this.isSending = false,
     this.isOffline = false,
+    this.isLoadingDialogue = false,
+    this.isDialogueReady = false,
+    this.turns = const [],
+    this.hasOlderTurns = false,
+    this.sendingPrompt,
     this.activeRun,
     this.outputVersions = const [],
     this.showPreviousVersion = false,
@@ -74,7 +86,14 @@ class LabRunState {
     List<String>? pendingImages,
     bool? isSending,
     bool? isOffline,
+    bool? isLoadingDialogue,
+    bool? isDialogueReady,
+    List<LabDialogueTurn>? turns,
+    bool? hasOlderTurns,
+    String? sendingPrompt,
+    bool clearSendingPrompt = false,
     LabRun? activeRun,
+    bool clearActiveRun = false,
     List<String>? outputVersions,
     bool? showPreviousVersion,
     String? activeIdempotencyKey,
@@ -89,7 +108,12 @@ class LabRunState {
       pendingImages: pendingImages ?? this.pendingImages,
       isSending: isSending ?? this.isSending,
       isOffline: isOffline ?? this.isOffline,
-      activeRun: activeRun ?? this.activeRun,
+      isLoadingDialogue: isLoadingDialogue ?? this.isLoadingDialogue,
+      isDialogueReady: isDialogueReady ?? this.isDialogueReady,
+      turns: turns ?? this.turns,
+      hasOlderTurns: hasOlderTurns ?? this.hasOlderTurns,
+      sendingPrompt: clearSendingPrompt ? null : (sendingPrompt ?? this.sendingPrompt),
+      activeRun: clearActiveRun ? null : (activeRun ?? this.activeRun),
       outputVersions: outputVersions ?? this.outputVersions,
       showPreviousVersion: showPreviousVersion ?? this.showPreviousVersion,
       activeIdempotencyKey: activeIdempotencyKey ?? this.activeIdempotencyKey,
@@ -106,11 +130,92 @@ class LabRunController extends Notifier<LabRunState> {
   final LabRuntimeApi api;
   final LabAgentRunConfig config;
   bool _inFlight = false;
+  String? _conversationId;
+  String? _olderCursor;
+  List<String> _retryImages = const [];
+  bool _retryPending = false;
+  bool _recovering = false;
 
   LabRunController({required this.api, required this.config});
 
   @override
   LabRunState build() => const LabRunState();
+
+  LabDialogueApi? get _dialogueApi =>
+      config.useDialogue && api is LabDialogueApi ? api as LabDialogueApi : null;
+
+  Future<void> loadDialogue({bool older = false}) async {
+    final dialogue = _dialogueApi;
+    if (dialogue == null || state.isLoadingDialogue || _inFlight) return;
+    final cursor = older ? _olderCursor : null;
+    if (older && cursor == null) return;
+    state = state.copyWith(isLoadingDialogue: true, clearError: true);
+    try {
+      final page = await dialogue.getDialogue(config.agentId, before: cursor);
+      if (older && page.conversationId != _conversationId) {
+        _olderCursor = null;
+        state = state.copyWith(hasOlderTurns: false, isLoadingDialogue: false);
+        return;
+      }
+      if (older) {
+        _olderCursor = page.nextBefore;
+        final ids = state.turns.map((turn) => turn.run.id).toSet();
+        state = state.copyWith(
+          turns: [...page.turns.where((turn) => !ids.contains(turn.run.id)), ...state.turns],
+          hasOlderTurns: _olderCursor != null,
+          isLoadingDialogue: false,
+        );
+        return;
+      }
+      final sameDialogue = _conversationId == page.conversationId;
+      if (!sameDialogue) _retryPending = false;
+      final first = page.turns.firstOrNull?.run.id;
+      final overlap = sameDialogue && first != null
+          ? state.turns.indexWhere((turn) => turn.run.id == first)
+          : -1;
+      final turns = overlap > 0
+          ? [...state.turns.take(overlap), ...page.turns]
+          : page.turns;
+      _conversationId = page.conversationId;
+      if (overlap <= 0) _olderCursor = page.nextBefore;
+      final latest = page.turns.lastOrNull?.run;
+      state = state.copyWith(
+        turns: turns,
+        hasOlderTurns: _olderCursor != null,
+        isDialogueReady: true,
+        isLoadingDialogue: false,
+        isOffline: false,
+        activeRun: latest,
+        clearActiveRun: latest == null,
+        isSending: latest?.status == 'running',
+      );
+    } on LabApiException catch (e) {
+      state = state.copyWith(
+        isLoadingDialogue: false,
+        isOffline: e.isOffline,
+        error: e,
+      );
+    } catch (_) {
+      state = state.copyWith(
+        isLoadingDialogue: false,
+        error: const LabApiException(
+          code: 'dialogue.load-error',
+          message: 'Не удалось загрузить историю диалога.',
+        ),
+      );
+    }
+  }
+
+  List<LabDialogueTurn> _upsertTurn(LabRun run, {String? prompt}) {
+    final turns = List<LabDialogueTurn>.of(state.turns);
+    final index = turns.indexWhere((turn) => turn.run.id == run.id);
+    if (index >= 0) {
+      turns[index] = LabDialogueTurn(prompt: turns[index].prompt, run: run);
+    } else if (prompt != null) {
+      turns.add(LabDialogueTurn(prompt: prompt, run: run));
+    }
+    return turns;
+  }
 
   void updateDraft(String text) {
     state = state.copyWith(draftText: text, clearCompatibility: true);
@@ -158,6 +263,18 @@ class LabRunController extends Notifier<LabRunState> {
       return;
     }
 
+    if (config.useDialogue) {
+      if (_conversationId == null || state.isLoadingDialogue) {
+        await loadDialogue();
+        return;
+      }
+      if (state.activeRun?.activePendingAction != null || state.isSending) return;
+      if (_retryPending && state.lastPromptForRetry == prompt) {
+        await retryLast();
+        return;
+      }
+      _retryImages = List<String>.of(state.pendingImages);
+    }
     final key = _generateIdempotencyKey();
     await _executeRun(
       prompt: prompt,
@@ -168,6 +285,11 @@ class LabRunController extends Notifier<LabRunState> {
 
   Future<void> retryLast() async {
     if (_inFlight) return;
+    if (config.useDialogue && !_retryPending) {
+      await loadDialogue();
+      return;
+    }
+    if (config.useDialogue && _conversationId == null) return;
     final prompt = state.lastPromptForRetry ?? state.draftText.trim();
     if (prompt.isEmpty) return;
     // Reuse the same Idempotency-Key across retries / double-taps
@@ -190,37 +312,57 @@ class LabRunController extends Notifier<LabRunState> {
       isOffline: false,
       activeIdempotencyKey: idempotencyKey,
       lastPromptForRetry: prompt,
+      sendingPrompt: config.useDialogue ? prompt : null,
       clearError: true,
       clearCompatibility: true,
     );
 
     try {
-      final run = await api.createRun(
-        agentId: config.agentId,
-        prompt: prompt,
-        idempotencyKey: idempotencyKey,
-        imageDataUris: state.pendingImages,
-      );
+      final dialogue = _dialogueApi;
+      final run = dialogue == null
+          ? await api.createRun(
+              agentId: config.agentId,
+              prompt: prompt,
+              idempotencyKey: idempotencyKey,
+              imageDataUris: state.pendingImages,
+            )
+          : await dialogue.createDialogueTurn(
+              agentId: config.agentId,
+              conversationId: _conversationId!,
+              prompt: prompt,
+              idempotencyKey: idempotencyKey,
+              imageDataUris: _retryImages,
+            );
+      _retryPending = false;
       final versions = List<String>.from(state.outputVersions);
       if (run.finalOutput != null && run.finalOutput!.isNotEmpty) {
         versions.add(run.finalOutput!);
       }
       state = state.copyWith(
-        isSending: false,
+        isSending: run.status == 'running',
+        clearSendingPrompt: true,
         activeRun: run,
+        turns: config.useDialogue ? _upsertTurn(run, prompt: prompt) : null,
         outputVersions: versions,
         showPreviousVersion: false,
-        draftText: clearDraftOnSuccess ? '' : state.draftText,
+        draftText: clearDraftOnSuccess && (!config.useDialogue || state.draftText.trim() == prompt)
+            ? ''
+            : state.draftText,
       );
     } on LabApiException catch (e) {
+      _retryPending = config.useDialogue &&
+          !const ['dialogue.changed', 'dialogue.busy', 'idempotency.key-reused'].contains(e.code);
       state = state.copyWith(
         isSending: false,
         isOffline: e.isOffline,
+        clearSendingPrompt: true,
         error: e,
       );
     } catch (e) {
+      _retryPending = config.useDialogue;
       state = state.copyWith(
         isSending: false,
+        clearSendingPrompt: true,
         error: LabApiException(
           code: 'run.unexpected',
           message: 'Не удалось выполнить запуск: $e',
@@ -236,7 +378,11 @@ class LabRunController extends Notifier<LabRunState> {
     if (run == null) return;
     try {
       final updated = await api.cancelRun(run.id);
-      state = state.copyWith(activeRun: updated, isSending: false);
+      state = state.copyWith(
+        activeRun: updated,
+        isSending: false,
+        turns: config.useDialogue ? _upsertTurn(updated) : null,
+      );
     } on LabApiException catch (e) {
       state = state.copyWith(error: e, isOffline: e.isOffline);
     }
@@ -261,6 +407,7 @@ class LabRunController extends Notifier<LabRunState> {
       state = state.copyWith(
         isSending: false,
         activeRun: updated,
+        turns: config.useDialogue ? _upsertTurn(updated) : null,
         outputVersions: versions,
         showPreviousVersion: false,
       );
@@ -276,11 +423,13 @@ class LabRunController extends Notifier<LabRunState> {
   }
 
   Future<void> recoverOnResumed() async {
+    if (_recovering || _inFlight) return;
     final run = state.activeRun;
-    if (run == null) return;
-    if (run.status != 'running' && run.status != 'awaiting_confirmation') {
+    if (run == null || (run.status != 'running' && run.status != 'awaiting_confirmation')) {
+      if (config.useDialogue) await loadDialogue();
       return;
     }
+    _recovering = true;
     try {
       final refreshed = await api.getRun(run.id);
       final versions = List<String>.from(state.outputVersions);
@@ -291,11 +440,14 @@ class LabRunController extends Notifier<LabRunState> {
       }
       state = state.copyWith(
         activeRun: refreshed,
+        turns: config.useDialogue ? _upsertTurn(refreshed) : null,
         outputVersions: versions,
         isSending: refreshed.status == 'running',
       );
     } on LabApiException catch (e) {
       state = state.copyWith(error: e, isOffline: e.isOffline);
+    } finally {
+      _recovering = false;
     }
   }
 }

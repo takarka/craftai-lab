@@ -95,6 +95,7 @@ class LabRun {
   final String status;
   final String? stopReason;
   final String? finalOutput;
+  final String? errorMessage;
   final int toolCallsCount;
   final int activeElapsedMs;
   final List<LabRunEvent> events;
@@ -109,6 +110,7 @@ class LabRun {
     required this.status,
     this.stopReason,
     this.finalOutput,
+    this.errorMessage,
     this.toolCallsCount = 0,
     this.activeElapsedMs = 0,
     this.events = const [],
@@ -134,6 +136,7 @@ class LabRun {
       status: (json['status'] as String?) ?? 'running',
       stopReason: json['stop_reason'] as String?,
       finalOutput: json['final_output'] as String?,
+      errorMessage: json['error_message'] as String?,
       toolCallsCount: (json['tool_calls_count'] as int?) ?? 0,
       activeElapsedMs: (json['active_elapsed_ms'] as int?) ?? 0,
       events: rawEvents
@@ -144,6 +147,42 @@ class LabRun {
           .whereType<Map>()
           .map((a) => LabPendingAction.fromJson(Map<String, dynamic>.from(a)))
           .toList(),
+    );
+  }
+}
+
+class LabDialogueTurn {
+  final String prompt;
+  final LabRun run;
+
+  const LabDialogueTurn({required this.prompt, required this.run});
+
+  factory LabDialogueTurn.fromJson(Map<String, dynamic> json) {
+    return LabDialogueTurn(
+      prompt: json['prompt'] as String,
+      run: LabRun.fromJson(Map<String, dynamic>.from(json['run'] as Map)),
+    );
+  }
+}
+
+class LabDialoguePage {
+  final String conversationId;
+  final List<LabDialogueTurn> turns;
+  final String? nextBefore;
+
+  const LabDialoguePage({
+    required this.conversationId,
+    required this.turns,
+    this.nextBefore,
+  });
+
+  factory LabDialoguePage.fromJson(Map<String, dynamic> json) {
+    return LabDialoguePage(
+      conversationId: json['conversation_id'] as String,
+      turns: (json['turns'] as List)
+          .map((item) => LabDialogueTurn.fromJson(Map<String, dynamic>.from(item as Map)))
+          .toList(growable: false),
+      nextBefore: json['next_before'] as String?,
     );
   }
 }

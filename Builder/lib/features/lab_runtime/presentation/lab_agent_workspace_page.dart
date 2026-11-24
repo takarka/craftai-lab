@@ -188,6 +188,7 @@ class _LabAgentWorkspacePageState extends ConsumerState<LabAgentWorkspacePage> {
             model: resolvedModel,
             allowSave: agent.allowSave,
             allowSearch: agent.allowSearch,
+            useDialogue: true,
           ),
         );
         return LabAgentChatPage(
