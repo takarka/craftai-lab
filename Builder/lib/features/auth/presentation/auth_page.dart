@@ -129,9 +129,7 @@ class _AuthPageState extends ConsumerState<AuthPage>
               termsRevision: documents!.terms.revision,
               privacyRevision: documents.privacy.revision,
             ),
-            AuthFormKind.recovery => gateway.requestPasswordReset(
-              email: email,
-            ),
+            AuthFormKind.recovery => gateway.requestPasswordReset(email: email),
             AuthFormKind.resetPassword => gateway.resetPassword(
               token: widget.resetToken ?? '',
               newPassword: password,
