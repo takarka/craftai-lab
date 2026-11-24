@@ -314,21 +314,30 @@ class LabHarness:
         conversation_id: str | None = None,
         idempotency_key: str | None = None,
         image_data_uris: list[str] | None = None,
+        dialogue_run_id: str | None = None,
+        dialogue_request_hash: str | None = None,
     ) -> LabRunModel:
         has_photo = bool(image_data_uris)
         descriptor = self.validate_model_compatibility(snapshot, has_photo=has_photo)
         await self.check_pilot_budget(db, owner_id=snapshot.owner_id)
 
         now_str = format_utc(utc_now())
+        version_snapshot = snapshot.to_snapshot_dict()
+        if dialogue_request_hash is not None:
+            version_snapshot["dialogue_request_hash"] = dialogue_request_hash
+            version_snapshot["dialogue_history"] = [
+                {"role": item.role, "content": item.content, "status": item.status}
+                for item in snapshot.conversation_history
+            ]
         run = LabRunModel(
-            id=str(uuid.uuid4()),
+            id=dialogue_run_id or str(uuid.uuid4()),
             owner_id=snapshot.owner_id,
             agent_id=snapshot.agent_id,
             agent_version_id=snapshot.agent_version_id,
             conversation_id=conversation_id,
             epoch=snapshot.epoch,
             model_id=snapshot.model_id,
-            version_snapshot_json=snapshot.to_snapshot_dict(),
+            version_snapshot_json=version_snapshot,
             status="running",
             idempotency_key=idempotency_key,
             user_prompt=user_prompt,
@@ -363,13 +372,48 @@ class LabHarness:
             image_data_uris=image_data_uris,
         )
 
-        return await self._execute_loop(
-            db=db,
-            run=run,
-            snapshot=snapshot,
-            descriptor=descriptor,
-            messages=assembled.messages,
-        )
+        if dialogue_request_hash is not None:
+            budget = (
+                descriptor.context_window - assembled.reserved_tokens
+                if descriptor.context_window > assembled.reserved_tokens
+                else descriptor.context_window // 2
+            )
+            if (
+                assembled.included_history_count != len(snapshot.conversation_history)
+                or assembled.estimated_tokens > budget
+            ):
+                return await self.fail_dialogue_run(
+                    db, run, "dialogue.context-limit",
+                    "Этот диалог достиг предела контекста. История сохранена.",
+                )
+        try:
+            return await self._execute_loop(
+                db=db,
+                run=run,
+                snapshot=snapshot,
+                descriptor=descriptor,
+                messages=assembled.messages,
+            )
+        except ApiError as error:
+            if dialogue_request_hash is None:
+                raise
+            return await self.fail_dialogue_run(db, run, error.code, error.message)
+
+    async def fail_dialogue_run(
+        self, db: AsyncSession, run: LabRunModel, code: str, message: str,
+    ) -> LabRunModel:
+        await db.refresh(run)
+        if run.status == "cancelled":
+            return run
+        run.status = "failed"
+        run.stop_reason = code
+        run.error_code = code
+        run.error_message = message
+        run.updated_at_utc = format_utc(utc_now())
+        run.completed_at_utc = run.updated_at_utc
+        await db.commit()
+        await self.append_event(db, run, "run_failed", {"error_code": code})
+        return run
 
     async def resolve_action(
         self,
@@ -484,6 +528,7 @@ class LabHarness:
             skills=[SkillContextItem(**s) for s in snap_data.get("skills", [])],
             knowledge_chunks=snap_data.get("knowledge_chunks", []),
             memory_facts=snap_data.get("memory_facts", []),
+            conversation_history=[HistoryMessage(**m) for m in snap_data.get("dialogue_history", [])],
             allow_save=bool(snap_data.get("allow_save", False)),
             allow_search=bool(snap_data.get("allow_search", False)),
             platform_rules=snap_data.get("platform_rules", DEFAULT_PLATFORM_RULES),
@@ -500,6 +545,7 @@ class LabHarness:
             skills=snapshot.skills,
             knowledge_chunks=snapshot.knowledge_chunks,
             memory_facts=snapshot.memory_facts,
+            conversation_history=snapshot.conversation_history,
         )
         messages = assembled.messages + [
             {

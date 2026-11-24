@@ -204,3 +204,69 @@ async def test_phase1_phase2_phase3_end_to_end_on_real_app(client: AsyncClient, 
         assert mem_after["items"] == []
     finally:
         app.dependency_overrides.pop(get_harness, None)
+
+
+async def test_dialogue_reload_retry_and_agent_isolation(client: AsyncClient, monkeypatch) -> None:
+    monkeypatch.setattr("app.modules.lab.catalog.settings.lab_model_1_id", "google/gemini-2.5-flash")
+    headers = await _login_dev(client)
+    agents = []
+    for name in ("Один", "Два"):
+        result = await client.post("/lab/v1/agents", headers=headers, json={"name": name})
+        assert result.status_code == 201
+        agents.append(result.json()["id"])
+    a = f"/lab/v1/agents/{agents[0]}"
+    b = f"/lab/v1/agents/{agents[1]}"
+    provider = FakeProvider([ModelCompletionResult(content="Понял: 5 класс, ровно три пункта.")])
+    harness = LabHarness(model_provider=provider, epoch_lookup=_lookup_agent_epoch)
+    app.dependency_overrides[get_harness] = lambda: harness
+    try:
+        initial = (await client.get(f"{a}/dialogue", headers=headers)).json()
+        assert initial["turns"] == []
+        first_body = {
+            "prompt": "Пятый класс. Давай ровно три пункта.",
+            "dialogue": True,
+            "conversation_id": initial["conversation_id"],
+        }
+        first_headers = {**headers, "Idempotency-Key": "dialogue-first"}
+        one = await client.post(f"{a}/runs", headers=first_headers, json=first_body)
+        assert one.status_code == 201, one.text
+        repeated = await client.post(f"{a}/runs", headers=first_headers, json=first_body)
+        assert repeated.json()["id"] == one.json()["id"]
+        mismatch = await client.post(
+            f"{a}/runs", headers=first_headers, json={**first_body, "prompt": "Другой запрос"},
+        )
+        assert mismatch.status_code == 409
+        assert len(provider.calls) == 1
+
+        reopened = (await client.get(f"{a}/dialogue", headers=headers)).json()
+        assert reopened["conversation_id"] == initial["conversation_id"]
+        assert [turn["prompt"] for turn in reopened["turns"]] == [first_body["prompt"]]
+        assert reopened["turns"][0]["run"]["final_output"] == "Понял: 5 класс, ровно три пункта."
+        b_reopened = (await client.get(f"{b}/dialogue", headers=headers)).json()
+        assert b_reopened["conversation_id"] != initial["conversation_id"]
+        assert b_reopened["turns"] == []
+        rejected = await client.post(f"{b}/runs", headers=first_headers, json=first_body)
+        assert rejected.status_code == 409
+
+        two = await client.post(
+            f"{a}/runs", headers={**headers, "Idempotency-Key": "dialogue-follow-up"},
+            json={**first_body, "prompt": "А теперь про испарение."},
+        )
+        assert two.status_code == 201, two.text
+        assert [message["role"] for message in provider.calls[1]["messages"]][-3:] == [
+            "user", "assistant", "user",
+        ]
+        assert provider.calls[1]["messages"][-3]["content"] == first_body["prompt"]
+        assert "5 класс, ровно три пункта" in provider.calls[1]["messages"][-2]["content"]
+
+        latest = (await client.get(f"{a}/dialogue?limit=1", headers=headers)).json()
+        assert latest["turns"][0]["run"]["id"] == two.json()["id"]
+        previous = (await client.get(
+            f"{a}/dialogue?limit=1&before={latest['next_before']}", headers=headers,
+        )).json()
+        assert previous["turns"][0]["run"]["id"] == one.json()["id"]
+        assert previous["next_before"] is None
+        wrong_cursor = await client.get(f"{b}/dialogue?before={one.json()['id']}", headers=headers)
+        assert wrong_cursor.status_code == 404
+    finally:
+        app.dependency_overrides.pop(get_harness, None)
