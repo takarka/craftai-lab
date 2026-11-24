@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+import asyncio
+import json
 from typing import Any
 
 import pytest
 from httpx import AsyncClient
 
 from app.core.database import SessionLocal
+from app.core.errors import ApiError
 from app.main import app
 from app.modules.lab.harness import LabHarness
-from app.modules.lab.model_provider import ModelCompletionResult, ToolCallRequest
+from app.modules.lab.model_provider import ModelCompletionResult, ModelDescriptor, ToolCallRequest, collect_stream
 from app.modules.lab.runs_router import _build_runtime_models_catalog, _lookup_agent_epoch, get_harness
 from app.modules.mcp import MaterialsToolExecutor
 
@@ -203,4 +206,244 @@ async def test_phase1_phase2_phase3_end_to_end_on_real_app(client: AsyncClient, 
         assert mats_after["items"] == []
         assert mem_after["items"] == []
     finally:
+        app.dependency_overrides.pop(get_harness, None)
+
+
+async def test_dialogue_reload_retry_and_agent_isolation(client: AsyncClient, monkeypatch) -> None:
+    monkeypatch.setattr("app.modules.lab.catalog.settings.lab_model_1_id", "google/gemini-2.5-flash")
+    headers = await _login_dev(client)
+    agents = []
+    for name in ("Один", "Два"):
+        result = await client.post("/lab/v1/agents", headers=headers, json={"name": name})
+        assert result.status_code == 201
+        agents.append(result.json()["id"])
+    a = f"/lab/v1/agents/{agents[0]}"
+    b = f"/lab/v1/agents/{agents[1]}"
+    provider = FakeProvider([ModelCompletionResult(content="Понял: 5 класс, ровно три пункта.")])
+    harness = LabHarness(model_provider=provider, epoch_lookup=_lookup_agent_epoch)
+    app.dependency_overrides[get_harness] = lambda: harness
+    try:
+        initial = (await client.get(f"{a}/dialogue", headers=headers)).json()
+        assert initial["turns"] == []
+        first_body = {
+            "prompt": "Пятый класс. Давай ровно три пункта.",
+            "dialogue": True,
+            "conversation_id": initial["conversation_id"],
+        }
+        first_headers = {**headers, "Idempotency-Key": "dialogue-first"}
+        one = await client.post(f"{a}/runs", headers=first_headers, json=first_body)
+        assert one.status_code == 201, one.text
+        repeated = await client.post(f"{a}/runs", headers=first_headers, json=first_body)
+        assert repeated.json()["id"] == one.json()["id"]
+        mismatch = await client.post(
+            f"{a}/runs", headers=first_headers, json={**first_body, "prompt": "Другой запрос"},
+        )
+        assert mismatch.status_code == 409
+        assert len(provider.calls) == 1
+
+        reopened = (await client.get(f"{a}/dialogue", headers=headers)).json()
+        assert reopened["conversation_id"] == initial["conversation_id"]
+        assert [turn["prompt"] for turn in reopened["turns"]] == [first_body["prompt"]]
+        assert reopened["turns"][0]["run"]["final_output"] == "Понял: 5 класс, ровно три пункта."
+        b_reopened = (await client.get(f"{b}/dialogue", headers=headers)).json()
+        assert b_reopened["conversation_id"] != initial["conversation_id"]
+        assert b_reopened["turns"] == []
+        rejected = await client.post(f"{b}/runs", headers=first_headers, json=first_body)
+        assert rejected.status_code == 409
+
+        two = await client.post(
+            f"{a}/runs", headers={**headers, "Idempotency-Key": "dialogue-follow-up"},
+            json={**first_body, "prompt": "А теперь про испарение."},
+        )
+        assert two.status_code == 201, two.text
+        assert [message["role"] for message in provider.calls[1]["messages"]][-3:] == [
+            "user", "assistant", "user",
+        ]
+        assert provider.calls[1]["messages"][-3]["content"] == first_body["prompt"]
+        assert "5 класс, ровно три пункта" in provider.calls[1]["messages"][-2]["content"]
+
+        latest = (await client.get(f"{a}/dialogue?limit=1", headers=headers)).json()
+        assert latest["turns"][0]["run"]["id"] == two.json()["id"]
+        previous = (await client.get(
+            f"{a}/dialogue?limit=1&before={latest['next_before']}", headers=headers,
+        )).json()
+        assert previous["turns"][0]["run"]["id"] == one.json()["id"]
+        assert previous["next_before"] is None
+        wrong_cursor = await client.get(f"{b}/dialogue?before={one.json()['id']}", headers=headers)
+        assert wrong_cursor.status_code == 404
+    finally:
+        app.dependency_overrides.pop(get_harness, None)
+
+
+@pytest.mark.parametrize("compaction_succeeds", [True, False])
+async def test_dialogue_compacts_old_turns_without_erasing_history(
+    client: AsyncClient, monkeypatch, compaction_succeeds: bool,
+) -> None:
+    model_id = "google/gemini-2.5-flash"
+    monkeypatch.setattr("app.modules.lab.catalog.settings.lab_model_1_id", model_id)
+    headers = await _login_dev(client)
+    response = await client.post("/lab/v1/agents", headers=headers, json={"name": "Учебный диалог"})
+    assert response.status_code == 201
+    route = f"/lab/v1/agents/{response.json()['id']}"
+    first_prompt = "Пятый класс. Ровно три пункта. " + "материал " * 110
+    recent_prompt = "ВТОРАЯ РЕПЛИКА " + "пример " * 140
+    latest_prompt = "ТРЕТЬЯ РЕПЛИКА " + "карточка " * 110
+    next_prompt = "НОВЫЙ ЗАПРОС " + "урок " * 185
+    latest_answer = "ПРОВЕРЕННЫЙ ОТВЕТ " + "деталь " * 140
+    summary = "Пятый класс. Ровно три пункта."
+    provider = FakeProvider([
+        ModelCompletionResult(content="Запомнил формат."),
+        ModelCompletionResult(content="Пример готов. " + "текст " * 175),
+        ModelCompletionResult(content=latest_answer),
+        ModelCompletionResult(content=summary if compaction_succeeds else "", finish_reason=(
+            "stop" if compaction_succeeds else "length"
+        )),
+        ModelCompletionResult(content="Три пункта для пятого класса."),
+    ])
+    harness = LabHarness(
+        model_provider=provider, epoch_lookup=_lookup_agent_epoch,
+        models_catalog={model_id: ModelDescriptor(model_id, "Test", True, False, context_window=3000)},
+    )
+    app.dependency_overrides[get_harness] = lambda: harness
+    try:
+        async def read_dialogue():
+            result = await client.get(f"{route}/dialogue", headers=headers)
+            assert result.status_code == 200, result.text
+            return result.json()
+
+        initial = await read_dialogue()
+        for index, prompt in enumerate((first_prompt, recent_prompt, latest_prompt)):
+            posted = await client.post(
+                f"{route}/runs", headers={**headers, "Idempotency-Key": f"compact-{index}"},
+                json={"prompt": prompt, "dialogue": True, "conversation_id": initial["conversation_id"]},
+            )
+            assert posted.status_code == 201, posted.text
+            assert posted.json()["status"] == "completed", posted.text
+        assert len(provider.calls) == 3
+        reopened = await read_dialogue()
+        followup = await client.post(
+            f"{route}/runs", headers={**headers, "Idempotency-Key": "compact-new"},
+            json={"prompt": next_prompt, "dialogue": True, "conversation_id": reopened["conversation_id"]},
+        )
+        assert followup.status_code == 201, followup.text
+        assert provider.calls[3]["tools"] is None
+        assert "earlier_turns" in provider.calls[3]["messages"][1]["content"]
+        assert first_prompt in provider.calls[3]["messages"][1]["content"]
+        if compaction_succeeds:
+            assert followup.json()["status"] == "completed", followup.text
+            contents = [message["content"] for message in provider.calls[4]["messages"]]
+            assert any(summary in content for content in contents)
+            assert first_prompt not in contents
+            assert latest_prompt in contents
+            assert latest_answer in contents
+            assert next_prompt == contents[-1]
+        else:
+            assert followup.json()["status"] == "failed"
+            assert followup.json()["error_code"] == "dialogue.compaction-failed"
+            assert len(provider.calls) == 4
+
+        after = await read_dialogue()
+        assert [turn["prompt"] for turn in after["turns"]] == [
+            first_prompt, recent_prompt, latest_prompt, next_prompt,
+        ]
+        assert after["turns"][0]["run"]["final_output"] == "Запомнил формат."
+        if compaction_succeeds:
+            followup_body = {"prompt": "Ещё один пример?", "dialogue": True, "conversation_id": after["conversation_id"]}
+            next_result = await client.post(
+                f"{route}/runs", headers={**headers, "Idempotency-Key": "compact-reuse"}, json=followup_body,
+            )
+            assert next_result.json()["status"] == "completed", next_result.text
+            assert len(provider.calls) == 6
+            reused = [message["content"] for message in provider.calls[-1]["messages"]]
+            assert any(summary in content for content in reused)
+            assert first_prompt not in reused
+            assert latest_prompt in reused
+    finally:
+        app.dependency_overrides.pop(get_harness, None)
+
+
+async def test_openrouter_stream_parses_text_and_split_tool_arguments() -> None:
+    deltas = []
+
+    async def on_delta(text):
+        deltas.append(text)
+
+    async def fragments():
+        yield ": upstream keepalive"
+        for chunk in [
+            {"choices": [{"delta": {"content": "Добрый "}}]},
+            {"choices": [{"delta": {"content": "день"}}]},
+            {"choices": [{"delta": {"tool_calls": [
+                {"index": 0, "id": "call_1", "function": {"name": "search_materials", "arguments": '{"que'}}
+            ]}}]},
+            {"choices": [{"finish_reason": "tool_calls", "delta": {"tool_calls": [
+                {"index": 0, "function": {"arguments": 'ry":"тема"}'}}
+            ]}}]},
+            {"choices": [], "usage": {"prompt_tokens": 9, "completion_tokens": 8}},
+        ]:
+            yield "data: " + json.dumps(chunk)
+        yield "data: [DONE]"
+
+    result = await collect_stream(fragments(), on_delta)
+    assert deltas == ["Добрый ", "день"]
+    assert result.input_tokens == 9 and result.output_tokens == 8
+    assert result.tool_calls == [ToolCallRequest("call_1", "search_materials", {"query": "тема"})]
+
+
+async def test_openrouter_stream_without_done_does_not_return_a_tool() -> None:
+    async def on_delta(_):
+        return None
+
+    async def incomplete():
+        yield 'data: {"choices":[{"finish_reason":"tool_calls","delta":{"tool_calls":[' \
+              '{"index":0,"id":"call_1","function":{"name":"search_materials","arguments":"{}"}}]}}]}'
+
+    with pytest.raises(ApiError) as error:
+        await collect_stream(incomplete(), on_delta)
+    assert error.value.code == "provider.stream-interrupted"
+
+
+async def test_running_dialogue_exposes_real_partial_text_before_completion(
+    client: AsyncClient, monkeypatch,
+) -> None:
+    monkeypatch.setattr("app.modules.lab.catalog.settings.lab_model_1_id", "google/gemini-2.5-flash")
+    headers = await _login_dev(client)
+    response = await client.post("/lab/v1/agents", headers=headers, json={"name": "Поток"})
+    route = f"/lab/v1/agents/{response.json()['id']}"
+    entered = asyncio.Event()
+    release = asyncio.Event()
+
+    class GatedProvider(FakeProvider):
+        async def complete_stream(self, *, model_id, messages, tools, on_delta):
+            await on_delta("Промежуточный ")
+            entered.set()
+            await release.wait()
+            await on_delta("ответ")
+            return ModelCompletionResult(content="Промежуточный ответ")
+
+    provider = GatedProvider([])
+    app.dependency_overrides[get_harness] = lambda: LabHarness(
+        model_provider=provider, epoch_lookup=_lookup_agent_epoch,
+    )
+    post = None
+    try:
+        empty = (await client.get(f"{route}/dialogue", headers=headers)).json()
+        post = asyncio.create_task(client.post(
+            f"{route}/runs", headers={**headers, "Idempotency-Key": "stream-test"},
+            json={"prompt": "Ответь по частям", "dialogue": True, "conversation_id": empty["conversation_id"]},
+        ))
+        await asyncio.wait_for(entered.wait(), timeout=6)
+        partial = (await client.get(f"{route}/dialogue", headers=headers)).json()["turns"]
+        assert len(partial) == 1 and not post.done()
+        assert partial[0]["run"]["status"] == "running"
+        assert partial[0]["run"]["request_key"] == "stream-test"
+        assert partial[0]["run"]["final_output"] == "Промежуточный "
+        release.set()
+        completed = await post
+        assert completed.json()["id"] == partial[0]["run"]["id"]
+        assert completed.json()["final_output"] == "Промежуточный ответ"
+    finally:
+        release.set()
+        if post is not None and not post.done():
+            await post
         app.dependency_overrides.pop(get_harness, None)
