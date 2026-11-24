@@ -1,0 +1,50 @@
+name: Capture CraftAI Lab Flutter Web guide
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'Builder/tool/guide_*'
+      - '.github/workflows/guide-screens.yml'
+permissions:
+  contents: read
+jobs:
+  capture:
+    if: github.head_ref == 'docs/guide-screen-capture'
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    defaults:
+      run:
+        working-directory: Builder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: Builder/.fvmrc
+          channel: stable
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - name: Build actual Flutter Web UI with isolated fixtures
+        run: flutter build web --release --target tool/guide_main.dart --no-web-resources-cdn
+      - name: Install screenshot runner
+        run: python3 -m pip install playwright==1.56.0
+      - name: Capture mobile viewport from localhost
+        shell: bash
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory build/web >/tmp/craftai-guide-http.log 2>&1 &
+          trap 'kill $! 2>/dev/null || true' EXIT
+          for n in {1..20}; do curl -sSf http://127.0.0.1:8765/ >/dev/null && break; sleep 1; done
+          python3 tool/guide_capture.py
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: craftai-lab-screens
+          path: Builder/guide-screens/*.png
+          if-no-files-found: ignore
+          retention-days: 3
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: craftai-lab-guide-web
+          path: Builder/build/web/
+          if-no-files-found: ignore
+          retention-days: 3
