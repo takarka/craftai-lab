@@ -455,7 +455,9 @@ class LabRunController extends Notifier<LabRunState> {
           page.conversationId != _conversationId) {
         return;
       }
-      final turn = page.turns.where((item) => item.run.requestKey == key).firstOrNull;
+      final turn = page.turns
+          .where((item) => item.run.requestKey == key)
+          .firstOrNull;
       if (turn == null ||
           state.activeRun?.id == turn.run.id &&
               state.activeRun?.status == 'cancelled' &&

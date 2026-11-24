@@ -81,7 +81,8 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
           _runningTimer = null;
         }
         final wasNearEnd =
-            !_dialogueScroll.hasClients || _dialogueScroll.position.extentAfter < 80;
+            !_dialogueScroll.hasClients ||
+            _dialogueScroll.position.extentAfter < 80;
         if (oldLast?.id != newLast?.id ||
             oldLast?.status != newLast?.status ||
             next.sendingPrompt != null && previous?.sendingPrompt == null ||
