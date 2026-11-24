@@ -15,7 +15,8 @@ final class TransferReviewStore {
 
   final FlutterSecureStorage storage;
 
-  String _key(String ownerId) => 'craftai_transfer_review_v1_${Uri.encodeComponent(ownerId)}';
+  String _key(String ownerId) =>
+      'craftai_transfer_review_v1_${Uri.encodeComponent(ownerId)}';
 
   Future<TransferReview?> read(String ownerId) async {
     final value = await storage.read(key: _key(ownerId));

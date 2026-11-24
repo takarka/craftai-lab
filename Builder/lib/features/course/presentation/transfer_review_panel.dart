@@ -53,9 +53,12 @@ class _TransferReviewPanelState extends ConsumerState<TransferReviewPanel> {
     });
     final provider = transferReviewProvider(widget.ownerId);
     try {
-      await ref.read(provider.notifier).change(
-        (current) => update(current ?? TransferReview(prompt: widget.defaultPrompt)),
-      );
+      await ref
+          .read(provider.notifier)
+          .change(
+            (current) =>
+                update(current ?? TransferReview(prompt: widget.defaultPrompt)),
+          );
       if (!mounted) return;
       final saved = ref.read(provider).asData?.value;
       if (saved != null) {
@@ -71,28 +74,41 @@ class _TransferReviewPanelState extends ConsumerState<TransferReviewPanel> {
 
   String _criterion(CourseStrings cs, TransferCriterion criterion) =>
       switch (criterion) {
-        TransferCriterion.source =>
-          cs.t('Верность источнику', 'Дереккөзге сәйкестік'),
-        TransferCriterion.accuracy =>
-          cs.t('Фактическая точность', 'Деректердің дәлдігі'),
+        TransferCriterion.source => cs.t(
+          'Верность источнику',
+          'Дереккөзге сәйкестік',
+        ),
+        TransferCriterion.accuracy => cs.t(
+          'Фактическая точность',
+          'Деректердің дәлдігі',
+        ),
         TransferCriterion.grade => cs.t('Уровень класса', 'Сынып деңгейі'),
         TransferCriterion.format => cs.t('Формат задания', 'Тапсырма пішімі'),
       };
 
-  String _verdict(CourseStrings cs, TransferVerdict verdict) => switch (verdict) {
-    TransferVerdict.met => cs.t('Выполнено', 'Орындалды'),
-    TransferVerdict.revise => cs.t('Нужно исправить', 'Түзету керек'),
-  };
+  String _verdict(CourseStrings cs, TransferVerdict verdict) =>
+      switch (verdict) {
+        TransferVerdict.met => cs.t('Выполнено', 'Орындалды'),
+        TransferVerdict.revise => cs.t('Нужно исправить', 'Түзету керек'),
+      };
 
   String _result(CourseStrings cs, TransferChange change) => switch (change) {
-    TransferChange.improved =>
-      cs.t('Отмечено улучшение.', 'Жақсару белгіленді.'),
-    TransferChange.worse =>
-      cs.t('Некоторые оценки стали хуже.', 'Кейбір бағалар төмендеді.'),
-    TransferChange.mixed =>
-      cs.t('Есть улучшения и ухудшения.', 'Жақсарғаны да, нашарлағаны да бар.'),
-    TransferChange.unchanged =>
-      cs.t('Оценки не изменились.', 'Бағалар өзгерген жоқ.'),
+    TransferChange.improved => cs.t(
+      'Отмечено улучшение.',
+      'Жақсару белгіленді.',
+    ),
+    TransferChange.worse => cs.t(
+      'Некоторые оценки стали хуже.',
+      'Кейбір бағалар төмендеді.',
+    ),
+    TransferChange.mixed => cs.t(
+      'Есть улучшения и ухудшения.',
+      'Жақсарғаны да, нашарлағаны да бар.',
+    ),
+    TransferChange.unchanged => cs.t(
+      'Оценки не изменились.',
+      'Бағалар өзгерген жоқ.',
+    ),
   };
 
   Widget _capture({
@@ -164,19 +180,19 @@ class _TransferReviewPanelState extends ConsumerState<TransferReviewPanel> {
                   key: Key('transfer.$round.${criterion.name}.${verdict.name}'),
                   label: Text(_verdict(cs, verdict)),
                   selected: marks[criterion] == verdict,
-                  onSelected: _saving || (!second && review.instructionChange.isNotEmpty)
+                  onSelected:
+                      _saving ||
+                          (!second && review.instructionChange.isNotEmpty)
                       ? null
-                      : (_) => _save(
-                          (current) {
-                            final values = {
-                              ...(second ? current.second : current.first),
-                              criterion: verdict,
-                            };
-                            return second
-                                ? current.copyWith(second: values)
-                                : current.copyWith(first: values);
-                          },
-                        ),
+                      : (_) => _save((current) {
+                          final values = {
+                            ...(second ? current.second : current.first),
+                            criterion: verdict,
+                          };
+                          return second
+                              ? current.copyWith(second: values)
+                              : current.copyWith(first: values);
+                        }),
                 ),
             ],
           ),
@@ -189,7 +205,10 @@ class _TransferReviewPanelState extends ConsumerState<TransferReviewPanel> {
   Widget _content(CourseStrings cs, TransferReview? saved) {
     final review = saved ?? TransferReview(prompt: widget.defaultPrompt);
     final firstTitle = cs.t('Исходный ответ', 'Бастапқы жауап');
-    final editTitle = cs.t('Одно изменение инструкции', 'Нұсқаулықтағы бір өзгеріс');
+    final editTitle = cs.t(
+      'Одно изменение инструкции',
+      'Нұсқаулықтағы бір өзгеріс',
+    );
     final secondTitle = cs.t('Повторный ответ', 'Қайта алынған жауап');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,11 +233,15 @@ class _TransferReviewPanelState extends ConsumerState<TransferReviewPanel> {
               : () => _save(
                   (current) => current,
                   then: (current) async {
-                    await Clipboard.setData(ClipboardData(text: current.prompt));
+                    await Clipboard.setData(
+                      ClipboardData(text: current.prompt),
+                    );
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(cs.t('Запрос скопирован', 'Сұрау көшірілді')),
+                        content: Text(
+                          cs.t('Запрос скопирован', 'Сұрау көшірілді'),
+                        ),
                       ),
                     );
                   },
@@ -234,10 +257,14 @@ class _TransferReviewPanelState extends ConsumerState<TransferReviewPanel> {
         if (review.firstAnswer.isEmpty)
           _capture(
             id: 'first',
-            label: cs.t('Вставьте первый ответ второго агента', 'Екінші агенттің алғашқы жауабын енгізіңіз'),
+            label: cs.t(
+              'Вставьте первый ответ второго агента',
+              'Екінші агенттің алғашқы жауабын енгізіңіз',
+            ),
             controller: _first,
             cs: cs,
-            save: (value) => _save((current) => current.copyWith(firstAnswer: value)),
+            save: (value) =>
+                _save((current) => current.copyWith(firstAnswer: value)),
           )
         else ...[
           _answer('first', firstTitle, review.firstAnswer),
@@ -247,10 +274,14 @@ class _TransferReviewPanelState extends ConsumerState<TransferReviewPanel> {
         if (review.firstReviewed && review.instructionChange.isEmpty)
           _capture(
             id: 'edit',
-            label: cs.t('В настройках агента измените одно правило. Что изменили?', 'Агент баптауында бір ережені өзгертіңіз. Нені өзгерттіңіз?'),
+            label: cs.t(
+              'В настройках агента измените одно правило. Что изменили?',
+              'Агент баптауында бір ережені өзгертіңіз. Нені өзгерттіңіз?',
+            ),
             controller: _instruction,
             cs: cs,
-            save: (value) => _save((current) => current.copyWith(instructionChange: value)),
+            save: (value) =>
+                _save((current) => current.copyWith(instructionChange: value)),
             maxLength: 600,
           ),
         if (review.instructionChange.isNotEmpty) ...[
@@ -260,10 +291,14 @@ class _TransferReviewPanelState extends ConsumerState<TransferReviewPanel> {
           if (review.secondAnswer.isEmpty)
             _capture(
               id: 'repeat',
-              label: cs.t('Отправьте тот же запрос тому же агенту и вставьте ответ', 'Сол сұрауды сол агентке қайта жіберіп, жауабын енгізіңіз'),
+              label: cs.t(
+                'Отправьте тот же запрос тому же агенту и вставьте ответ',
+                'Сол сұрауды сол агентке қайта жіберіп, жауабын енгізіңіз',
+              ),
               controller: _second,
               cs: cs,
-              save: (value) => _save((current) => current.copyWith(secondAnswer: value)),
+              save: (value) =>
+                  _save((current) => current.copyWith(secondAnswer: value)),
             )
           else ...[
             _answer('repeat', secondTitle, review.secondAnswer),
@@ -279,7 +314,10 @@ class _TransferReviewPanelState extends ConsumerState<TransferReviewPanel> {
           ),
         if (_saveFailed)
           Text(
-            cs.t('Не удалось сохранить. Повторите действие.', 'Сақтау мүмкін болмады. Қайталап көріңіз.'),
+            cs.t(
+              'Не удалось сохранить. Повторите действие.',
+              'Сақтау мүмкін болмады. Қайталап көріңіз.',
+            ),
             key: const Key('transfer.saveError'),
             style: BuilderType.body,
           ),
@@ -291,13 +329,18 @@ class _TransferReviewPanelState extends ConsumerState<TransferReviewPanel> {
   Widget build(BuildContext context) {
     final cs = CourseStrings.of(context);
     final provider = transferReviewProvider(widget.ownerId);
-    return ref.watch(provider).when(
-      data: (saved) => _content(cs, saved),
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, _) => BuilderButton(
-        label: cs.t('Повторить загрузку проверки', 'Тексеруді қайта жүктеу'),
-        onPressed: () => ref.invalidate(provider),
-      ),
-    );
+    return ref
+        .watch(provider)
+        .when(
+          data: (saved) => _content(cs, saved),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, _) => BuilderButton(
+            label: cs.t(
+              'Повторить загрузку проверки',
+              'Тексеруді қайта жүктеу',
+            ),
+            onPressed: () => ref.invalidate(provider),
+          ),
+        );
   }
 }

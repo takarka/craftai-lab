@@ -72,7 +72,9 @@ final levelStatusProvider =
       if (arg.levelId != CourseTopic.transfer.storageId) {
         return repo.getLevelStatus(arg.ownerId, arg.levelId);
       }
-      final progress = await ref.watch(courseProgressListProvider(arg.ownerId).future);
+      final progress = await ref.watch(
+        courseProgressListProvider(arg.ownerId).future,
+      );
       return CourseAccess.status(arg.levelId, progress);
     });
 
@@ -84,9 +86,11 @@ final overallCourseProgressProvider =
       final review = await restoration;
       if (review == null) return base;
       final id = CourseTopic.transfer.storageId;
-      final addCompletion = review.completed && !base.completedLevelIds.contains(id);
+      final addCompletion =
+          review.completed && !base.completedLevelIds.contains(id);
       return OverallCourseProgress(
-        completedLevelsCount: base.completedLevelsCount + (addCompletion ? 1 : 0),
+        completedLevelsCount:
+            base.completedLevelsCount + (addCompletion ? 1 : 0),
         totalActiveLevels: base.totalActiveLevels,
         activeLevelId: review.completed ? base.activeLevelId : id,
         activeStep: review.completed
@@ -108,7 +112,10 @@ Future<TransferReview?> _localReview(Ref ref, String ownerId) async {
   }
 }
 
-LevelProgress _restoreTransferProgress(LevelProgress base, TransferReview review) {
+LevelProgress _restoreTransferProgress(
+  LevelProgress base,
+  TransferReview review,
+) {
   return base.copyWith(
     currentStep: review.secondReviewed
         ? review.step
@@ -187,12 +194,14 @@ class CourseController {
     _ref.invalidate(completedCourseLevelsProvider(ownerId));
   }
 
-  Future<void> _updateReview(TransferReview Function(TransferReview) edit) async {
+  Future<void> _updateReview(
+    TransferReview Function(TransferReview) edit,
+  ) async {
     final review = transferReviewProvider(ownerId);
     if (_ref.read(review).asData?.value != null) {
-      await _ref.read(review.notifier).change(
-        (current) => current == null ? null : edit(current),
-      );
+      await _ref
+          .read(review.notifier)
+          .change((current) => current == null ? null : edit(current));
     }
   }
 

@@ -8,10 +8,11 @@ final transferReviewStoreProvider = Provider<TransferReviewStore>(
 );
 
 final transferReviewProvider =
-    AsyncNotifierProvider.family<TransferReviewController, TransferReview?, String>(
-      TransferReviewController.new,
-      retry: (count, error) => null,
-    );
+    AsyncNotifierProvider.family<
+      TransferReviewController,
+      TransferReview?,
+      String
+    >(TransferReviewController.new, retry: (count, error) => null);
 
 class TransferReviewController extends AsyncNotifier<TransferReview?> {
   TransferReviewController(this.ownerId);

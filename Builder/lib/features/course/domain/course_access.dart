@@ -12,7 +12,8 @@ abstract final class CourseAccess {
     // A locally saved transfer exercise is proof that this user previously
     // reached the capstone, even if the rest of the web course cache restarted.
     if (id == CourseTopic.transfer.storageId &&
-        ((current?.currentStep ?? 1) > 1 || current?.practiceEvidenceMet == true)) {
+        ((current?.currentStep ?? 1) > 1 ||
+            current?.practiceEvidenceMet == true)) {
       return LevelStatus.inProgress;
     }
     final previous = prerequisite(id);

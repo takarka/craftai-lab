@@ -81,7 +81,9 @@ final class TransferReview {
     'first_answer': firstAnswer,
     'instruction_change': instructionChange,
     'second_answer': secondAnswer,
-    'first': {for (final entry in first.entries) entry.key.name: entry.value.name},
+    'first': {
+      for (final entry in first.entries) entry.key.name: entry.value.name,
+    },
     'second': {
       for (final entry in second.entries) entry.key.name: entry.value.name,
     },
