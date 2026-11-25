@@ -132,7 +132,7 @@ void main() {
         await environment.runtime.listMaterials('demo-russian'),
         hasLength(1),
       );
-      await tap(tester, find.widgetWithText(TextButton, 'Как выполнено'));
+      await tap(tester, find.widgetWithIcon(IconButton, Icons.timeline));
       await reveal(tester, find.textContaining('ID материала:'));
       expect(find.textContaining('ID материала:'), findsOneWidget);
       await back(tester);

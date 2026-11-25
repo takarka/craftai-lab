@@ -85,6 +85,30 @@ void main() {
       );
       expect(bubble('Учитывай пятый класс.'), findsOneWidget);
       expect(bubble('Пятый класс, понял.'), findsOneWidget);
+      final answerCard = find.ancestor(
+        of: bubble('Пятый класс, понял.'),
+        matching: find.byType(Card),
+      );
+      final actions = find.descendant(
+        of: answerCard,
+        matching: find.byType(IconButton),
+      );
+      expect(actions, findsNWidgets(3));
+      expect(
+        tester.widgetList<IconButton>(actions).map((button) => button.tooltip),
+        ['Копировать', 'Поделиться', 'Как выполнено'],
+      );
+      expect(
+        tester.widgetList<IconButton>(actions).map((button) => button.icon),
+        [
+          isA<Icon>().having((icon) => icon.icon, 'icon', Icons.copy),
+          isA<Icon>().having((icon) => icon.icon, 'icon', Icons.share),
+          isA<Icon>().having((icon) => icon.icon, 'icon', Icons.timeline),
+        ],
+      );
+      expect(find.text('Копировать'), findsNothing);
+      expect(find.text('Поделиться'), findsNothing);
+      expect(find.text('Как выполнено'), findsNothing);
       await tester.enterText(find.byType(TextField), 'Теперь про испарение.');
       await tester.tap(find.byTooltip('Отправить'));
       await tester.pump();

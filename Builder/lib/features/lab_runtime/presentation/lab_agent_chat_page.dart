@@ -405,7 +405,7 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
             Wrap(
               spacing: 8,
               children: [
-                TextButton.icon(
+                IconButton(
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: output));
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -413,17 +413,17 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
                     );
                   },
                   icon: const Icon(Icons.copy, size: 18),
-                  label: const Text('Копировать'),
+                  tooltip: 'Копировать',
                 ),
-                TextButton.icon(
+                IconButton(
                   onPressed: () {
                     SharePlus.instance.share(ShareParams(text: output));
                   },
                   icon: const Icon(Icons.share, size: 18),
-                  label: const Text('Поделиться'),
+                  tooltip: 'Поделиться',
                 ),
                 if (run != null)
-                  TextButton.icon(
+                  IconButton(
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute<void>(
@@ -435,7 +435,7 @@ class _LabAgentChatPageState extends ConsumerState<LabAgentChatPage>
                       );
                     },
                     icon: const Icon(Icons.timeline, size: 18),
-                    label: const Text('Как выполнено'),
+                    tooltip: 'Как выполнено',
                   ),
               ],
             ),
